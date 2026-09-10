@@ -11,6 +11,7 @@ import {
   WarningCircle,
   Sparkle,
   ClipboardText,
+  Clock,
 } from '@phosphor-icons/react';
 import { useAuth } from '../lib/AuthContext';
 import { GlassCard, Button, Badge, StatusMessage } from '../components/ui';
@@ -117,7 +118,7 @@ export default function Dashboard() {
   const steps = [
     { done: true, label: 'Account created' },
     { done: Boolean(resume), label: 'Resume uploaded' },
-    { done: applicationStatus === 'submitted', label: 'Application submitted' },
+    { done: applicationStatus === 'submitted', label: 'Application sent' },
   ];
   const completed = steps.filter((s) => s.done).length;
 
@@ -297,8 +298,8 @@ export default function Dashboard() {
                   </p>
                 </div>
                 {applicationStatus === 'submitted' && (
-                  <Badge tone="success" icon={CheckCircle}>
-                    Submitted
+                  <Badge tone="accent" icon={Clock}>
+                    Under review
                   </Badge>
                 )}
                 {applicationStatus === 'draft' && <Badge tone="neutral">Draft saved</Badge>}
@@ -307,12 +308,13 @@ export default function Dashboard() {
               {applicationStatus === 'submitted' ? (
                 <div className="app-done">
                   <span className="app-done__icon" aria-hidden="true">
-                    <CheckCircle size={36} weight="duotone" />
+                    <Clock size={36} weight="duotone" />
                   </span>
-                  <p className="app-done__title">You're in the pipeline</p>
+                  <p className="app-done__title">Application under review</p>
                   <p className="app-done__body">
-                    Your application is submitted. E-board reviews applications on a
-                    rolling basis and will reach out at the email you gave us.
+                    Your application is in. E-board reviews applications on a rolling
+                    basis and will email you a decision at the address you gave us.
+                    Spots are limited, so not every applicant is accepted each cycle.
                   </p>
                   <Link to="/apply">
                     <Button variant="glass" size="md">
@@ -361,8 +363,7 @@ export default function Dashboard() {
             { name: 'Build / Project', weight: '15%' },
             { name: 'Resume', weight: '10%' },
             { name: 'Mock Interview', weight: '15%' },
-            { name: 'Networking', weight: '10%' },
-            { name: 'Capstone Hackathon', weight: '30%' },
+            { name: 'Capstone Hackathon', weight: '40%' },
           ].map((c) => (
             <StaggerItem key={c.name}>
               <GlassCard interactive className="mini-card">

@@ -98,8 +98,8 @@ export default function Signup() {
               Start building your <span>track record</span>
             </h1>
             <p className="auth__aside-text">
-              One account gets you into every challenge, onto the leaderboard, and in
-              front of partner recruiters.
+              Create an account to apply. Accepted members get into every challenge,
+              onto the leaderboard, and in front of partner recruiters.
             </p>
 
             <ol className="auth__steps">

@@ -38,7 +38,7 @@ shadows. Buttons invert those borders on `:active` so they physically depress.
 
 | Route | Access | What it does |
 |---|---|---|
-| `/` | public | Landing hub: program overview, six challenges, scoring weights, timeline |
+| `/` | public | Landing hub: program overview, five challenges, scoring weights, timeline |
 | `/login` | public | Username + password sign-in |
 | `/signup` | public | Account creation with password strength meter |
 | `/dashboard` | auth | Progress tracker, resume upload, application status |
@@ -94,3 +94,30 @@ allow paste and password managers.
 `public/colorstack-gsu-logo.png` is the chapter logo (also the source for
 `favicon.ico`, `apple-touch-icon.png`, and `icon-192.png`). To change it,
 replace the source image and regenerate the icon sizes.
+
+### Adding a partner logo
+
+Partner logos live in `public/partners/` and are listed in the `PARTNERS`
+array at the top of
+[src/components/PartnerCarousel.jsx](src/components/PartnerCarousel.jsx):
+
+```js
+{ name: 'Org Name', logo: '/partners/org.png' }
+```
+
+Tiles are white, so a transparent PNG or SVG drops straight in. If the logo
+file has its own solid background baked in (a white mark on a brand color),
+add `bleed: true` so it fills the tile edge to edge instead of sitting as a
+colored square inside a white box. Either way the full logo always shows —
+nothing is cropped.
+
+Omit `logo` entirely and the tile renders the org's name as text, so the
+carousel still looks intentional while you wait on an asset. **CS Club is currently a text tile** — drop its logo in
+`public/partners/` and add a `logo:` key to that row to swap it in.
+
+The marquee repeats short lists automatically to fill the strip, and it has a
+pause button (and stops for `prefers-reduced-motion`).
+
+The partners section is framed as a co-organized effort — the League is run by
+ColorStack, ProGSU, CS Club, and NSBE together, not by
+ColorStack alone with outside sponsors.

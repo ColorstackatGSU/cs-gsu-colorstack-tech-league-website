@@ -7,6 +7,7 @@ import {
   CheckCircle,
   FloppyDisk,
   PaperPlaneTilt,
+  Clock,
 } from '@phosphor-icons/react';
 import { useAuth } from '../lib/AuthContext';
 import {
@@ -193,15 +194,16 @@ export default function Apply() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <GlassCard title="Submitted — confirmation.exe" className="apply__done">
+            <GlassCard title="Received — confirmation.exe" className="apply__done">
               <span className="apply__done-icon" aria-hidden="true">
-                <CheckCircle size={44} weight="duotone" />
+                <Clock size={44} weight="duotone" />
               </span>
-              <h1 className="apply__done-title">Application submitted</h1>
+              <h1 className="apply__done-title">Application received</h1>
               <p className="apply__done-body">
-                Thanks, {values.fullName.split(' ')[0] || 'and welcome'}. E-board reviews
-                applications on a rolling basis and will reach out at{' '}
-                <strong className="wrap-anywhere">{values.schoolEmail}</strong>.
+                Thanks, {values.fullName.split(' ')[0] || 'for applying'}. E-board reviews
+                applications on a rolling basis and will email a decision to{' '}
+                <strong className="wrap-anywhere">{values.schoolEmail}</strong>. Spots are
+                limited, so not every applicant is accepted each cycle.
               </p>
 
               <div className="apply__recap">
@@ -276,10 +278,11 @@ export default function Apply() {
           </Badge>
         </div>
 
-        <h1 className="apply__title">Join the ColorStack Tech League</h1>
+        <h1 className="apply__title">Apply to the ColorStack Tech League</h1>
         <p className="apply__subtitle">
           A few questions so e-board knows who you are and what you want out of the
-          semester.
+          semester. Spots are limited and applications are reviewed on a rolling
+          basis.
         </p>
 
         {/* step rail */}

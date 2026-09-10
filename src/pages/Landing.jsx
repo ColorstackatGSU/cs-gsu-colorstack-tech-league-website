@@ -15,6 +15,7 @@ import {
 } from '@phosphor-icons/react';
 import { GlassCard, Button, Badge, SectionHeading } from '../components/ui';
 import { Reveal, Stagger, StaggerItem, RevealText } from '../components/Motion';
+import PartnerCarousel from '../components/PartnerCarousel';
 import './Landing.css';
 
 /* Content mirrors the official Program Overview & Scoring Guide. */
@@ -73,23 +74,9 @@ const CHALLENGES = [
     ],
   },
   {
-    icon: UsersThree,
-    name: 'Networking',
-    weight: '10%',
-    points: 'Per action',
-    blurb:
-      'Points for showing up and staying engaged. Low stakes, high participation — the easiest points on the board.',
-    scoring: [
-      'Biweekly meeting — 5',
-      'Partner workshop — 10',
-      'Judge a challenge — 15',
-      'Refer a member — 10',
-    ],
-  },
-  {
     icon: Trophy,
     name: 'Capstone Hackathon',
-    weight: '30%',
+    weight: '40%',
     points: '150 pts',
     blurb:
       'The centerpiece. A themed prompt, a fixed afternoon build window, then live demos to partner reps and e-board.',
@@ -202,7 +189,7 @@ export default function Landing() {
             transition={{ duration: 0.65, delay: 0.5 }}
           >
             The ColorStack Tech League is a semester-long, points-based program at
-            Georgia State. Six challenge types, one live leaderboard, and a capstone
+            Georgia State. Five challenge types, one live leaderboard, and a capstone
             hackathon judged by partner engineers — built so the skills that get people
             hired stop being a thing you cram for.
           </motion.p>
@@ -215,7 +202,7 @@ export default function Landing() {
           >
             <Link to="/signup">
               <Button variant="primary" size="lg" iconRight={ArrowRight}>
-                Join the League
+                Apply to the League
               </Button>
             </Link>
             <a href="#challenges">
@@ -232,8 +219,8 @@ export default function Landing() {
             transition={{ duration: 0.7, delay: 0.8 }}
           >
             {[
-              { value: '6', label: 'Challenge types' },
-              { value: '650', label: 'Points on the board' },
+              { value: '5', label: 'Challenge types' },
+              { value: '550', label: 'Points on the board' },
               { value: '2–4', label: 'Members per team' },
               { value: '1', label: 'Capstone hackathon' },
             ].map((stat) => (
@@ -295,7 +282,7 @@ export default function Landing() {
       <section className="section on-dark" id="challenges">
         <div className="container">
           <SectionHeading
-            eyebrow="The six challenges"
+            eyebrow="The five challenges"
             title="Every challenge builds one specific skill"
             subtitle="Each one has its own rubric and point value. Your raw points convert to a percentage of that category's max, then get weighted into a composite score out of 100 — so one rough round never tanks your standing."
           />
@@ -345,7 +332,7 @@ export default function Landing() {
                 align="left"
                 eyebrow="How scoring works"
                 title="Weighted so one bad round doesn't sink you"
-                subtitle="Technical, Resume, Mock Interview, and Networking are scored individually then averaged across your team. Build and Capstone are scored at the team level directly."
+                subtitle="Technical, Resume, and Mock Interview are scored individually then averaged across your team. Build and Capstone are scored at the team level directly."
               />
               <ul className="scoring__notes">
                 <li>
@@ -367,12 +354,11 @@ export default function Landing() {
               <GlassCard title="Weight distribution" className="scoring__card">
                 <ul className="weights">
                   {[
-                    { label: 'Capstone Hackathon', pct: 30, tone: 'accent' },
+                    { label: 'Capstone Hackathon', pct: 40, tone: 'accent' },
                     { label: 'Technical Skills', pct: 20, tone: 'brand' },
                     { label: 'Build / Project', pct: 15, tone: 'brand' },
                     { label: 'Mock Interview', pct: 15, tone: 'brand' },
                     { label: 'Resume', pct: 10, tone: 'brand' },
-                    { label: 'Networking', pct: 10, tone: 'brand' },
                   ].map((row, i) => (
                     <li className="weights__row" key={row.label}>
                       <span className="weights__label">{row.label}</span>
@@ -380,7 +366,7 @@ export default function Landing() {
                         <motion.span
                           className={`weights__fill weights__fill--${row.tone}`}
                           initial={reduce ? false : { width: 0 }}
-                          whileInView={{ width: `${(row.pct / 30) * 100}%` }}
+                          whileInView={{ width: `${(row.pct / 40) * 100}%` }}
                           viewport={{ once: true, margin: '-15%' }}
                           transition={{
                             duration: 0.85,
@@ -455,6 +441,20 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ---------------- Partners ---------------- */}
+      <section className="section on-dark" id="partners">
+        <div className="container">
+          <SectionHeading
+            eyebrow="Built together"
+            title="This isn't just a ColorStack thing"
+            subtitle="The Tech League runs on a partnership between ColorStack, ProGSU, CS Club, and NSBE. Each org brings its own members, mentors, and judges — which is why the League reaches further than any one club could on its own."
+          />
+          <Reveal>
+            <PartnerCarousel />
+          </Reveal>
+        </div>
+      </section>
+
       {/* ---------------- CTA ---------------- */}
       <section className="section on-dark">
         <div className="container">
@@ -464,15 +464,17 @@ export default function Landing() {
               <Badge tone="accent" icon={Trophy}>
                 Spots are limited
               </Badge>
-              <h2 className="cta__title">Ready to get on the board?</h2>
+              <h2 className="cta__title">Ready to apply?</h2>
               <p className="cta__body">
                 Create your account, upload your resume so partner recruiters can find
-                you, and submit your application. It takes about five minutes.
+                you, and submit your application. It takes about five minutes. E-board
+                reviews applications on a rolling basis and emails every applicant a
+                decision.
               </p>
               <div className="cta__actions">
                 <Link to="/signup">
                   <Button variant="primary" size="lg" iconRight={ArrowRight}>
-                    Create your account
+                    Start your application
                   </Button>
                 </Link>
                 <Link to="/login">

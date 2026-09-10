@@ -123,7 +123,7 @@ export default function Navbar() {
                   size="sm"
                   onClick={() => navigate('/signup')}
                 >
-                  Join the League
+                  Apply now
                 </Button>
               </>
             )}
@@ -188,7 +188,7 @@ export default function Navbar() {
                     Log in
                   </Link>
                   <Link to="/signup" className="mobile-menu__link mobile-menu__link--cta">
-                    Join the League
+                    Apply now
                   </Link>
                 </>
               )}

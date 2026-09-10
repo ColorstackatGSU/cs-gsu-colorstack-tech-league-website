@@ -91,7 +91,7 @@ export default function Login() {
 
             <ul className="auth__perks">
               {[
-                { icon: ChartLineUp, text: 'Track your points across all six challenges' },
+                { icon: ChartLineUp, text: 'Track your points across all five challenges' },
                 { icon: Trophy, text: 'See where you land on the live leaderboard' },
                 { icon: Users, text: 'Stay visible to partner recruiters' },
               ].map((perk) => (
