@@ -61,6 +61,33 @@ const TEAM_PREFS = [
   { value: 'either', label: 'Either works for me' },
 ];
 
+/**
+ * Graduation terms, generated from today so the list never goes stale.
+ * Starts at the term we're currently in and runs six years out, which
+ * covers freshmen through PhD students.
+ */
+function buildGradTerms(years = 6) {
+  const now = new Date();
+  const year = now.getFullYear();
+  // Jan–Apr = Spring, May–Jul = Summer, Aug–Dec = Fall
+  const month = now.getMonth();
+  const startIndex = month <= 3 ? 0 : month <= 6 ? 1 : 2;
+
+  const seasons = ['Spring', 'Summer', 'Fall'];
+  const terms = [];
+
+  for (let y = 0; y <= years; y++) {
+    seasons.forEach((season, s) => {
+      // skip terms that already passed this calendar year
+      if (y === 0 && s < startIndex) return;
+      terms.push(`${season} ${year + y}`);
+    });
+  }
+  return terms;
+}
+
+const GRAD_TERMS = buildGradTerms();
+
 const EMPTY = {
   fullName: '',
   schoolEmail: '',
@@ -125,7 +152,7 @@ export default function Apply() {
     if (index === 1) {
       if (!v.year) found.year = 'Select your year.';
       if (!v.major) found.major = 'Select your major.';
-      if (!v.gradTerm.trim()) found.gradTerm = 'Enter your expected graduation.';
+      if (!v.gradTerm) found.gradTerm = 'Select your expected graduation term.';
       if (!v.interest) found.interest = 'Pick the area you are most interested in.';
     }
 
@@ -421,18 +448,23 @@ export default function Apply() {
                     htmlFor="gradTerm"
                     required
                     error={errors.gradTerm}
-                    helper="For example: Spring 2028"
                   >
-                    {({ errorId, helperId }) => (
-                      <TextInput
+                    {({ errorId }) => (
+                      <Select
                         id="gradTerm"
                         name="gradTerm"
-                        placeholder="Spring 2028"
                         value={values.gradTerm}
                         invalid={Boolean(errors.gradTerm)}
-                        aria-describedby={errors.gradTerm ? errorId : helperId}
+                        aria-describedby={errors.gradTerm ? errorId : undefined}
                         onChange={(e) => set('gradTerm', e.target.value)}
-                      />
+                      >
+                        <option value="">Select your graduation term</option>
+                        {GRAD_TERMS.map((term) => (
+                          <option key={term} value={term}>
+                            {term}
+                          </option>
+                        ))}
+                      </Select>
                     )}
                   </Field>
 

@@ -57,6 +57,87 @@ async function hashPassword(password) {
 
 const delay = (ms = 620) => new Promise((r) => setTimeout(r, ms));
 
+/* ---------- demo accounts ----------
+ *
+ * Two seeded logins so the whole flow can be clicked through without
+ * registering first:
+ *
+ *   demo / demo1234   — fresh account, nothing done yet
+ *   applied / demo1234 — resume uploaded + application already submitted
+ *
+ * Seeding is skipped entirely in a production build, and it never
+ * overwrites an account that already exists (so edits you make while
+ * clicking around survive a refresh). Delete this block, and the call in
+ * main.jsx, when real auth lands.
+ */
+
+const DEMO_PASSWORD = 'demo1234';
+
+const DEMO_APPLICATION = {
+  fullName: 'Jordan Rivera',
+  schoolEmail: 'jrivera1@student.gsu.edu',
+  year: 'Sophomore',
+  major: 'Computer Science',
+  gradTerm: 'Spring 2028',
+  interest: 'Software Engineering',
+  teamPref: 'team',
+  whyJoin:
+    'I want structured practice instead of cramming before career fairs. The League gives me a reason to build and interview every single week.',
+  goals:
+    'Land a summer internship, get two solid projects on my resume, and stop freezing up in technical interviews.',
+  experience:
+    'Took CSC 2720 and 3210. Built a small budgeting app in React and a Python scraper for class schedules.',
+  commitment: '3-5',
+  consentShare: true,
+};
+
+export async function seedDemoAccounts() {
+  if (!import.meta.env.DEV) return;
+
+  const users = read(USERS_KEY, {});
+  const profiles = read(PROFILE_KEY, {});
+  let changed = false;
+
+  const seeds = [
+    { username: 'demo', profile: null },
+    {
+      username: 'applied',
+      profile: {
+        resume: {
+          name: 'jordan-rivera-resume.pdf',
+          size: 148_000,
+          type: 'application/pdf',
+          // 1-page valid PDF so the download link actually opens
+          dataUrl:
+            'data:application/pdf;base64,JVBERi0xLjQKMSAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PgplbmRvYmoKMiAwIG9iago8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PgplbmRvYmoKMyAwIG9iago8PC9UeXBlL1BhZ2UvUGFyZW50IDIgMCBSL01lZGlhQm94WzAgMCAyMDAgMjAwXT4+CmVuZG9iagp4cmVmCjAgNAowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1NiAwMDAwMCBuIAowMDAwMDAwMTExIDAwMDAwIG4gCnRyYWlsZXIKPDwvU2l6ZSA0L1Jvb3QgMSAwIFI+PgpzdGFydHhyZWYKMTkwCiUlRU9G',
+          uploadedAt: new Date().toISOString(),
+        },
+        application: DEMO_APPLICATION,
+        applicationStatus: 'submitted',
+      },
+    },
+  ];
+
+  for (const seed of seeds) {
+    if (users[seed.username]) continue; // never clobber existing data
+
+    const id = crypto.randomUUID();
+    users[seed.username] = {
+      id,
+      username: seed.username,
+      passwordHash: await hashPassword(DEMO_PASSWORD),
+      createdAt: new Date().toISOString(),
+    };
+    if (seed.profile) profiles[id] = seed.profile;
+    changed = true;
+  }
+
+  if (changed) {
+    write(USERS_KEY, users);
+    write(PROFILE_KEY, profiles);
+  }
+}
+
 /* ---------- validation ---------- */
 
 export function validateUsername(username) {

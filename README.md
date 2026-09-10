@@ -47,6 +47,25 @@ shadows. Buttons invert those borders on `:active` so they physically depress.
 Signed-out visitors hitting a protected route are sent to `/login` and returned
 to where they were headed after signing in.
 
+## Demo accounts (dev only)
+
+Two accounts are seeded automatically when you run `npm run dev`, so you can
+click the whole flow without registering:
+
+| Username | Password | State |
+|---|---|---|
+| `demo` | `demo1234` | Fresh account — nothing uploaded or applied yet |
+| `applied` | `demo1234` | Resume uploaded and application already submitted |
+
+Seeding lives in `seedDemoAccounts()` in
+[src/lib/authStore.js](src/lib/authStore.js) and is called from
+[src/main.jsx](src/main.jsx). It **no-ops in a production build** and never
+overwrites an account that already exists, so changes you make while clicking
+around stick. Delete both the function and its call when real auth lands.
+
+To reset a demo account to its seeded state, clear site data for localhost in
+your browser's devtools (Application → Storage → Clear site data) and reload.
+
 ## Data and auth — read this before deploying
 
 `src/lib/authStore.js` is the **only** file that knows where data lives.
