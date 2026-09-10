@@ -7,10 +7,7 @@ import {
   Rocket,
   FileText,
   Microphone,
-  UsersThree,
   Trophy,
-  Star,
-  CheckCircle,
   Sparkle,
 } from '@phosphor-icons/react';
 import { GlassCard, Button, Badge, SectionHeading } from '../components/ui';
@@ -118,15 +115,6 @@ const PHASES = [
   },
 ];
 
-const BENEFITS = [
-  'Structured face time with partner engineers and recruiters across multiple touchpoints',
-  'Real, rubric-based feedback on your resume and interview performance from industry professionals',
-  'A portfolio-ready project from the Build Challenge and the Capstone Hackathon',
-  'Visibility to partner companies for internship and full-time pipelines, with your consent',
-  'A documented record of skill growth over a semester you can actually talk about in interviews',
-  'Community with other Black and Latinx CS students at GSU working toward the same goals',
-];
-
 export default function Landing() {
   const heroRef = useRef(null);
   const reduce = useReducedMotion();
@@ -165,7 +153,7 @@ export default function Landing() {
           className="hero__inner container"
           style={reduce ? undefined : { y: heroY, opacity: heroOpacity }}
         >
-          <GlassCard title="Welcome - TechLeague.exe" className="hero__window">
+          <GlassCard className="hero__window">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -238,46 +226,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ---------------- About ---------------- */}
-      <section className="section on-dark" id="about">
-        <div className="container">
-          <SectionHeading
-            eyebrow="What it is"
-            title="A program, not a one-off event"
-            subtitle="Most chapters run disconnected workshops and hope something sticks. The League gives you repeated, scored practice on the exact skills that get people hired, and gives partners a real way to plug in."
-          />
-
-          <Stagger className="about__grid">
-            {[
-              {
-                icon: Code,
-                title: 'Structured reps',
-                body: 'Coding, building, interviewing, networking, all scored on a rubric every single round, so progress is measurable instead of vibes.',
-              },
-              {
-                icon: Star,
-                title: 'A live leaderboard',
-                body: 'Every submission posts points within a few days. You always know where you stand and what will move you up.',
-              },
-              {
-                icon: UsersThree,
-                title: 'Real partner access',
-                body: 'Partner engineers judge challenges, run workshops, and review resumes across the whole semester, not one info session.',
-              },
-            ].map((item) => (
-              <StaggerItem key={item.title}>
-                <GlassCard interactive title={item.title} className="about__card">
-                  <span className="about__icon" aria-hidden="true">
-                    <item.icon size={26} weight="duotone" />
-                  </span>
-                  <p className="about__card-body">{item.body}</p>
-                </GlassCard>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </div>
-      </section>
-
       {/* ---------------- Challenges ---------------- */}
       <section className="section on-dark" id="challenges">
         <div className="container">
@@ -292,8 +240,7 @@ export default function Landing() {
               <StaggerItem key={challenge.name}>
                 <GlassCard
                   interactive
-                  title={challenge.name}
-                  className={`challenge ${challenge.featured ? 'challenge--featured' : ''}`}
+                                    className={`challenge ${challenge.featured ? 'challenge--featured' : ''}`}
                 >
                   <div className="challenge__head">
                     <span className="challenge__icon" aria-hidden="true">
@@ -304,6 +251,7 @@ export default function Landing() {
                     </Badge>
                   </div>
 
+                  <h3 className="challenge__name">{challenge.name}</h3>
                   <p className="challenge__blurb">{challenge.blurb}</p>
 
                   <div className="challenge__scoring">
@@ -323,68 +271,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ---------------- Scoring ---------------- */}
-      <section className="section section--tint on-dark" id="scoring">
-        <div className="container">
-          <div className="scoring">
-            <Reveal className="scoring__copy">
-              <SectionHeading
-                align="left"
-                eyebrow="How scoring works"
-                title="Weighted so one bad round doesn't sink you"
-                subtitle="Technical, Resume, and Mock Interview are scored individually then averaged across your team. Build and Capstone are scored at the team level directly."
-              />
-              <ul className="scoring__notes">
-                <li>
-                  <CheckCircle size={19} weight="fill" aria-hidden="true" />
-                  <span>Raw points become a percentage of each category's max</span>
-                </li>
-                <li>
-                  <CheckCircle size={19} weight="fill" aria-hidden="true" />
-                  <span>Categories are weighted, then combined into one score out of 100</span>
-                </li>
-                <li>
-                  <CheckCircle size={19} weight="fill" aria-hidden="true" />
-                  <span>Resume and mock interview improvements earn bonus points</span>
-                </li>
-              </ul>
-            </Reveal>
-
-            <Reveal className="scoring__chart" delay={0.12}>
-              <GlassCard title="Weight distribution" className="scoring__card">
-                <ul className="weights">
-                  {[
-                    { label: 'Capstone Hackathon', pct: 40, tone: 'accent' },
-                    { label: 'Technical Skills', pct: 20, tone: 'brand' },
-                    { label: 'Build / Project', pct: 15, tone: 'brand' },
-                    { label: 'Mock Interview', pct: 15, tone: 'brand' },
-                    { label: 'Resume', pct: 10, tone: 'brand' },
-                  ].map((row, i) => (
-                    <li className="weights__row" key={row.label}>
-                      <span className="weights__label">{row.label}</span>
-                      <span className="weights__track">
-                        <motion.span
-                          className={`weights__fill weights__fill--${row.tone}`}
-                          initial={reduce ? false : { width: 0 }}
-                          whileInView={{ width: `${(row.pct / 40) * 100}%` }}
-                          viewport={{ once: true, margin: '-15%' }}
-                          transition={{
-                            duration: 0.85,
-                            delay: 0.1 + i * 0.09,
-                            ease: [0.22, 1, 0.36, 1],
-                          }}
-                        />
-                      </span>
-                      <span className="weights__pct">{row.pct}%</span>
-                    </li>
-                  ))}
-                </ul>
-              </GlassCard>
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
       {/* ---------------- Timeline ---------------- */}
       <section className="section on-dark" id="timeline">
         <div className="container">
@@ -401,39 +287,14 @@ export default function Landing() {
                     <span className="timeline__dot" />
                     <span className="timeline__line" />
                   </div>
-                  <GlassCard interactive title={phase.title} className="timeline__card">
+                  <GlassCard interactive className="timeline__card">
                     <div className="timeline__meta">
                       <span className="timeline__phase">{phase.phase}</span>
                       <Badge tone="neutral">{phase.week}</Badge>
                     </div>
+                    <h3 className="timeline__title">{phase.title}</h3>
                     <p className="timeline__body">{phase.body}</p>
                   </GlassCard>
-                </div>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </div>
-      </section>
-
-      {/* ---------------- Benefits ---------------- */}
-      <section className="section section--tint on-dark">
-        <div className="container">
-          <SectionHeading
-            eyebrow="What you walk away with"
-            title="More than a line on your resume"
-          />
-
-          <Stagger className="benefits" gap={0.055}>
-            {BENEFITS.map((benefit) => (
-              <StaggerItem key={benefit}>
-                <div className="benefits__item">
-                  <CheckCircle
-                    size={21}
-                    weight="fill"
-                    aria-hidden="true"
-                    className="benefits__check"
-                  />
-                  <p>{benefit}</p>
                 </div>
               </StaggerItem>
             ))}
@@ -459,7 +320,7 @@ export default function Landing() {
       <section className="section on-dark">
         <div className="container">
           <Reveal>
-            <GlassCard interactive title="Get started - register.exe" className="cta">
+            <GlassCard interactive className="cta">
               <span className="cta__glow" aria-hidden="true" />
               <Badge tone="accent" icon={Trophy}>
                 Spots are limited

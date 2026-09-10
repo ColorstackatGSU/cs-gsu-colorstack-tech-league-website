@@ -26,10 +26,8 @@ export function Panel({
 
   return (
     <Tag
-      className={[
-        sunken ? 'panel-sunken' : 'panel-raised',
+      className={['window', sunken ? 'panel-sunken' : 'panel-raised',
         interactive ? 'panel--interactive' : '',
-        hasChrome ? 'window' : '',
         className,
       ]
         .filter(Boolean)
@@ -46,7 +44,9 @@ export function Panel({
           </span>
         </div>
       )}
-      {hasChrome ? <div className="window__body">{children}</div> : children}
+      {/* The body wrapper always renders so cards keep consistent padding
+          and layout whether or not they have a title. */}
+      <div className="window__body">{children}</div>
     </Tag>
   );
 }
@@ -190,8 +190,13 @@ export const Select = forwardRef(function Select(
         {children}
       </select>
       <span className="select-wrap__chevron" aria-hidden="true">
-        <svg viewBox="0 0 10 6" width="10" height="6">
-          <path d="M0 0h10L5 6z" fill="currentColor" />
+        <svg viewBox="0 0 16 10" width="16" height="10" fill="none">
+          <path
+            d="M1.5 2C4 5.2 6 8 8 8.2c2 .2 4-3 6.5-6.4"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
         </svg>
       </span>
     </div>

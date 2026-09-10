@@ -1,68 +1,71 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap');
 
 /* ============================================================
-   ColorStack Tech League @ GSU, Vintage Desktop Design Tokens
-   A 1995 desktop OS: teal ground, silver beveled panels,
-   silkscreen type, hard edges. No blur, no gradients, no glass.
+   ColorStack Tech League @ GSU, Sketch Design Tokens
+
+   A friendly hand-drawn style: warm cream paper, soft teal
+   accents, handwritten headings, rounded pill controls,
+   dashed outlines, pencil-like offset shadows.
    ============================================================ */
 
 :root {
-  /* --- Desktop ground --- */
-  --desktop: #0C7B7B;
-  --desktop-deep: #076060;
+  /* --- Paper --- */
+  --paper: #FBF7EF;
+  --paper-warm: #F5EFE2;
+  --paper-deep: #EDE4D3;
+  --card: #FFFDF8;
 
-  /* --- Silver chrome: the panel material --- */
-  --silver: #C6C6C6;
-  --silver-light: #DFDFDF;
-  --silver-dark: #9A9A9A;
-  --silver-darker: #6E6E6E;
+  /* --- Ink: soft graphite, never pure black --- */
+  --ink: #33302B;
+  --ink-soft: #5C574F;
+  --ink-light: #8A8378;
 
-  /* --- Bevel edges. The whole look lives in these four. --- */
-  --bevel-light: #FFFFFF;
-  --bevel-shadow: #808080;
-  --bevel-dark: #3D3D3D;
-  --ink: #1A1A1A;
+  /* --- Teal accent --- */
+  --teal: #4FB3A5;
+  --teal-deep: #2F8478;
+  --teal-soft: #DCF0EC;
+  --teal-line: #A8D9D1;
 
-  /* --- Accent: classic title-bar navy + warm vintage highlights --- */
-  --navy: #00007B;
-  --navy-light: #1010A8;
-  --rust: #A93B1E;
-  --mustard: #C8901E;
-  --olive: #4A6B2A;
-
-  /* --- Text --- */
-  --text: #1A1A1A;
-  --text-muted: #4A4A4A;
-  --text-subtle: #6E6E6E;
-  --text-on-navy: #FFFFFF;
-  --text-on-desktop: #F0F0F0;
+  /* --- Warm secondary accents --- */
+  --clay: #E08A5F;
+  --clay-soft: #FBE7DC;
+  --mustard: #E3B23C;
+  --mustard-soft: #FAF0D7;
 
   /* --- Semantic --- */
-  --success: #1E7A3C;
-  --danger: #B01818;
-  --warning: #9A6B00;
+  --success: #3F9E6E;
+  --success-soft: #DFF2E8;
+  --danger: #D2604F;
+  --danger-soft: #FBE3DF;
+
+  /* --- Text --- */
+  --text: #33302B;
+  --text-muted: #5C574F;
+  --text-subtle: #8A8378;
+  --on-teal: #FFFFFF;
 
   /* --- Type ---
-     Press Start 2P is very wide; only for short headings.
-     Space Mono carries all body copy and UI text. */
-  --font-pixel: 'Press Start 2P', 'Courier New', monospace;
-  --font-body: 'Space Mono', 'Courier New', monospace;
+     Caveat for headings (handwritten), Quicksand for everything
+     else. Quicksand stays legible at form-label sizes where a
+     true handwriting face would not. */
+  --font-hand: 'Caveat', 'Comic Sans MS', cursive;
+  --font-body: 'Quicksand', ui-rounded, system-ui, sans-serif;
 
-  /* Pixel type needs smaller sizes than normal fonts to fit */
-  --fs-xs: 0.72rem;
-  --fs-sm: 0.82rem;
-  --fs-base: 0.94rem;
-  --fs-lg: 1.06rem;
-  --fs-xl: 1.25rem;
+  --fs-xs: 0.8rem;
+  --fs-sm: 0.9rem;
+  --fs-base: 1rem;
+  --fs-lg: 1.12rem;
+  --fs-xl: 1.3rem;
   --fs-2xl: 1.6rem;
   --fs-3xl: 2rem;
 
-  /* Pixel headings, clamped tight, they get wide fast */
-  --fs-pixel-sm: 0.7rem;
-  --fs-pixel-md: 0.95rem;
-  --fs-pixel-lg: clamp(1rem, 2.4vw, 1.5rem);
-  --fs-pixel-xl: clamp(1.3rem, 4vw, 2.4rem);
-  --fs-pixel-hero: clamp(1.5rem, 5.2vw, 3.2rem);
+  /* Handwritten headings run small for their point size, so they
+     are set noticeably larger than the body scale. */
+  --fs-hand-sm: 1.6rem;
+  --fs-hand-md: 2.1rem;
+  --fs-hand-lg: clamp(2.2rem, 4vw, 3rem);
+  --fs-hand-xl: clamp(2.6rem, 5.5vw, 4rem);
+  --fs-hand-hero: clamp(3rem, 7vw, 5.2rem);
 
   /* --- Spacing (8pt rhythm) --- */
   --sp-1: 4px;
@@ -76,22 +79,36 @@
   --sp-9: 96px;
   --sp-10: 128px;
 
-  /* --- Radius: none. Everything is square. --- */
-  --r-sm: 0px;
-  --r-md: 0px;
-  --r-lg: 0px;
-  --r-full: 0px;
+  /* --- Radius: soft and rounded. Pills for controls. --- */
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 30px;
+  --r-full: 999px;
+
+  /* Slightly irregular radii so shapes look drawn, not generated */
+  --r-wobble: 22px 26px 20px 28px;
+  --r-wobble-alt: 26px 20px 28px 22px;
+
+  /* --- Borders + pencil shadows --- */
+  --line: 2px solid var(--ink);
+  --line-soft: 2px solid var(--teal-line);
+  --line-dash: 2px dashed var(--ink-light);
+  --shadow-pencil: 3px 3px 0 var(--ink);
+  --shadow-pencil-sm: 2px 2px 0 var(--ink);
+  --shadow-pencil-lg: 5px 5px 0 var(--ink);
+  --shadow-soft: 0 4px 14px rgba(51, 48, 43, 0.09);
 
   /* --- Motion --- */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --dur-fast: 120ms;
-  --dur-mid: 220ms;
-  --dur-slow: 380ms;
+  --dur-fast: 140ms;
+  --dur-mid: 260ms;
+  --dur-slow: 420ms;
 
   /* --- Layout --- */
-  --container: 1180px;
-  --nav-h: 68px;
+  --container: 1160px;
+  --nav-h: 76px;
 
   --z-base: 0;
   --z-raised: 10;
@@ -124,29 +141,30 @@ html {
 
 body {
   min-height: 100dvh;
-  background: var(--desktop);
+  background: var(--paper);
   color: var(--text);
   font-family: var(--font-body);
   font-size: var(--fs-base);
-  line-height: 1.65;
+  font-weight: 500;
+  line-height: 1.7;
   overflow-x: hidden;
 }
 
-/* Faint CRT scanline texture over the desktop ground.
-   Sits behind all content and never intercepts clicks. */
+/* Faint paper grain so the cream never looks like flat #fff */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-image: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.055) 0px,
-    rgba(0, 0, 0, 0.055) 1px,
-    transparent 1px,
-    transparent 3px
-  );
+  opacity: 0.5;
+  background-image: radial-gradient(
+      circle at 20% 30%,
+      rgba(224, 138, 95, 0.05),
+      transparent 45%
+    ),
+    radial-gradient(circle at 82% 18%, rgba(79, 179, 165, 0.06), transparent 45%),
+    radial-gradient(circle at 60% 88%, rgba(227, 178, 60, 0.05), transparent 45%);
 }
 
 img,
@@ -180,10 +198,10 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-pixel);
-  font-weight: 400;
-  line-height: 1.45;
-  letter-spacing: 0;
+  font-family: var(--font-hand);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
   text-wrap: balance;
 }
 
@@ -197,49 +215,40 @@ p {
 }
 
 /* ============================================================
-   Focus, hard dotted outline, straight out of the era
+   Focus, a drawn teal ring
    ============================================================ */
 
 :focus-visible {
-  outline: 2px dotted var(--ink);
-  outline-offset: 2px;
-}
-
-/* On dark grounds the dotted ink outline disappears; go light */
-.on-dark :focus-visible,
-.nav :focus-visible {
-  outline-color: #fff;
+  outline: 3px dashed var(--teal-deep);
+  outline-offset: 3px;
+  border-radius: var(--r-sm);
 }
 
 ::selection {
-  background: var(--navy);
-  color: #fff;
+  background: var(--teal-soft);
+  color: var(--ink);
 }
 
 /* ============================================================
-   Scrollbar, chunky, beveled, period-correct
+   Scrollbar
    ============================================================ */
 
 ::-webkit-scrollbar {
-  width: 16px;
-  height: 16px;
+  width: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #B0B0B0;
-  border-left: 1px solid var(--silver-dark);
+  background: var(--paper-warm);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--silver);
-  border-top: 2px solid var(--bevel-light);
-  border-left: 2px solid var(--bevel-light);
-  border-right: 2px solid var(--bevel-dark);
-  border-bottom: 2px solid var(--bevel-dark);
+  background: var(--teal-line);
+  border-radius: var(--r-full);
+  border: 3px solid var(--paper-warm);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--silver-light);
+  background: var(--teal);
 }
 
 /* ============================================================

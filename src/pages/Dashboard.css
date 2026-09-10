@@ -1,26 +1,20 @@
 .dash {
   position: relative;
   min-height: 100dvh;
-  padding-top: calc(var(--nav-h) + var(--sp-6));
+  padding-top: calc(var(--nav-h) + var(--sp-7));
   padding-bottom: var(--sp-8);
   overflow: hidden;
 }
 
 .dash__orb {
   position: absolute;
-  top: -4%;
-  right: -6%;
-  width: 340px;
-  height: 340px;
-  opacity: 0.4;
-  background: repeating-linear-gradient(
-    45deg,
-    rgba(255, 255, 255, 0.09) 0px,
-    rgba(255, 255, 255, 0.09) 6px,
-    transparent 6px,
-    transparent 12px
-  );
-  border: 2px solid rgba(255, 255, 255, 0.12);
+  top: -3%;
+  right: -5%;
+  width: 300px;
+  height: 300px;
+  border: 3px dashed var(--teal-line);
+  border-radius: 55% 45% 50% 50%;
+  opacity: 0.45;
   pointer-events: none;
   z-index: 0;
 }
@@ -30,10 +24,10 @@
   z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--sp-4);
+  gap: var(--sp-5);
 }
 
-/* ---------- header: sits on the teal desktop ---------- */
+/* ---------- header ---------- */
 
 .dash__header {
   display: flex;
@@ -45,20 +39,19 @@
 
 .dash__greeting {
   font-family: var(--font-body);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #FFD98A;
+  color: var(--teal-deep);
 }
 
 .dash__name {
-  font-family: var(--font-pixel);
-  font-size: var(--fs-pixel-lg);
-  line-height: 1.5;
-  color: #FFFFFF;
-  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.4);
-  margin-top: var(--sp-2);
+  font-family: var(--font-hand);
+  font-size: var(--fs-hand-lg);
+  line-height: 1.05;
+  color: var(--ink);
+  margin-top: var(--sp-1);
 }
 
 /* ---------- progress ---------- */
@@ -67,6 +60,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
+  /* the track is a rounded bar; keep it clear of the card's own edge */
+  padding-block: var(--sp-5);
 }
 
 .progress__list {
@@ -92,7 +87,7 @@
   gap: var(--sp-3);
   color: var(--text-subtle);
   font-size: var(--fs-sm);
-  font-weight: 700;
+  font-weight: 600;
   flex: 1;
 }
 
@@ -103,62 +98,46 @@
 .progress__icon {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
-  background: var(--silver);
+  background: var(--paper-warm);
   color: var(--text-subtle);
-  border-top: 2px solid var(--bevel-light);
-  border-left: 2px solid var(--bevel-light);
-  border-right: 2px solid var(--bevel-dark);
-  border-bottom: 2px solid var(--bevel-dark);
+  border: 2px dashed var(--ink-light);
+  border-radius: 50%;
 }
 
 .progress__step.is-done .progress__icon {
-  background: #C8E6C8;
+  background: var(--success-soft);
+  border-color: var(--success);
+  border-style: solid;
   color: var(--success);
 }
 
 .progress__num {
-  font-family: var(--font-body);
-  font-size: var(--fs-xs);
+  font-family: var(--font-hand);
+  font-size: 1.15rem;
   font-weight: 700;
 }
 
-.progress__label {
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  font-size: var(--fs-xs);
-}
-
-/* Segmented progress well */
 .progress__track {
-  height: 20px;
-  padding: 2px;
-  background: var(--silver-light);
-  border-top: 2px solid var(--bevel-dark);
-  border-left: 2px solid var(--bevel-dark);
-  border-right: 2px solid var(--bevel-light);
-  border-bottom: 2px solid var(--bevel-light);
+  height: 12px;
+  background: var(--paper-deep);
+  border-radius: var(--r-full);
   overflow: hidden;
 }
 
 .progress__fill {
   height: 100%;
-  background-image: repeating-linear-gradient(
-    90deg,
-    var(--navy) 0px,
-    var(--navy) 8px,
-    transparent 8px,
-    transparent 10px
-  );
+  background: var(--teal);
+  border-radius: var(--r-full);
 }
 
 /* ---------- layout ---------- */
 
 .dash__grid {
   display: grid;
-  gap: var(--sp-4);
+  gap: var(--sp-5);
   grid-template-columns: 1fr;
   align-items: start;
 }
@@ -191,21 +170,21 @@
   gap: var(--sp-3);
   flex-wrap: wrap;
   padding-bottom: var(--sp-3);
-  border-bottom: 2px groove var(--silver-dark);
+  border-bottom: 2px dashed var(--paper-deep);
 }
 
 .panel__title {
-  font-family: var(--font-pixel);
-  font-size: var(--fs-pixel-sm);
-  line-height: 1.6;
+  font-family: var(--font-hand);
+  font-size: var(--fs-hand-sm);
+  line-height: 1.15;
   color: var(--ink);
-  margin-bottom: var(--sp-2);
+  margin-bottom: var(--sp-1);
 }
 
 .panel__subtitle {
   font-size: var(--fs-sm);
   color: var(--text-muted);
-  line-height: 1.65;
+  line-height: 1.7;
   max-width: 46ch;
 }
 
@@ -214,17 +193,17 @@
   align-items: flex-start;
   gap: var(--sp-2);
   font-size: var(--fs-sm);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--danger);
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
 .panel__error svg {
   flex-shrink: 0;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
-/* ---------- dropzone: a sunken well ---------- */
+/* ---------- dropzone ---------- */
 
 .dropzone {
   display: flex;
@@ -232,37 +211,35 @@
   align-items: center;
   text-align: center;
   gap: var(--sp-3);
-  padding: var(--sp-6) var(--sp-4);
-  background: var(--silver-light);
-  border: 2px dashed var(--silver-darker);
-  box-shadow: inset 1px 1px 0 var(--bevel-shadow);
+  padding: var(--sp-7) var(--sp-4);
+  background: var(--paper-warm);
+  border: 3px dashed var(--ink-light);
+  border-radius: var(--r-lg);
+  transition:
+    border-color var(--dur-mid) var(--ease-out),
+    background var(--dur-mid) var(--ease-out);
 }
 
 .dropzone.is-dragging {
-  border-color: var(--navy);
-  border-style: solid;
-  background: #E8E8F5;
+  border-color: var(--teal);
+  background: var(--teal-soft);
 }
 
 .dropzone__icon {
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
-  background: var(--navy);
-  color: #FFFFFF;
-  border-top: 2px solid var(--bevel-light);
-  border-left: 2px solid var(--bevel-light);
-  border-right: 2px solid var(--bevel-dark);
-  border-bottom: 2px solid var(--bevel-dark);
+  width: 62px;
+  height: 62px;
+  background: var(--teal-soft);
+  color: var(--teal-deep);
+  border: 2px solid var(--teal-line);
+  border-radius: 52% 48% 45% 55%;
 }
 
 .dropzone__title {
-  font-family: var(--font-body);
-  font-size: var(--fs-sm);
+  font-family: var(--font-hand);
+  font-size: 1.45rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
   color: var(--ink);
 }
 
@@ -272,33 +249,29 @@
   margin-top: calc(var(--sp-2) * -1);
 }
 
-/* ---------- uploaded file row ---------- */
+/* ---------- uploaded file ---------- */
 
 .resume-file {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
   flex-wrap: wrap;
-  padding: var(--sp-3);
-  background: #DCEEDC;
-  border-top: 2px solid var(--bevel-dark);
-  border-left: 2px solid var(--bevel-dark);
-  border-right: 2px solid var(--bevel-light);
-  border-bottom: 2px solid var(--bevel-light);
+  padding: var(--sp-4);
+  background: var(--success-soft);
+  border: 2px solid var(--success);
+  border-radius: var(--r-md);
 }
 
 .resume-file__icon {
   display: grid;
   place-items: center;
-  width: 46px;
-  height: 46px;
+  width: 50px;
+  height: 50px;
   flex-shrink: 0;
-  background: var(--silver);
-  color: var(--rust);
-  border-top: 2px solid var(--bevel-light);
-  border-left: 2px solid var(--bevel-light);
-  border-right: 2px solid var(--bevel-dark);
-  border-bottom: 2px solid var(--bevel-dark);
+  background: #fff;
+  color: var(--clay);
+  border: 2px solid var(--clay);
+  border-radius: var(--r-sm);
 }
 
 .resume-file__meta {
@@ -340,32 +313,31 @@
 .app-done__icon {
   display: grid;
   place-items: center;
-  width: 52px;
-  height: 52px;
-  background: var(--mustard);
-  color: var(--ink);
-  border-top: 2px solid var(--bevel-light);
-  border-left: 2px solid var(--bevel-light);
-  border-right: 2px solid var(--bevel-dark);
-  border-bottom: 2px solid var(--bevel-dark);
+  width: 58px;
+  height: 58px;
+  background: var(--mustard-soft);
+  color: #A97F16;
+  border: 2px solid var(--mustard);
+  border-radius: 50% 45% 55% 48%;
 }
 
 .app-done__icon {
-  background: #C8E6C8;
-  color: var(--success);
+  background: var(--teal-soft);
+  border-color: var(--teal);
+  color: var(--teal-deep);
 }
 
 .app-start__body,
 .app-done__body {
   color: var(--text-muted);
-  line-height: 1.7;
+  line-height: 1.75;
   font-size: var(--fs-sm);
 }
 
 .app-done__title {
-  font-family: var(--font-pixel);
-  font-size: var(--fs-pixel-sm);
-  line-height: 1.6;
+  font-family: var(--font-hand);
+  font-size: var(--fs-hand-sm);
+  line-height: 1.15;
   color: var(--ink);
 }
 
@@ -383,29 +355,25 @@
   align-items: center;
   gap: 5px;
   font-size: var(--fs-xs);
-  font-weight: 700;
-  text-transform: uppercase;
+  font-weight: 600;
   color: var(--text-muted);
-  padding: 4px 9px;
-  background: var(--silver);
-  border-top: 1.5px solid var(--bevel-dark);
-  border-left: 1.5px solid var(--bevel-dark);
-  border-right: 1.5px solid var(--bevel-light);
-  border-bottom: 1.5px solid var(--bevel-light);
+  padding: 4px 12px;
+  background: var(--paper-warm);
+  border: 2px dashed var(--ink-light);
+  border-radius: var(--r-full);
 }
 
 .app-start__list svg {
-  color: var(--rust);
+  color: var(--clay);
 }
 
 /* ---------- challenges strip ---------- */
 
 .dash__section-title {
-  font-family: var(--font-pixel);
-  font-size: var(--fs-pixel-md);
-  line-height: 1.5;
-  color: #FFFFFF;
-  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4);
+  font-family: var(--font-hand);
+  font-size: var(--fs-hand-md);
+  line-height: 1.15;
+  color: var(--ink);
   margin-top: var(--sp-4);
 }
 
@@ -423,12 +391,12 @@
 
 @media (min-width: 1000px) {
   .dash__challenges {
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
 }
 
 .mini-card {
-  padding: var(--sp-3);
+  padding: var(--sp-4);
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
@@ -436,25 +404,24 @@
 }
 
 .mini-card__name {
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  line-height: 1.4;
+  line-height: 1.35;
   color: var(--ink);
   flex-grow: 1;
 }
 
 .mini-card__weight {
-  font-family: var(--font-pixel);
-  font-size: 0.6rem;
-  color: var(--navy);
+  font-family: var(--font-hand);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--teal-deep);
   font-variant-numeric: tabular-nums;
 }
 
 .dash__footnote {
   font-size: var(--fs-xs);
-  color: var(--text-on-desktop);
-  line-height: 1.65;
+  color: var(--text-subtle);
+  line-height: 1.7;
   max-width: 68ch;
 }

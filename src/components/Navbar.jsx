@@ -7,9 +7,8 @@ import { Button } from './ui';
 import './Navbar.css';
 
 const PUBLIC_LINKS = [
-  { to: '/#about', label: 'About' },
+  { to: '/#partners', label: 'Partners' },
   { to: '/#challenges', label: 'Challenges' },
-  { to: '/#scoring', label: 'Scoring' },
   { to: '/#timeline', label: 'Timeline' },
 ];
 

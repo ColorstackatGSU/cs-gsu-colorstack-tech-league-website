@@ -114,7 +114,7 @@ export default function Login() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
         >
-          <GlassCard title="Log in - TechLeague.exe" className="auth__card">
+          <GlassCard className="auth__card">
             <div className="auth__card-head">
               <h2 className="auth__title">Log in</h2>
               <p className="auth__subtitle">

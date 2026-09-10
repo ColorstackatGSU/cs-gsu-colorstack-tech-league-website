@@ -142,7 +142,7 @@ export default function Dashboard() {
 
         {/* ---------- progress ---------- */}
         <Reveal delay={0.06}>
-          <GlassCard title="Your progress" className="progress">
+          <GlassCard className="progress">
             <ol className="progress__list">
               {steps.map((step, i) => (
                 <li
@@ -175,7 +175,7 @@ export default function Dashboard() {
         <div className="dash__grid">
           {/* ---------- resume ---------- */}
           <Reveal delay={0.1} className="dash__col">
-            <GlassCard title="Resume - upload.exe" className="panel">
+            <GlassCard className="panel">
               <div className="panel__head">
                 <div>
                   <h2 className="panel__title">Your resume</h2>
@@ -289,7 +289,7 @@ export default function Dashboard() {
 
           {/* ---------- application ---------- */}
           <Reveal delay={0.16} className="dash__col">
-            <GlassCard title="Application - apply.exe" className="panel">
+            <GlassCard className="panel">
               <div className="panel__head">
                 <div>
                   <h2 className="panel__title">League application</h2>

@@ -23,22 +23,27 @@ npm run lint     # oxlint
 
 ## Design
 
-A vintage desktop-OS look: teal desktop ground, silver beveled panels with
-window title bars, square corners, and pixel type (Press Start 2P for headings,
-Space Mono for body).
+A friendly hand-drawn sketch style: warm cream paper, soft teal accents,
+handwritten headings (Caveat) over a rounded readable body face (Quicksand),
+rounded pill controls, dashed outlines, and pencil-like hard offset shadows.
 
 All design decisions live as CSS custom properties in
-[src/index.css](src/index.css), color, type scale, spacing, motion. Components
-never hardcode a hex value, so retheming happens in one file.
+[src/index.css](src/index.css) - color, type scale, spacing, motion.
+Components never hardcode a hex value, so retheming happens in one file.
 
-The bevel effect is four borders (light top-left, dark bottom-right) plus inset
-shadows. Buttons invert those borders on `:active` so they physically depress.
+Two details carry most of the character: cards use slightly uneven corner
+radii (`--r-wobble`) so shapes read as drawn rather than generated, and
+buttons sit on a hard offset shadow that they sink onto when pressed.
+
+Body copy uses Quicksand rather than a true handwriting face because
+handwriting becomes unreadable at form-label sizes. Caveat is reserved for
+headings, numbers, and short labels.
 
 ## Routes
 
 | Route | Access | What it does |
 |---|---|---|
-| `/` | public | Landing hub: program overview, five challenges, scoring weights, timeline |
+| `/` | public | Landing hub: hero, five challenges, timeline, partners, apply CTA |
 | `/login` | public | Username + password sign-in |
 | `/signup` | public | Account creation with password strength meter |
 | `/dashboard` | auth | Progress tracker, resume upload, application status |

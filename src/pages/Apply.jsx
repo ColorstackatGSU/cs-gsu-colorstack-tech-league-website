@@ -221,7 +221,7 @@ export default function Apply() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <GlassCard title="Received - confirmation.exe" className="apply__done">
+            <GlassCard className="apply__done">
               <span className="apply__done-icon" aria-hidden="true">
                 <Clock size={44} weight="duotone" />
               </span>
@@ -339,7 +339,7 @@ export default function Apply() {
           </div>
         </div>
 
-        <GlassCard title={`Application - step ${step + 1} of ${STEPS.length}`} className="apply__card">
+        <GlassCard className="apply__card">
           <ErrorSummary errors={errors} onJump={jumpToField} headingRef={summaryRef} />
 
           <AnimatePresence mode="wait">
