@@ -91,6 +91,7 @@ const GRAD_TERMS = buildGradTerms();
 const EMPTY = {
   fullName: '',
   schoolEmail: '',
+  personalEmail: '',
   year: '',
   major: '',
   gradTerm: '',
@@ -104,7 +105,7 @@ const EMPTY = {
 };
 
 const STEPS = [
-  { id: 0, title: 'About you', fields: ['fullName', 'schoolEmail'] },
+  { id: 0, title: 'About you', fields: ['fullName', 'schoolEmail', 'personalEmail'] },
   { id: 1, title: 'Academics', fields: ['year', 'major', 'gradTerm', 'interest'] },
   { id: 2, title: 'Short answers', fields: ['whyJoin', 'goals', 'experience'] },
   { id: 3, title: 'Logistics', fields: ['teamPref', 'commitment', 'consentShare'] },
@@ -146,6 +147,18 @@ export default function Apply() {
         found.schoolEmail = 'Enter a valid email address.';
       } else if (!/\.edu$/i.test(v.schoolEmail.trim())) {
         found.schoolEmail = 'Please use your school (.edu) email address.';
+      }
+
+      if (!v.personalEmail.trim()) {
+        found.personalEmail = 'Enter a personal email.';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.personalEmail.trim())) {
+        found.personalEmail = 'Enter a valid email address.';
+      } else if (
+        v.personalEmail.trim().toLowerCase() === v.schoolEmail.trim().toLowerCase()
+      ) {
+        // A student address can lapse after graduation, which is exactly when
+        // recruiters follow up, so the two have to differ.
+        found.personalEmail = 'Use a different address from your school email.';
       }
     }
 
@@ -229,8 +242,10 @@ export default function Apply() {
               <p className="apply__done-body">
                 Thanks, {values.fullName.split(' ')[0] || 'for applying'}. E-board reviews
                 applications on a rolling basis and will email a decision to{' '}
-                <strong className="wrap-anywhere">{values.schoolEmail}</strong>. Spots are
-                limited, so not every applicant is accepted each cycle.
+                <strong className="wrap-anywhere">
+                  {values.personalEmail || values.schoolEmail}
+                </strong>
+                . Spots are limited, so not every applicant is accepted each cycle.
               </p>
 
               <div className="apply__recap">
@@ -239,6 +254,7 @@ export default function Apply() {
                   {[
                     ['Name', values.fullName],
                     ['School email', values.schoolEmail],
+                    ['Personal email', values.personalEmail],
                     ['Year', values.year],
                     ['Major', values.major],
                     ['Graduating', values.gradTerm],
@@ -384,7 +400,7 @@ export default function Apply() {
                         name="schoolEmail"
                         type="email"
                         inputMode="email"
-                        autoComplete="email"
+                        autoComplete="school email"
                         autoCapitalize="none"
                         spellCheck="false"
                         placeholder="jrivera1@student.gsu.edu"
@@ -392,6 +408,31 @@ export default function Apply() {
                         invalid={Boolean(errors.schoolEmail)}
                         aria-describedby={errors.schoolEmail ? errorId : helperId}
                         onChange={(e) => set('schoolEmail', e.target.value)}
+                      />
+                    )}
+                  </Field>
+
+                  <Field
+                    label="Personal email"
+                    htmlFor="personalEmail"
+                    required
+                    error={errors.personalEmail}
+                    helper="Where we'll send decisions and program updates. Your .edu address stops working after you graduate."
+                  >
+                    {({ errorId, helperId }) => (
+                      <TextInput
+                        id="personalEmail"
+                        name="personalEmail"
+                        type="email"
+                        inputMode="email"
+                        autoComplete="home email"
+                        autoCapitalize="none"
+                        spellCheck="false"
+                        placeholder="jordan.rivera@gmail.com"
+                        value={values.personalEmail}
+                        invalid={Boolean(errors.personalEmail)}
+                        aria-describedby={errors.personalEmail ? errorId : helperId}
+                        onChange={(e) => set('personalEmail', e.target.value)}
                       />
                     )}
                   </Field>

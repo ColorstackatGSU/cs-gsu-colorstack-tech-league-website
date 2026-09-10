@@ -7,9 +7,9 @@ import { Button } from './ui';
 import './Navbar.css';
 
 const PUBLIC_LINKS = [
-  { to: '/#partners', label: 'Partners' },
   { to: '/#challenges', label: 'Challenges' },
   { to: '/#timeline', label: 'Timeline' },
+  { to: '/#partners', label: 'Partners' },
 ];
 
 export default function Navbar() {
@@ -51,7 +51,10 @@ export default function Navbar() {
     };
   }, [menuOpen]);
 
+  const closeMenu = () => setMenuOpen(false);
+
   function handleSignOut() {
+    setMenuOpen(false);
     signOut();
     navigate('/');
   }
@@ -60,10 +63,6 @@ export default function Navbar() {
 
   return (
     <>
-      <a className="skip-link" href="#main">
-        Skip to main content
-      </a>
-
       <header className={`nav ${scrolled ? 'nav--scrolled' : ''}`}>
         <div className="nav__inner container">
           <Link to="/" className="nav__brand" aria-label="ColorStack Tech League, home">
@@ -129,7 +128,7 @@ export default function Navbar() {
           </div>
 
           <button
-            className="nav__burger"
+            className={`nav__burger ${menuOpen ? 'nav__burger--open' : ''}`}
             onClick={() => setMenuOpen((v) => !v)}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
@@ -153,6 +152,7 @@ export default function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
+            onClick={() => setMenuOpen(false)}
           >
             <motion.nav
               className="mobile-menu__panel"
@@ -161,20 +161,28 @@ export default function Navbar() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -12, opacity: 0 }}
               transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              onClick={(e) => e.stopPropagation()}
             >
               {onLanding &&
                 PUBLIC_LINKS.map((link) => (
-                  <a key={link.to} href={link.to} className="mobile-menu__link">
+                  <a
+                    key={link.to}
+                    href={link.to}
+                    className="mobile-menu__link"
+                    onClick={closeMenu}
+                  >
                     {link.label}
                   </a>
                 ))}
 
+              {onLanding && <span className="mobile-menu__divider" aria-hidden="true" />}
+
               {isAuthed ? (
                 <>
-                  <Link to="/dashboard" className="mobile-menu__link">
+                  <Link to="/dashboard" className="mobile-menu__link" onClick={closeMenu}>
                     Dashboard
                   </Link>
-                  <Link to="/apply" className="mobile-menu__link">
+                  <Link to="/apply" className="mobile-menu__link" onClick={closeMenu}>
                     Application
                   </Link>
                   <button className="mobile-menu__link" onClick={handleSignOut}>
@@ -183,10 +191,14 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  <Link to="/login" className="mobile-menu__link">
+                  <Link to="/login" className="mobile-menu__link" onClick={closeMenu}>
                     Log in
                   </Link>
-                  <Link to="/signup" className="mobile-menu__link mobile-menu__link--cta">
+                  <Link
+                    to="/signup"
+                    className="mobile-menu__link mobile-menu__link--cta"
+                    onClick={closeMenu}
+                  >
                     Apply now
                   </Link>
                 </>

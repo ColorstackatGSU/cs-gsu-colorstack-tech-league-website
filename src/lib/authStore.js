@@ -76,6 +76,7 @@ const DEMO_PASSWORD = 'demo1234';
 const DEMO_APPLICATION = {
   fullName: 'Jordan Rivera',
   schoolEmail: 'jrivera1@student.gsu.edu',
+  personalEmail: 'jordan.rivera@gmail.com',
   year: 'Sophomore',
   major: 'Computer Science',
   gradTerm: 'Spring 2028',

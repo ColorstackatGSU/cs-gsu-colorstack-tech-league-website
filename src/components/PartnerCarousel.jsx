@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
 import { useReducedMotion } from 'framer-motion';
-import { Pause, Play } from '@phosphor-icons/react';
 import './PartnerCarousel.css';
 
 /**
@@ -19,15 +18,16 @@ import './PartnerCarousel.css';
  * of sitting as a colored square inside a white box.
  *
  * Either way the whole logo is always visible, nothing is ever cropped.
+ *
+ * The marquee pauses on hover and on keyboard focus, and doesn't run at all
+ * under prefers-reduced-motion.
  */
 const PARTNERS = [
   // `bleed` = the logo file has its own solid background baked in, so it
   // fills the tile edge to edge instead of floating on white.
   { name: 'ColorStack @ GSU', logo: '/partners/colorstack.png', bleed: true },
   { name: 'ProGSU', logo: '/partners/progsu.png', bleed: true },
-  // TODO: drop the CS Club logo in public/partners/ and add `logo:` here.
-  // Until then this renders as a text tile.
-  { name: 'CS Club' },
+  { name: 'CS Club', logo: '/partners/csclub.png' },
   { name: 'NSBE', logo: '/partners/nsbe.png' },
 ];
 
@@ -94,23 +94,6 @@ export default function PartnerCarousel({ partners = PARTNERS }) {
         </ul>
       </div>
 
-      {/* Auto-scrolling content needs a stop control (WCAG 2.2.2). Hidden when
-          reduced motion already stopped it. */}
-      {!reduce && (
-        <button
-          type="button"
-          className="partners__toggle"
-          onClick={() => setPaused((p) => !p)}
-          aria-pressed={paused}
-        >
-          {paused ? (
-            <Play size={14} weight="fill" aria-hidden="true" />
-          ) : (
-            <Pause size={14} weight="fill" aria-hidden="true" />
-          )}
-          <span>{paused ? 'Resume scrolling' : 'Pause scrolling'}</span>
-        </button>
-      )}
     </div>
   );
 }

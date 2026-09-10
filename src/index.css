@@ -64,8 +64,8 @@
   --fs-hand-sm: 1.6rem;
   --fs-hand-md: 2.1rem;
   --fs-hand-lg: clamp(2.2rem, 4vw, 3rem);
-  --fs-hand-xl: clamp(2.6rem, 5.5vw, 4rem);
-  --fs-hand-hero: clamp(3rem, 7vw, 5.2rem);
+  --fs-hand-xl: clamp(2.1rem, 6.5vw, 4rem);
+  --fs-hand-hero: clamp(2.4rem, 8.5vw, 5.2rem);
 
   /* --- Spacing (8pt rhythm) --- */
   --sp-1: 4px;

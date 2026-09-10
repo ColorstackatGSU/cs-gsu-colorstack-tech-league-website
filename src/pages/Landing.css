@@ -31,6 +31,27 @@
   opacity: 0.32;
 }
 
+/* On a phone the doodles are wider than the margins, so they end up sitting
+   behind the copy instead of beside it. Shrink them and tuck them further
+   off-canvas; they read as texture at the edge rather than clutter. */
+@media (max-width: 767px) {
+  .landing__orb--one {
+    top: 6%;
+    left: -22%;
+    width: 150px;
+    height: 150px;
+    opacity: 0.35;
+  }
+
+  .landing__orb--two {
+    top: 58%;
+    right: -24%;
+    width: 170px;
+    height: 170px;
+    opacity: 0.22;
+  }
+}
+
 /* ============================================================
    Hero
    ============================================================ */
@@ -43,6 +64,21 @@
   padding-top: calc(var(--nav-h) + var(--sp-7));
   padding-bottom: var(--sp-8);
   z-index: 1;
+}
+
+/* The hero card is taller than a phone viewport once the stats grid wraps to
+   two rows. `min-height` (not `height`) lets it grow, and dropping the
+   absolutely positioned scroll hint stops it colliding with the last row. */
+@media (max-width: 767px) {
+  .hero {
+    min-height: auto;
+    padding-top: calc(var(--nav-h) + var(--sp-5));
+    padding-bottom: var(--sp-7);
+  }
+
+  .hero__scroll-hint {
+    display: none;
+  }
 }
 
 .hero__inner {
@@ -77,6 +113,16 @@
   max-width: 18ch;
   margin-inline: auto;
   padding-bottom: var(--sp-4);
+  text-wrap: balance;
+}
+
+@media (max-width: 767px) {
+  /* 18ch of a 2.4rem hand face is wider than a phone, so the cap only forced
+     ragged breaks. Let the line box use the full column instead. */
+  .hero__title {
+    max-width: 100%;
+    line-height: 1.12;
+  }
 }
 
 /* Hand-drawn underline swoosh beneath the headline */
@@ -216,6 +262,45 @@
   grid-template-columns: 1fr;
 }
 
+/* ---------- mobile: a swipeable rail instead of a tall stack ----------
+
+   Five full-width cards stacked vertically is a very long scroll on a phone.
+   Below 640px the grid becomes a single horizontal row that snaps card to
+   card. Negative margins let the rail bleed to the screen edges while the
+   padding keeps the first and last card aligned with the container's gutter,
+   so a partially visible next card hints that the row scrolls. */
+@media (max-width: 639px) {
+  .challenges__grid {
+    grid-auto-flow: column;
+    grid-auto-columns: 78%;
+    grid-template-columns: none;
+    gap: var(--sp-4);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    /* Room for the cards' pencil shadow, which sits bottom-right */
+    padding: var(--sp-1) var(--sp-4) var(--sp-4);
+    margin-inline: calc(var(--sp-4) * -1);
+    scrollbar-width: none;
+  }
+
+  .challenges__grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* StaggerItem wraps each card, so the height chain has to reach through it
+     for the cards in a row to line up. */
+  .challenges__grid > * {
+    scroll-snap-align: center;
+    display: flex;
+    height: auto;
+  }
+
+  .challenges__grid > * > .challenge {
+    width: 100%;
+  }
+}
+
 @media (min-width: 640px) {
   .challenges__grid {
     grid-template-columns: repeat(2, 1fr);
@@ -342,6 +427,8 @@
   gap: var(--sp-4);
 }
 
+
+
 .timeline__marker {
   display: flex;
   flex-direction: column;
@@ -365,7 +452,10 @@
   margin-top: var(--sp-2);
 }
 
-.timeline__row:last-child .timeline__line {
+/* Only the final phase has no connector. Each row is wrapped in a motion div
+   by <StaggerItem>, so `.timeline__row:last-child` would match every row,
+   hiding the line everywhere; the check has to be on the wrapper. */
+.timeline > *:last-child .timeline__line {
   display: none;
 }
 
@@ -402,6 +492,78 @@
   color: var(--text-muted);
   font-size: var(--fs-sm);
   line-height: 1.7;
+}
+
+/* ---------- mobile: the phases run left-to-right ----------
+
+   Five stacked phase cards make for a very long scroll, and a timeline reads
+   naturally along a horizontal axis anyway. Below 768px the column becomes a
+   snapping rail: the marker rotates so the dot sits above each card with the
+   dashed connector running between them, left to right. */
+@media (max-width: 767px) {
+  .timeline {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 78%;
+    gap: var(--sp-4);
+    max-width: none;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    padding: var(--sp-1) var(--sp-4) var(--sp-4);
+    margin-inline: calc(var(--sp-4) * -1);
+    scrollbar-width: none;
+  }
+
+  .timeline::-webkit-scrollbar {
+    display: none;
+  }
+
+  .timeline > * {
+    scroll-snap-align: center;
+    display: flex;
+  }
+
+  /* Marker on top, card beneath, instead of marker beside card. The row is a
+     flex column so the marker keeps its own height and the card takes the
+     rest, matching every other card in the rail. */
+  .timeline__row {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
+    gap: var(--sp-3);
+    width: 100%;
+  }
+
+  /* Dot at the left edge with the connector running right to the next card,
+     so the rail reads as one continuous line. `align-items` has to be reset
+     from the vertical layout's `center`, which would centre the dot. */
+  .timeline__marker {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 0;
+    height: 16px;
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  .timeline__line {
+    width: auto;
+    height: 0;
+    flex: 1 1 auto;
+    border-left: 0;
+    border-top: 2px dashed var(--teal-line);
+    margin-top: 0;
+    margin-left: var(--sp-2);
+  }
+
+
+  .timeline__card {
+    margin-bottom: 0;
+    width: 100%;
+    flex: 1 1 auto;
+  }
 }
 
 /* ============================================================

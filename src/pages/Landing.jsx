@@ -11,7 +11,13 @@ import {
   Sparkle,
 } from '@phosphor-icons/react';
 import { GlassCard, Button, Badge, SectionHeading } from '../components/ui';
-import { Reveal, Stagger, StaggerItem, RevealText } from '../components/Motion';
+import {
+  Reveal,
+  Stagger,
+  StaggerItem,
+  RevealText,
+  useIsSmallScreen,
+} from '../components/Motion';
 import PartnerCarousel from '../components/PartnerCarousel';
 import './Landing.css';
 
@@ -76,7 +82,7 @@ const CHALLENGES = [
     weight: '40%',
     points: '150 pts',
     blurb:
-      'The centerpiece. A themed prompt, a fixed afternoon build window, then live demos to partner reps and e-board.',
+      'The centerpiece. Every partner org in one room on Dec 4: a themed prompt, a six-hour build window, then live demos to partner reps and e-board.',
     scoring: [
       'Functionality: 50',
       'Technical execution: 30',
@@ -90,34 +96,46 @@ const CHALLENGES = [
 
 const PHASES = [
   {
-    phase: 'Phase 1',
-    week: 'Week 1',
-    title: 'Kickoff',
-    body: 'Register solo or in teams of 2-4. Teams lock after kickoff so scoring stays consistent. Everyone gets a scorecard.',
+    phase: 'Kickoff',
+    week: 'Sept 30',
+    title: 'Build Night & Mock Interviews',
+    body: 'A mini build night paired with mock interviews. Register solo or in teams of 2-4, meet the other orgs, and get your scorecard. Teams lock after kickoff so scoring stays consistent.',
   },
   {
     phase: 'Phase 2',
-    week: 'Weeks 2-6',
-    title: 'Challenge Rounds',
-    body: 'A new challenge drops each week or two. Submit proof, get scored on the rubric, watch points post to the leaderboard.',
+    week: 'October',
+    title: 'Internal Challenge 1',
+    body: 'The first scored challenge, run with a partner organization. Submit proof, get scored on the rubric, and watch your points post to the leaderboard.',
   },
   {
     phase: 'Phase 3',
-    week: 'Week of 9/28',
-    title: 'Capstone Mini Hackathon',
-    body: 'One afternoon. A themed prompt at the start, 3-4 hours to build, then a live demo and Q&A with the judging panel.',
+    week: 'November',
+    title: 'Challenge Night',
+    body: 'A live head-to-head night. Everyone competes in the same room on the same prompt, with points on the board that evening.',
   },
   {
     phase: 'Phase 4',
-    week: 'Wrap-up',
-    title: 'Awards',
-    body: 'Points total up, final standings go live, prizes go out, and top performers get shared with partner recruiters, with your consent.',
+    week: 'November',
+    title: 'Internal Challenge 2',
+    body: 'The second scored challenge, run with a different partner organization, so you get reps in front of a new set of mentors and judges.',
+  },
+  {
+    phase: 'Finale',
+    week: 'Dec 4 · 12-6pm',
+    title: 'Mini Hackathon',
+    body: 'The centerpiece. Every partner org together in one room with its own sponsors: a themed prompt at noon, six hours to build, then live demos and Q&A with the judging panel. Final standings and prizes follow.',
   },
 ];
 
 export default function Landing() {
   const heroRef = useRef(null);
   const reduce = useReducedMotion();
+  const small = useIsSmallScreen();
+
+  // Scroll-linked motion is desktop-only. On a phone the viewport is short
+  // enough that a drifting, fading hero still covers the section below it,
+  // which is what made the sections look like they were overlapping.
+  const still = reduce || small;
 
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -139,19 +157,19 @@ export default function Landing() {
       <motion.div
         className="landing__orb landing__orb--one"
         aria-hidden="true"
-        style={reduce ? undefined : { y: orbOneY }}
+        style={still ? undefined : { y: orbOneY }}
       />
       <motion.div
         className="landing__orb landing__orb--two"
         aria-hidden="true"
-        style={reduce ? undefined : { y: orbTwoY }}
+        style={still ? undefined : { y: orbTwoY }}
       />
 
       {/* ---------------- Hero ---------------- */}
       <section className="hero" ref={heroRef}>
         <motion.div
           className="hero__inner container"
-          style={reduce ? undefined : { y: heroY, opacity: heroOpacity }}
+          style={still ? undefined : { y: heroY, opacity: heroOpacity }}
         >
           <GlassCard className="hero__window">
           <motion.div
@@ -276,7 +294,7 @@ export default function Landing() {
         <div className="container">
           <SectionHeading
             eyebrow="How it runs"
-            title="Four phases, one semester"
+            title="Five milestones, one semester"
           />
 
           <Stagger className="timeline" gap={0.09}>
