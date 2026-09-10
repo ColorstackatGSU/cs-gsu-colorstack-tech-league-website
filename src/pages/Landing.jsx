@@ -326,7 +326,7 @@ export default function Landing() {
           <SectionHeading
             eyebrow="Built together"
             title="This isn't just a ColorStack thing"
-            subtitle="The Tech League runs on a partnership between ColorStack, CS Club, ProGSU, and NSBE. Each org brings its own members, mentors, and judges, which is why the League reaches further than any one club could on its own."
+            subtitle="The Tech League runs on a partnership between ColorStack, CS Club, ProgSU, and NSBE. Each org brings its own members, mentors, and judges, which is why the League reaches further than any one club could on its own."
           />
           <Reveal>
             <PartnerCarousel />
