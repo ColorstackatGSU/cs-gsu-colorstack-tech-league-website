@@ -1,0 +1,260 @@
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: var(--sp-4);
+  z-index: var(--z-toast);
+  padding: var(--sp-3) var(--sp-5);
+  background: var(--mustard);
+  color: var(--ink);
+  font-weight: 700;
+  border: 2px solid var(--ink);
+  transition: top var(--dur-fast) var(--ease-out);
+}
+
+.skip-link:focus {
+  top: var(--sp-3);
+}
+
+/* The nav is a fixed desktop menu bar: solid silver, hard bottom edge */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-sticky);
+  min-height: var(--nav-h);
+  display: flex;
+  align-items: center;
+  background: var(--silver);
+  border-bottom: 2px solid var(--bevel-dark);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--bevel-light);
+}
+
+/* No scroll-state change — a menu bar is always solid */
+.nav--scrolled {
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3), inset 0 1px 0 var(--bevel-light);
+}
+
+.nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  width: 100%;
+}
+
+.nav__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-shrink: 0;
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) 0;
+}
+
+/* The logo is white-on-royal-blue, so it sits in an inset well
+   rather than floating on the silver bar. */
+.nav__logo {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 2px;
+  background: var(--silver-light);
+  border-top: 2px solid var(--bevel-dark);
+  border-left: 2px solid var(--bevel-dark);
+  border-right: 2px solid var(--bevel-light);
+  border-bottom: 2px solid var(--bevel-light);
+  flex-shrink: 0;
+}
+
+.nav__logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: auto;
+}
+
+.nav__brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.1;
+}
+
+.nav__brand-text strong {
+  font-family: var(--font-pixel);
+  font-size: 0.7rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.nav__brand-text span {
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--navy);
+}
+
+.nav__links {
+  display: none;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-left: auto;
+}
+
+/* Menu-bar items: flat until hover, then they raise like a real menu */
+.nav__link {
+  position: relative;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  padding: var(--sp-2) var(--sp-3);
+  border: 2px solid transparent;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.nav__link:hover {
+  background: var(--navy);
+  color: var(--text-on-navy);
+}
+
+.nav__link--active {
+  background: var(--silver-light);
+  border-top-color: var(--bevel-dark);
+  border-left-color: var(--bevel-dark);
+  border-right-color: var(--bevel-light);
+  border-bottom-color: var(--bevel-light);
+}
+
+.nav__link--active:hover {
+  background: var(--navy);
+}
+
+.nav__actions {
+  display: none;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.nav__user {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--ink);
+  padding: var(--sp-2) var(--sp-3);
+  max-width: 180px;
+  background: var(--silver-light);
+  border-top: 2px solid var(--bevel-dark);
+  border-left: 2px solid var(--bevel-dark);
+  border-right: 2px solid var(--bevel-light);
+  border-bottom: 2px solid var(--bevel-light);
+}
+
+.nav__user span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav__user svg {
+  color: var(--navy);
+  flex-shrink: 0;
+}
+
+.nav__burger {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 40px;
+  margin-left: auto;
+  color: var(--ink);
+  background: var(--silver);
+  border-top: 2px solid var(--bevel-light);
+  border-left: 2px solid var(--bevel-light);
+  border-right: 2px solid var(--bevel-dark);
+  border-bottom: 2px solid var(--bevel-dark);
+}
+
+.nav__burger:active {
+  border-top-color: var(--bevel-dark);
+  border-left-color: var(--bevel-dark);
+  border-right-color: var(--bevel-light);
+  border-bottom-color: var(--bevel-light);
+}
+
+@media (min-width: 940px) {
+  .nav__links,
+  .nav__actions {
+    display: flex;
+  }
+
+  .nav__burger {
+    display: none;
+  }
+}
+
+/* ---------- mobile menu: a dropdown panel, not a full overlay ---------- */
+
+.mobile-menu {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background: rgba(0, 0, 0, 0.5);
+  padding-top: var(--nav-h);
+}
+
+.mobile-menu__panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--silver);
+  border-bottom: 2px solid var(--bevel-dark);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+  padding: var(--sp-2);
+}
+
+.mobile-menu__link {
+  display: flex;
+  align-items: center;
+  min-height: 50px;
+  padding: 0 var(--sp-3);
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  text-align: left;
+  width: 100%;
+  border: 2px solid transparent;
+  transition: background var(--dur-fast);
+}
+
+.mobile-menu__link:hover {
+  background: var(--navy);
+  color: var(--text-on-navy);
+}
+
+.mobile-menu__link--cta {
+  background: var(--mustard);
+  border-top-color: var(--bevel-light);
+  border-left-color: var(--bevel-light);
+  border-right-color: var(--bevel-dark);
+  border-bottom-color: var(--bevel-dark);
+  margin-top: var(--sp-2);
+  justify-content: center;
+}
+
+.mobile-menu__link--cta:hover {
+  background: #DBA334;
+  color: var(--ink);
+}
