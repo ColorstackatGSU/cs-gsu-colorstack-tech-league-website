@@ -47,6 +47,15 @@
   animation: marquee var(--marquee-duration, 36s) linear infinite;
 }
 
+/* The global reduced-motion reset collapses every animation to one iteration,
+   which would leave the track parked mid-loop. This marquee is meant to run
+   continuously, so it opts back out. */
+@media (prefers-reduced-motion: reduce) {
+  .partners__track {
+    animation: marquee var(--marquee-duration, 36s) linear infinite !important;
+  }
+}
+
 @keyframes marquee {
   from {
     transform: translateX(0);
@@ -54,10 +63,6 @@
   to {
     transform: translateX(-50%);
   }
-}
-
-.partners__viewport.is-paused .partners__track {
-  animation-play-state: paused;
 }
 
 .partner {

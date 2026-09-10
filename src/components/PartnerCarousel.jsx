@@ -1,5 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
-import { useReducedMotion } from 'framer-motion';
+import { useRef, useEffect } from 'react';
 import './PartnerCarousel.css';
 
 /**
@@ -19,48 +18,37 @@ import './PartnerCarousel.css';
  *
  * Either way the whole logo is always visible, nothing is ever cropped.
  *
- * The marquee pauses on hover and on keyboard focus, and doesn't run at all
- * under prefers-reduced-motion.
+ * The marquee scrolls continuously and never pauses.
  */
 const PARTNERS = [
   // `bleed` = the logo file has its own solid background baked in, so it
   // fills the tile edge to edge instead of floating on white.
   { name: 'ColorStack @ GSU', logo: '/partners/colorstack.png', bleed: true },
-  { name: 'ProGSU', logo: '/partners/progsu.png', bleed: true },
   { name: 'CS Club', logo: '/partners/csclub.png' },
+  { name: 'ProGSU', logo: '/partners/progsu.png', bleed: true },
   { name: 'NSBE', logo: '/partners/nsbe.png' },
 ];
 
 export default function PartnerCarousel({ partners = PARTNERS }) {
-  const reduce = useReducedMotion();
-  const [paused, setPaused] = useState(false);
   const trackRef = useRef(null);
 
-  // A short partner list has to be repeated enough times to fill a wide
-  // viewport, or the marquee shows visible gaps. Build one "set" of at least
-  // 6 tiles, then duplicate that set once so the -50% loop is seamless.
-  const perSet = Math.max(partners.length, 6);
-  const set = Array.from({ length: perSet }, (_, i) => partners[i % partners.length]);
-  const loop = [...set, ...set];
+  // The four logos in order, then the same four again. The track animates to
+  // -50%, so the second copy lands exactly where the first started and the
+  // loop is seamless with no repeated padding in between.
+  const loop = [...partners, ...partners];
 
-  // Respect reduced motion: never auto-scroll, let the user scroll manually.
-  const animate = !reduce && !paused;
-
-  // Pace the loop by tile count so adding partners doesn't speed it up
+  // Pace the loop by tile count so adding a partner doesn't speed it up
   useEffect(() => {
     if (!trackRef.current) return;
-    trackRef.current.style.setProperty('--marquee-duration', `${perSet * 5}s`);
-  }, [perSet]);
+    trackRef.current.style.setProperty(
+      '--marquee-duration',
+      `${partners.length * 5}s`
+    );
+  }, [partners.length]);
 
   return (
     <div className="partners">
-      <div
-        className={`partners__viewport ${animate ? '' : 'is-paused'}`}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        onFocusCapture={() => setPaused(true)}
-        onBlurCapture={() => setPaused(false)}
-      >
+      <div className="partners__viewport">
         <ul className="partners__track" ref={trackRef}>
           {loop.map((partner, i) => {
             // Only the first occurrence of each real partner is announced;
