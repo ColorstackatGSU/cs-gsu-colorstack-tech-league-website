@@ -1,6 +1,6 @@
 # ColorStack Tech League @ GSU
 
-The hub site for the ColorStack Tech League at Georgia State University — a
+The hub site for the ColorStack Tech League at Georgia State University, a
 semester-long, points-based technical development program. Students land here,
 create an account, upload a resume for partner recruiters, and apply to the
 League.
@@ -28,7 +28,7 @@ window title bars, square corners, and pixel type (Press Start 2P for headings,
 Space Mono for body).
 
 All design decisions live as CSS custom properties in
-[src/index.css](src/index.css) — color, type scale, spacing, motion. Components
+[src/index.css](src/index.css), color, type scale, spacing, motion. Components
 never hardcode a hex value, so retheming happens in one file.
 
 The bevel effect is four borders (light top-left, dark bottom-right) plus inset
@@ -54,7 +54,7 @@ click the whole flow without registering:
 
 | Username | Password | State |
 |---|---|---|
-| `demo` | `demo1234` | Fresh account — nothing uploaded or applied yet |
+| `demo` | `demo1234` | Fresh account, nothing uploaded or applied yet |
 | `applied` | `demo1234` | Resume uploaded and application already submitted |
 
 Seeding lives in `seedDemoAccounts()` in
@@ -66,7 +66,7 @@ around stick. Delete both the function and its call when real auth lands.
 To reset a demo account to its seeded state, clear site data for localhost in
 your browser's devtools (Application → Storage → Clear site data) and reload.
 
-## Data and auth — read this before deploying
+## Data and auth, read this before deploying
 
 `src/lib/authStore.js` is the **only** file that knows where data lives.
 Everything else calls its functions. It currently persists to `localStorage`:
@@ -77,7 +77,7 @@ Everything else calls its functions. It currently persists to `localStorage`:
   around 5 MB).
 - Passwords are SHA-256 hashed so they aren't sitting in plain text.
 
-**This is not production auth.** There is no salt and no server — anything in
+**This is not production auth.** There is no salt and no server, anything in
 `localStorage` is readable and editable by the person sitting at the browser,
 and data lives only in that one browser. Before real students use this, move
 verification server-side (Supabase, Firebase, or your own API with
@@ -88,7 +88,7 @@ the function bodies in that one file. The signatures and return shapes are
 designed to stay the same.
 
 Recruiter-facing views (browsing submitted resumes and applications) are not
-built yet — that is the natural next phase.
+built yet, that is the natural next phase.
 
 ## Animation
 
@@ -127,16 +127,16 @@ array at the top of
 Tiles are white, so a transparent PNG or SVG drops straight in. If the logo
 file has its own solid background baked in (a white mark on a brand color),
 add `bleed: true` so it fills the tile edge to edge instead of sitting as a
-colored square inside a white box. Either way the full logo always shows —
+colored square inside a white box. Either way the full logo always shows -
 nothing is cropped.
 
 Omit `logo` entirely and the tile renders the org's name as text, so the
-carousel still looks intentional while you wait on an asset. **CS Club is currently a text tile** — drop its logo in
+carousel still looks intentional while you wait on an asset. **CS Club is currently a text tile**, drop its logo in
 `public/partners/` and add a `logo:` key to that row to swap it in.
 
 The marquee repeats short lists automatically to fill the strip, and it has a
 pause button (and stops for `prefers-reduced-motion`).
 
-The partners section is framed as a co-organized effort — the League is run by
+The partners section is framed as a co-organized effort, the League is run by
 ColorStack, ProGSU, CS Club, and NSBE together, not by
 ColorStack alone with outside sponsors.

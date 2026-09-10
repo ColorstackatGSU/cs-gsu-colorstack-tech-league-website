@@ -111,7 +111,7 @@
 
 /* The logo is capped well inside the padded box. Because both the
    width and height caps are explicit, a square OR a wide logo fits
-   whole every time — object-fit does the letterboxing. */
+   whole every time, object-fit does the letterboxing. */
 .partner__tile img {
   display: block;
   width: 100%;
@@ -123,7 +123,7 @@
 
 /* A logo that carries its own solid background fills the tile completely,
    so it reads as a brand block rather than a colored square marooned in a
-   white box. The full mark is still visible — object-fit: cover is never
+   white box. The full mark is still visible, object-fit: cover is never
    used here, the art is already square. */
 .partner__tile--bleed {
   padding: 0;

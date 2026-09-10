@@ -18,7 +18,7 @@ import { GlassCard, Button, Badge, StatusMessage } from '../components/ui';
 import { Reveal, Stagger, StaggerItem } from '../components/Motion';
 import './Dashboard.css';
 
-const MAX_BYTES = 2 * 1024 * 1024; // 2MB — localStorage caps near 5MB total
+const MAX_BYTES = 2 * 1024 * 1024; // 2MB; localStorage caps near 5MB total
 const ACCEPTED = ['application/pdf'];
 
 function formatSize(bytes) {
@@ -175,7 +175,7 @@ export default function Dashboard() {
         <div className="dash__grid">
           {/* ---------- resume ---------- */}
           <Reveal delay={0.1} className="dash__col">
-            <GlassCard title="Resume — upload.exe" className="panel">
+            <GlassCard title="Resume - upload.exe" className="panel">
               <div className="panel__head">
                 <div>
                   <h2 className="panel__title">Your resume</h2>
@@ -289,7 +289,7 @@ export default function Dashboard() {
 
           {/* ---------- application ---------- */}
           <Reveal delay={0.16} className="dash__col">
-            <GlassCard title="Application — apply.exe" className="panel">
+            <GlassCard title="Application - apply.exe" className="panel">
               <div className="panel__head">
                 <div>
                   <h2 className="panel__title">League application</h2>

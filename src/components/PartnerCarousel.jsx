@@ -18,7 +18,7 @@ import './PartnerCarousel.css';
  * color, say), set `bleed: true` so it fills the tile edge to edge instead
  * of sitting as a colored square inside a white box.
  *
- * Either way the whole logo is always visible — nothing is ever cropped.
+ * Either way the whole logo is always visible, nothing is ever cropped.
  */
 const PARTNERS = [
   // `bleed` = the logo file has its own solid background baked in, so it

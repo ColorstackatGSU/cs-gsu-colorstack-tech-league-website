@@ -27,8 +27,8 @@ const CHALLENGES = [
     weight: '20%',
     points: '100 pts',
     blurb:
-      'A timed set of 3–5 LeetCode-style problems tied to data structures, algorithms, and SQL. Solo work rolls up into your team total.',
-    scoring: ['Correctness — 60', 'Efficiency — 20', 'Code quality — 20'],
+      'A timed set of 3-5 LeetCode-style problems tied to data structures, algorithms, and SQL. Solo work rolls up into your team total.',
+    scoring: ['Correctness: 60', 'Efficiency: 20', 'Code quality: 20'],
   },
   {
     icon: Rocket,
@@ -36,13 +36,13 @@ const CHALLENGES = [
     weight: '15%',
     points: '100 pts',
     blurb:
-      'Ship a working mini-project against a prompt over a 1–2 week window. Submit a demo plus your repo.',
+      'Ship a working mini-project against a prompt over a 1-2 week window. Submit a demo plus your repo.',
     scoring: [
-      'Functionality — 40',
-      'Technical difficulty — 20',
-      'Design/UX — 15',
-      'Presentation — 15',
-      'Creativity — 10',
+      'Functionality: 40',
+      'Technical difficulty: 20',
+      'Design/UX: 15',
+      'Presentation: 15',
+      'Creativity: 10',
     ],
   },
   {
@@ -53,10 +53,10 @@ const CHALLENGES = [
     blurb:
       'Structured review against a standardized rubric by e-board or visiting partner reps. Resubmit to earn improvement points.',
     scoring: [
-      'Impact statements — 30',
-      'Relevance — 25',
-      'Technical depth — 25',
-      'Formatting — 20',
+      'Impact statements: 30',
+      'Relevance: 25',
+      'Technical depth: 25',
+      'Formatting: 20',
     ],
   },
   {
@@ -65,12 +65,12 @@ const CHALLENGES = [
     weight: '15%',
     points: '100 pts',
     blurb:
-      '20–30 minute technical or behavioral interviews run by partner volunteers and trained upperclassmen.',
+      '20-30 minute technical or behavioral interviews run by partner volunteers and trained upperclassmen.',
     scoring: [
-      'Problem-solving / STAR — 35',
-      'Communication — 25',
-      'Answer quality — 25',
-      'Composure — 15',
+      'Problem-solving / STAR: 35',
+      'Communication: 25',
+      'Answer quality: 25',
+      'Composure: 15',
     ],
   },
   {
@@ -81,11 +81,11 @@ const CHALLENGES = [
     blurb:
       'The centerpiece. A themed prompt, a fixed afternoon build window, then live demos to partner reps and e-board.',
     scoring: [
-      'Functionality — 50',
-      'Technical execution — 30',
-      'Presentation — 30',
-      'Creativity — 20',
-      'Teamwork — 20',
+      'Functionality: 50',
+      'Technical execution: 30',
+      'Presentation: 30',
+      'Creativity: 20',
+      'Teamwork: 20',
     ],
     featured: true,
   },
@@ -96,11 +96,11 @@ const PHASES = [
     phase: 'Phase 1',
     week: 'Week 1',
     title: 'Kickoff',
-    body: 'Register solo or in teams of 2–4. Teams lock after kickoff so scoring stays consistent. Everyone gets a scorecard.',
+    body: 'Register solo or in teams of 2-4. Teams lock after kickoff so scoring stays consistent. Everyone gets a scorecard.',
   },
   {
     phase: 'Phase 2',
-    week: 'Weeks 2–6',
+    week: 'Weeks 2-6',
     title: 'Challenge Rounds',
     body: 'A new challenge drops each week or two. Submit proof, get scored on the rubric, watch points post to the leaderboard.',
   },
@@ -108,13 +108,13 @@ const PHASES = [
     phase: 'Phase 3',
     week: 'Week of 9/28',
     title: 'Capstone Mini Hackathon',
-    body: 'One afternoon. A themed prompt at the start, 3–4 hours to build, then a live demo and Q&A with the judging panel.',
+    body: 'One afternoon. A themed prompt at the start, 3-4 hours to build, then a live demo and Q&A with the judging panel.',
   },
   {
     phase: 'Phase 4',
     week: 'Wrap-up',
     title: 'Awards',
-    body: 'Points total up, final standings go live, prizes go out, and top performers get shared with partner recruiters — with your consent.',
+    body: 'Points total up, final standings go live, prizes go out, and top performers get shared with partner recruiters, with your consent.',
   },
 ];
 
@@ -141,7 +141,7 @@ export default function Landing() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.75], [1, 0]);
 
   // Background orb parallax, tied to overall page scroll. Decorative layers
-  // only — foreground text never moves. Different rates sell the depth.
+  // only; foreground text never moves. Different rates sell the depth.
   const { scrollYProgress: pageScroll } = useScroll();
   const orbOneY = useTransform(pageScroll, [0, 1], ['0%', '-14%']);
   const orbTwoY = useTransform(pageScroll, [0, 1], ['0%', '-26%']);
@@ -165,7 +165,7 @@ export default function Landing() {
           className="hero__inner container"
           style={reduce ? undefined : { y: heroY, opacity: heroOpacity }}
         >
-          <GlassCard title="Welcome — TechLeague.exe" className="hero__window">
+          <GlassCard title="Welcome - TechLeague.exe" className="hero__window">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -190,7 +190,7 @@ export default function Landing() {
           >
             The ColorStack Tech League is a semester-long, points-based program at
             Georgia State. Five challenge types, one live leaderboard, and a capstone
-            hackathon judged by partner engineers — built so the skills that get people
+            hackathon judged by partner engineers, built so the skills that get people
             hired stop being a thing you cram for.
           </motion.p>
 
@@ -221,7 +221,7 @@ export default function Landing() {
             {[
               { value: '5', label: 'Challenge types' },
               { value: '550', label: 'Points on the board' },
-              { value: '2–4', label: 'Members per team' },
+              { value: '2-4', label: 'Members per team' },
               { value: '1', label: 'Capstone hackathon' },
             ].map((stat) => (
               <div className="hero__stat" key={stat.label}>
@@ -244,7 +244,7 @@ export default function Landing() {
           <SectionHeading
             eyebrow="What it is"
             title="A program, not a one-off event"
-            subtitle="Most chapters run disconnected workshops and hope something sticks. The League gives you repeated, scored practice on the exact skills that get people hired — and gives partners a real way to plug in."
+            subtitle="Most chapters run disconnected workshops and hope something sticks. The League gives you repeated, scored practice on the exact skills that get people hired, and gives partners a real way to plug in."
           />
 
           <Stagger className="about__grid">
@@ -252,7 +252,7 @@ export default function Landing() {
               {
                 icon: Code,
                 title: 'Structured reps',
-                body: 'Coding, building, interviewing, networking — scored on a rubric every single round, so progress is measurable instead of vibes.',
+                body: 'Coding, building, interviewing, networking, all scored on a rubric every single round, so progress is measurable instead of vibes.',
               },
               {
                 icon: Star,
@@ -262,7 +262,7 @@ export default function Landing() {
               {
                 icon: UsersThree,
                 title: 'Real partner access',
-                body: 'Partner engineers judge challenges, run workshops, and review resumes across the whole semester — not one info session.',
+                body: 'Partner engineers judge challenges, run workshops, and review resumes across the whole semester, not one info session.',
               },
             ].map((item) => (
               <StaggerItem key={item.title}>
@@ -284,7 +284,7 @@ export default function Landing() {
           <SectionHeading
             eyebrow="The five challenges"
             title="Every challenge builds one specific skill"
-            subtitle="Each one has its own rubric and point value. Your raw points convert to a percentage of that category's max, then get weighted into a composite score out of 100 — so one rough round never tanks your standing."
+            subtitle="Each one has its own rubric and point value. Your raw points convert to a percentage of that category's max, then get weighted into a composite score out of 100, so one rough round never tanks your standing."
           />
 
           <Stagger className="challenges__grid" gap={0.06}>
@@ -447,7 +447,7 @@ export default function Landing() {
           <SectionHeading
             eyebrow="Built together"
             title="This isn't just a ColorStack thing"
-            subtitle="The Tech League runs on a partnership between ColorStack, ProGSU, CS Club, and NSBE. Each org brings its own members, mentors, and judges — which is why the League reaches further than any one club could on its own."
+            subtitle="The Tech League runs on a partnership between ColorStack, ProGSU, CS Club, and NSBE. Each org brings its own members, mentors, and judges, which is why the League reaches further than any one club could on its own."
           />
           <Reveal>
             <PartnerCarousel />
@@ -459,7 +459,7 @@ export default function Landing() {
       <section className="section on-dark">
         <div className="container">
           <Reveal>
-            <GlassCard interactive title="Get started — register.exe" className="cta">
+            <GlassCard interactive title="Get started - register.exe" className="cta">
               <span className="cta__glow" aria-hidden="true" />
               <Badge tone="accent" icon={Trophy}>
                 Spots are limited

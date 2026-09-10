@@ -3,7 +3,7 @@
   overflow-x: clip;
 }
 
-/* Decorative parallax blocks — flat squares, not blurred orbs.
+/* Decorative parallax blocks, flat squares, not blurred orbs.
    They read as desktop wallpaper shapes drifting behind windows. */
 .landing__orb {
   position: absolute;
@@ -44,7 +44,7 @@
 }
 
 /* ============================================================
-   Hero — a big application window sitting on the desktop
+   Hero, a big application window sitting on the desktop
    ============================================================ */
 
 .hero {
@@ -656,7 +656,7 @@
 }
 
 /* ============================================================
-   Footer — a desktop status bar
+   Footer, a desktop status bar
    ============================================================ */
 
 .footer {

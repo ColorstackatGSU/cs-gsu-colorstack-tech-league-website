@@ -28,7 +28,7 @@
 }
 
 /* ============================================================
-   Panel — the core material. A raised silver surface with a
+   Panel, the core material. A raised silver surface with a
    light top-left bevel and dark bottom-right, exactly like an
    old dialog box.
    ============================================================ */
@@ -46,7 +46,7 @@
     3px 3px 0 rgba(0, 0, 0, 0.28);
 }
 
-/* Inset/sunken variant — for input wells and content areas */
+/* Inset/sunken variant, for input wells and content areas */
 .panel-sunken {
   background: var(--silver-light);
   border-top: 2px solid var(--bevel-dark);
@@ -112,7 +112,7 @@
   flex-shrink: 0;
 }
 
-/* Decorative window buttons — not interactive, marked aria-hidden */
+/* Decorative window buttons, not interactive, marked aria-hidden */
 .window__dot {
   width: 17px;
   height: 15px;
@@ -142,7 +142,7 @@
 }
 
 /* ============================================================
-   Button — beveled, and it physically depresses on click
+   Button, beveled, and it physically depresses on click
    ============================================================ */
 
 .btn {
@@ -204,7 +204,7 @@
   cursor: not-allowed;
 }
 
-/* Primary — mustard fill, the one loud element per screen */
+/* Primary, mustard fill, the one loud element per screen */
 .btn--primary {
   background: var(--mustard);
   color: var(--ink);
@@ -214,7 +214,7 @@
   background: #DBA334;
 }
 
-/* Secondary — navy fill */
+/* Secondary, navy fill */
 .btn--secondary {
   background: var(--navy);
   color: var(--text-on-navy);
@@ -314,7 +314,7 @@
   margin-top: 2px;
 }
 
-/* Inputs are sunken wells — the inverse bevel of a button */
+/* Inputs are sunken wells, the inverse bevel of a button */
 .input {
   width: 100%;
   font-family: var(--font-body);
@@ -423,7 +423,7 @@
 }
 
 /* ============================================================
-   Badge — a small inset tag
+   Badge, a small inset tag
    ============================================================ */
 
 .badge {

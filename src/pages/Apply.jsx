@@ -55,7 +55,7 @@ const INTERESTS = [
 ];
 
 const TEAM_PREFS = [
-  { value: 'team', label: 'Put me on a team of 2–4' },
+  { value: 'team', label: 'Put me on a team of 2-4' },
   { value: 'solo', label: 'I want to compete solo' },
   { value: 'have-team', label: 'I already have a team' },
   { value: 'either', label: 'Either works for me' },
@@ -69,7 +69,7 @@ const TEAM_PREFS = [
 function buildGradTerms(years = 6) {
   const now = new Date();
   const year = now.getFullYear();
-  // Jan–Apr = Spring, May–Jul = Summer, Aug–Dec = Fall
+  // Jan-Apr = Spring, May-Jul = Summer, Aug-Dec = Fall
   const month = now.getMonth();
   const startIndex = month <= 3 ? 0 : month <= 6 ? 1 : 2;
 
@@ -160,7 +160,7 @@ export default function Apply() {
       if (!v.whyJoin.trim()) {
         found.whyJoin = 'Tell us why you want to join.';
       } else if (v.whyJoin.trim().length < MIN_WHY) {
-        found.whyJoin = `Give us a bit more — at least ${MIN_WHY} characters.`;
+        found.whyJoin = `Give us a bit more, at least ${MIN_WHY} characters.`;
       }
       if (!v.goals.trim()) found.goals = 'Tell us what you want to get out of the League.';
     }
@@ -221,7 +221,7 @@ export default function Apply() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <GlassCard title="Received — confirmation.exe" className="apply__done">
+            <GlassCard title="Received - confirmation.exe" className="apply__done">
               <span className="apply__done-icon" aria-hidden="true">
                 <Clock size={44} weight="duotone" />
               </span>
@@ -245,12 +245,12 @@ export default function Apply() {
                     ['Interest', values.interest],
                     [
                       'Competing',
-                      TEAM_PREFS.find((t) => t.value === values.teamPref)?.label ?? '—',
+                      TEAM_PREFS.find((t) => t.value === values.teamPref)?.label ?? '-',
                     ],
                   ].map(([label, value]) => (
                     <div key={label}>
                       <dt>{label}</dt>
-                      <dd className="wrap-anywhere">{value || '—'}</dd>
+                      <dd className="wrap-anywhere">{value || '-'}</dd>
                     </div>
                   ))}
                 </dl>
@@ -259,7 +259,7 @@ export default function Apply() {
               {!profile?.resume && (
                 <StatusMessage tone="error">
                   You have not uploaded a resume yet. Recruiters use it to reach out about
-                  internships — add it from your dashboard.
+                  internships. Add it from your dashboard.
                 </StatusMessage>
               )}
 
@@ -339,7 +339,7 @@ export default function Apply() {
           </div>
         </div>
 
-        <GlassCard title={`Application — step ${step + 1} of ${STEPS.length}`} className="apply__card">
+        <GlassCard title={`Application - step ${step + 1} of ${STEPS.length}`} className="apply__card">
           <ErrorSummary errors={errors} onJump={jumpToField} headingRef={summaryRef} />
 
           <AnimatePresence mode="wait">
@@ -503,14 +503,14 @@ export default function Apply() {
                     htmlFor="whyJoin"
                     required
                     error={errors.whyJoin}
-                    helper={`${values.whyJoin.trim().length} characters — aim for a few honest sentences.`}
+                    helper={`${values.whyJoin.trim().length} characters. Aim for a few honest sentences.`}
                   >
                     {({ errorId, helperId }) => (
                       <TextArea
                         id="whyJoin"
                         name="whyJoin"
                         rows={5}
-                        placeholder="What made you want to join? Be honest — there's no right answer."
+                        placeholder="What made you want to join? Be honest, there's no right answer."
                         value={values.whyJoin}
                         invalid={Boolean(errors.whyJoin)}
                         aria-describedby={errors.whyJoin ? errorId : helperId}
@@ -524,7 +524,7 @@ export default function Apply() {
                     htmlFor="goals"
                     required
                     error={errors.goals}
-                    helper="An internship, interview reps, a project for your portfolio, community — whatever it actually is."
+                    helper="An internship, interview reps, a project for your portfolio, community, whatever it actually is."
                   >
                     {({ errorId, helperId }) => (
                       <TextArea
@@ -543,7 +543,7 @@ export default function Apply() {
                   <Field
                     label="Tell us about your experience so far"
                     htmlFor="experience"
-                    helper="Optional. Classes, projects, languages, past internships — or nothing yet, which is completely fine."
+                    helper="Optional. Classes, projects, languages, past internships, or nothing yet, which is completely fine."
                   >
                     {({ helperId }) => (
                       <TextArea
@@ -601,7 +601,7 @@ export default function Apply() {
                     htmlFor="commitment"
                     required
                     error={errors.commitment}
-                    helper="Be honest — this helps us pair teams fairly."
+                    helper="Be honest. This helps us pair teams fairly."
                   >
                     {({ errorId, helperId }) => (
                       <Select
@@ -613,9 +613,9 @@ export default function Apply() {
                         onChange={(e) => set('commitment', e.target.value)}
                       >
                         <option value="">Select an option</option>
-                        <option value="1-2">1–2 hours</option>
-                        <option value="3-5">3–5 hours</option>
-                        <option value="6-8">6–8 hours</option>
+                        <option value="1-2">1-2 hours</option>
+                        <option value="3-5">3-5 hours</option>
+                        <option value="6-8">6-8 hours</option>
                         <option value="9+">9+ hours</option>
                       </Select>
                     )}

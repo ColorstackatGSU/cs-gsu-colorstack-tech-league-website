@@ -4,7 +4,7 @@ import { Eye, EyeSlash, WarningCircle, CircleNotch } from '@phosphor-icons/react
 import './ui.css';
 
 /* ============================================================
-   Panel — the core material: a raised silver surface with
+   Panel, the core material: a raised silver surface with
    period-correct bevels. Pass `title` to give it window chrome
    (title bar + decorative minimize/maximize/close buttons).
 
@@ -97,7 +97,7 @@ export const Button = forwardRef(function Button(
 });
 
 /* ============================================================
-   Field — label + control + helper/error, wired for a11y.
+   Field, label + control + helper/error, wired for a11y.
    Errors sit next to the field and are announced.
    ============================================================ */
 

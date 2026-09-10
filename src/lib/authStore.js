@@ -3,13 +3,13 @@
  *
  * This is the ONLY file that knows where data lives. Everything else in the
  * app talks to these functions. To move to Supabase/Firebase later, rewrite
- * the bodies here to make network calls — every call site keeps working
+ * the bodies here to make network calls, every call site keeps working
  * because the signatures and return shapes stay the same.
  *
  * Current backing store: localStorage (per-browser, survives refresh).
  *
  * SECURITY NOTE: passwords are hashed with SHA-256 so they are not sitting in
- * localStorage in plain text, but this is NOT production-grade auth — there is
+ * localStorage in plain text, but this is NOT production-grade auth, there is
  * no salt and no server. A real deployment must move verification server-side
  * (bcrypt/argon2). Do not ship this as the real login.
  */
@@ -62,8 +62,8 @@ const delay = (ms = 620) => new Promise((r) => setTimeout(r, ms));
  * Two seeded logins so the whole flow can be clicked through without
  * registering first:
  *
- *   demo / demo1234   — fresh account, nothing done yet
- *   applied / demo1234 — resume uploaded + application already submitted
+ *   demo / demo1234  , fresh account, nothing done yet
+ *   applied / demo1234, resume uploaded + application already submitted
  *
  * Seeding is skipped entirely in a production build, and it never
  * overwrites an account that already exists (so edits you make while

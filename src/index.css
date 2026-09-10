@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
 
 /* ============================================================
-   ColorStack Tech League @ GSU — Vintage Desktop Design Tokens
+   ColorStack Tech League @ GSU, Vintage Desktop Design Tokens
    A 1995 desktop OS: teal ground, silver beveled panels,
    silkscreen type, hard edges. No blur, no gradients, no glass.
    ============================================================ */
@@ -57,7 +57,7 @@
   --fs-2xl: 1.6rem;
   --fs-3xl: 2rem;
 
-  /* Pixel headings — clamped tight, they get wide fast */
+  /* Pixel headings, clamped tight, they get wide fast */
   --fs-pixel-sm: 0.7rem;
   --fs-pixel-md: 0.95rem;
   --fs-pixel-lg: clamp(1rem, 2.4vw, 1.5rem);
@@ -197,7 +197,7 @@ p {
 }
 
 /* ============================================================
-   Focus — hard dotted outline, straight out of the era
+   Focus, hard dotted outline, straight out of the era
    ============================================================ */
 
 :focus-visible {
@@ -217,7 +217,7 @@ p {
 }
 
 /* ============================================================
-   Scrollbar — chunky, beveled, period-correct
+   Scrollbar, chunky, beveled, period-correct
    ============================================================ */
 
 ::-webkit-scrollbar {

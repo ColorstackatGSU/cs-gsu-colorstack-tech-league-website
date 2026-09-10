@@ -124,7 +124,7 @@ export default function Signup() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
         >
-          <GlassCard title="New account — register.exe" className="auth__card">
+          <GlassCard title="New account - register.exe" className="auth__card">
             <div className="auth__card-head">
               <h2 className="auth__title">Create your account</h2>
               <p className="auth__subtitle">
@@ -140,7 +140,7 @@ export default function Signup() {
                 htmlFor="username"
                 required
                 error={errors.username}
-                helper="3–24 characters. Letters, numbers, underscores, and periods."
+                helper="3-24 characters. Letters, numbers, underscores, and periods."
               >
                 {({ errorId, helperId }) => (
                   <TextInput
