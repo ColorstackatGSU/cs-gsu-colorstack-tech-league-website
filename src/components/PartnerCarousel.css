@@ -36,12 +36,21 @@
   background: linear-gradient(to left, var(--paper-warm), transparent);
 }
 
+/* The track holds two identical copies of the partner list and slides left by
+   exactly one copy's width, at which point the second copy sits where the first
+   started and the animation restarts invisibly.
+
+   For that to be seamless the two copies must be interchangeable, so the track
+   carries no horizontal padding of its own (padding is not duplicated, so it
+   would throw the -50% off by its width and open a gap at the wrap). The seam
+   spacing comes from a trailing margin on the last tile of each copy, which
+   matches the gap between every other pair. */
 .partners__track {
   display: flex;
   align-items: stretch;
   gap: var(--sp-5);
   margin: 0;
-  padding: 0 var(--sp-5);
+  padding: 0;
   list-style: none;
   width: max-content;
   animation: marquee var(--marquee-duration, 36s) linear infinite;
@@ -61,13 +70,21 @@
     transform: translateX(0);
   }
   to {
-    transform: translateX(-50%);
+    /* One copy's width out of the whole track, set from the component so the
+       shift stays correct if the number of copies changes. */
+    transform: translateX(var(--marquee-shift, -25%));
   }
 }
 
 .partner {
   flex-shrink: 0;
   display: flex;
+}
+
+/* Closes the seam: the last tile of each copy needs the same spacing after it
+   that `gap` gives every other tile, or the two copies would butt together. */
+.partner--copy-end {
+  margin-right: var(--sp-5);
 }
 
 /* ============================================================

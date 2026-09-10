@@ -32,10 +32,14 @@ const PARTNERS = [
 export default function PartnerCarousel({ partners = PARTNERS }) {
   const trackRef = useRef(null);
 
-  // The four logos in order, then the same four again. The track animates to
-  // -50%, so the second copy lands exactly where the first started and the
-  // loop is seamless with no repeated padding in between.
-  const loop = [...partners, ...partners];
+  // The list is repeated COPIES times and the track slides left by exactly one
+  // copy's width, so copy N lands where copy N-1 started and the restart is
+  // invisible. Two copies would be enough for the wrap itself, but with only a
+  // handful of partners a two-copy track can be narrower than a wide desktop
+  // viewport, which leaves visible empty strip no matter how the animation
+  // behaves. Four copies keep the track wider than any realistic screen.
+  const COPIES = 4;
+  const loop = Array.from({ length: COPIES }, () => partners).flat();
 
   // Pace the loop by tile count so adding a partner doesn't speed it up
   useEffect(() => {
@@ -43,6 +47,11 @@ export default function PartnerCarousel({ partners = PARTNERS }) {
     trackRef.current.style.setProperty(
       '--marquee-duration',
       `${partners.length * 5}s`
+    );
+    // How far to slide: one copy out of COPIES.
+    trackRef.current.style.setProperty(
+      '--marquee-shift',
+      `-${100 / COPIES}%`
     );
   }, [partners.length]);
 
@@ -54,9 +63,13 @@ export default function PartnerCarousel({ partners = PARTNERS }) {
             // Only the first occurrence of each real partner is announced;
             // repeats and the duplicated set are decorative.
             const isClone = i >= partners.length;
+            // Every tile that closes a copy carries the same trailing spacing
+            // `gap` gives every other pair, so all copies are identical in
+            // width and each seam looks like any other space between tiles.
+            const isCopyEnd = (i + 1) % partners.length === 0;
             return (
               <li
-                className="partner"
+                className={`partner ${isCopyEnd ? 'partner--copy-end' : ''}`}
                 key={`${partner.name}-${i}`}
                 aria-hidden={isClone ? 'true' : undefined}
               >
