@@ -105,10 +105,6 @@ export default function Scoring() {
               max, then get weighted into a composite score out of 100, so one rough
               round never tanks your standing.
             </p>
-            <p className="scoring__confirm">
-              <CheckCircle size={18} weight="fill" aria-hidden="true" />
-              AWS is confirmed on board for the season.
-            </p>
             <div className="scoring__actions">
               <Link to={isAuthed ? '/leaderboard' : '/signup'}>
                 <Button variant="primary" size="lg" iconRight={ArrowRight}>

@@ -46,26 +46,6 @@
   line-height: 1.65;
 }
 
-.scoring__confirm {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-2);
-  margin-top: var(--sp-5);
-  padding: var(--sp-2) var(--sp-4);
-  background: var(--teal-soft);
-  border: var(--line);
-  border-radius: var(--r-full);
-  box-shadow: var(--shadow-pencil-sm);
-  font-size: var(--fs-sm);
-  font-weight: 700;
-  color: var(--teal-deep);
-}
-
-.scoring__confirm svg {
-  color: var(--teal-deep);
-  flex-shrink: 0;
-}
-
 .scoring__actions {
   margin-top: var(--sp-6);
   display: flex;
