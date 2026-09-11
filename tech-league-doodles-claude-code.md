@@ -7,7 +7,7 @@ The ColorStack Tech League site has a lot of empty space on the left and right s
 There are two doodle sets:
 
 1. **Homepage doodles** for `src/pages/Landing.jsx`
-2. **App doodles** for the logged in pages: `src/pages/Dashboard.jsx` and `src/pages/Apply.jsx` (every step of the application plus the "Application received" screen)
+2. **App doodles** for `src/pages/Login.jsx`, `src/pages/Signup.jsx`, `src/pages/Dashboard.jsx` and `src/pages/Apply.jsx` (every step of the application plus the "Application received" screen)
 
 **Do not change anything that already exists.** No edits to existing components, text, layout, colors, fonts, or CSS. This task only adds four new files and a few lines of code to mount them.
 
@@ -29,6 +29,14 @@ All doodles are decorative SVGs, `aria-hidden`, don't block clicks on real conte
 - **Timeline:** Sept 30 calendar ("kickoff!"), alarm clock, pizza ("hackathon fuel"), rocket ("ship it"), "teams lock after kickoff!" sticky note
 - **Partners:** "HELLO my name is future SWE" name tag, speech bubbles
 - **Ready to apply:** resume with an A+ sticker, envelope ("check your inbox"), paper plane
+
+**Log in**
+
+A key with a dashed arrow pointing at the form, a 1 2 3 podium with a crown ("where do you land?") next to the leaderboard perk, a "WELCOME BACK" doormat under the form card, an open book with a bookmark ("where you left off"), a rising chart on graph paper ("points go up"), an open padlock ("unlocked"), and a "git pull" scribble.
+
+**Sign up**
+
+Stacked building blocks ("one block at a time"), a running shoe ("on your mark"), a sprout with a "day 1" sign, a shield with a checkmark beside the password fields ("strong password"), a hot air balloon ("up from here"), and a "git init" scribble.
 
 **Dashboard**
 
@@ -508,10 +516,10 @@ export function mountDoodles() {
 }
 ```
 
-### 3. Create `src/doodles/app-doodles.js` (dashboard + application)
+### 3. Create `src/doodles/app-doodles.js` (log in, sign up, dashboard, application)
 
 ```js
-// Tech League app doodles (dashboard + application form).
+// Tech League app doodles (log in, sign up, dashboard, application form).
 // A different set of hand drawn objects from the homepage. Nothing in your existing markup changes.
 // Call startAppDoodles() once (in App.jsx). It watches the page and swaps doodles when the
 // route or the application step changes.
@@ -773,10 +781,106 @@ const ART = {
     ${txt(65, 62, 24, l1)}${txt(63, 94, 24, l2)}
   `),
 
+  openbook: svg('0 0 150 112', `
+    <path d="M75 26 C 58 16, 30 14, 10 20 V96 C 30 90, 58 92, 75 102 Z" fill="${C.card}"/>
+    <path d="M75 26 C 92 16, 120 14, 140 20 V96 C 120 90, 92 92, 75 102 Z" fill="${C.card}"/>
+    <path d="M22 38 C 36 34, 52 35, 64 40 M22 52 C 36 48, 52 49, 64 54 M22 66 C 36 62, 52 63, 64 68 M22 80 C 36 76, 48 77, 56 80" stroke="${C.tealLine}" stroke-width="2.4"/>
+    <path d="M86 40 C 98 35, 104 34, 104 34 M86 54 C 98 49, 114 48, 128 52 M86 68 C 98 63, 114 62, 128 66" stroke="${C.tealLine}" stroke-width="2.4"/>
+    <path d="M75 26 V102" stroke-width="2"/>
+    <path d="M108 8 V52 L116 44 L124 52 V10 Z" fill="${C.clay}"/>
+  `),
+
+  chart: svg('0 0 120 112', `
+    <rect x="8" y="8" width="104" height="94" rx="6" fill="${C.card}"/>
+    ${[21, 34, 47, 60, 73, 86, 99].map(x => `<path d="M${x} 12 V98" stroke="${C.tealLine}" stroke-width="1"/>`).join('')}
+    ${[21, 34, 47, 60, 73, 86].map(y => `<path d="M12 ${y} H108" stroke="${C.tealLine}" stroke-width="1"/>`).join('')}
+    <path d="M20 16 V88 H104" stroke-width="2.2"/>
+    <path d="M24 78 L42 66 L56 70 L72 48 L86 52 L100 26" stroke="${C.clay}" stroke-width="3.4"/>
+    <path d="M91 25 L101 25 L100 35" stroke="${C.clay}" stroke-width="3"/>
+  `),
+
+  padlock: svg('0 0 100 130', `
+    <path d="M30 58 V36 C 30 14, 66 10, 70 30" stroke-width="10"/>
+    <path d="M30 58 V36 C 30 14, 66 10, 70 30" stroke="${C.metal}" stroke-width="4"/>
+    <path d="M80 20 l8 -6 M84 32 h10" stroke="${C.mustard}" stroke-width="3"/>
+    <rect x="14" y="56" width="72" height="64" rx="10" fill="${C.mustard}"/>
+    <circle cx="50" cy="82" r="7" fill="${INK}"/>
+    <path d="M50 86 V100" stroke-width="5"/>
+  `),
+
+  keyGo: svg('0 0 172 92', `
+    <path d="M108 46 C 124 64, 142 62, 160 44" stroke="${C.light}" stroke-width="2.2" stroke-dasharray="5 7"/>
+    <path d="M148 39 L161 43 L155 55" stroke="${C.light}" stroke-width="2.4"/>
+    <rect x="40" y="33" width="62" height="11" rx="3" fill="${C.mustard}"/>
+    <path d="M80 44 V56 H88 V44 M93 44 V51 H100 V44" fill="${C.mustard}"/>
+    <circle cx="26" cy="38" r="19" fill="${C.mustard}"/>
+    <circle cx="21" cy="33" r="5.5" fill="${C.card}"/>
+  `),
+
+  podium: svg('0 0 150 124', `
+    <path d="M62 34 L64 18 L70 25 L76 12 L82 25 L88 18 L90 34 Z" fill="${C.mustard}"/>
+    <rect x="10" y="62" width="44" height="52" fill="${C.tealSoft}"/>
+    <rect x="54" y="42" width="44" height="72" fill="${C.mustard}"/>
+    <rect x="98" y="76" width="44" height="38" fill="${C.claySoft}"/>
+    ${txt(32, 96, 26, '2')}${txt(76, 82, 30, '1')}${txt(120, 104, 24, '3')}
+    <path d="M4 114 H146" stroke-width="2.6"/>
+  `),
+
+  doormat: svg('0 0 220 92', `
+    ${[24, 34, 44, 54, 64].map(y => `<path d="M8 ${y} H2 M212 ${y} H218" stroke-width="2"/>`).join('')}
+    <rect x="8" y="14" width="204" height="64" rx="8" fill="${C.wood}"/>
+    <rect x="18" y="24" width="184" height="44" rx="4" stroke="#8a5a2b" stroke-width="2" stroke-dasharray="4 4"/>
+    ${txt(110, 53, 17, 'WELCOME BACK', C.card, 'middle', QS, 700)}
+  `),
+
+  blocks: svg('0 0 110 140', `
+    <rect x="8" y="100" width="94" height="32" rx="4" fill="${C.teal}"/>
+    <rect x="16" y="92" width="16" height="8" rx="2" fill="${C.teal}"/><rect x="78" y="92" width="16" height="8" rx="2" fill="${C.teal}"/>
+    <rect x="20" y="60" width="72" height="32" rx="4" fill="${C.clay}"/>
+    <rect x="28" y="52" width="16" height="8" rx="2" fill="${C.clay}"/><rect x="68" y="52" width="16" height="8" rx="2" fill="${C.clay}"/>
+    <rect x="34" y="20" width="44" height="32" rx="4" fill="${C.mustard}"/>
+    <rect x="40" y="12" width="12" height="8" rx="2" fill="${C.mustard}"/><rect x="60" y="12" width="12" height="8" rx="2" fill="${C.mustard}"/>
+  `),
+
+  sneaker: svg('0 0 160 100', `
+    <path d="M6 42 H30 M2 56 H26 M10 70 H32" stroke="${C.light}" stroke-width="2"/>
+    <path d="M36 78 H150 C154 78 156 82 154 86 C 152 90, 148 92, 144 92 H40 C 36 92, 34 88, 36 78 Z" fill="${C.card}"/>
+    <path d="M38 78 C 36 60, 42 40, 56 32 C 64 28, 74 34, 78 42 C 90 52, 110 58, 134 62 C 148 64, 152 72, 150 78 Z" fill="${C.teal}"/>
+    <path d="M124 62 C 140 64, 150 70, 150 78 H118 Z" fill="${C.clay}"/>
+    <path d="M60 38 L72 44 M63 46 L76 51 M67 54 L80 58" stroke="${C.card}" stroke-width="2.6"/>
+    <path d="M44 84 H146" stroke-width="1.4"/>
+  `),
+
+  sprout: svg('0 0 110 130', `
+    <path d="M84 112 V76" stroke="${C.wood}" stroke-width="3"/>
+    <rect x="66" y="60" width="38" height="22" rx="3" fill="${C.card}"/>
+    ${txt(85, 76, 16, 'day 1')}
+    <path d="M55 104 C 55 80, 52 66, 56 50" stroke="${C.tealDeep}" stroke-width="3.5"/>
+    <path d="M56 58 C 40 60, 26 50, 24 36 C 40 34, 52 42, 56 58 Z" fill="${C.teal}"/>
+    <path d="M56 50 C 60 38, 70 28, 82 26 C 82 40, 70 50, 56 50 Z" fill="${C.tealMid}"/>
+    <path d="M8 114 C 28 96, 82 96, 102 114 Z" fill="#8a6a4b"/>
+  `),
+
+  shield: svg('0 0 100 120', `
+    <path d="M50 8 L90 22 V56 C90 84 72 102 50 112 C28 102 10 84 10 56 V22 Z" fill="${C.tealSoft}"/>
+    <path d="M50 20 L78 30 V56 C78 76 66 90 50 98 C34 90 22 76 22 56 V30 Z" fill="${C.teal}" stroke-width="2"/>
+    <path d="M35 58 L46 69 L67 45" stroke="${C.card}" stroke-width="5"/>
+  `),
+
+  balloon: svg('0 0 110 160', `
+    <path d="M55 8 C 20 8, 8 36, 14 60 C 20 82, 40 96, 44 108 H66 C 70 96, 90 82, 96 60 C 102 36, 90 8, 55 8 Z" fill="${C.clay}"/>
+    <path d="M55 8 C 40 30, 40 80, 48 108 H62 C 70 80, 70 30, 55 8 Z" fill="${C.mustard}"/>
+    <path d="M44 108 L46 126 M66 108 L64 126" stroke-width="1.8"/>
+    <path d="M42 126 H68 L65 146 H45 Z" fill="${C.wood}"/>
+    <path d="M44 135 H66" stroke-width="1.4"/>
+  `),
+
   sparkle: (fill = C.mustard) => svg('0 0 40 40', star(20, 20, 18, fill)),
 };
 
 // e = px from page center to the doodle's inner edge, t = px from the top of the page
+// (log in / sign up doodles measure t from the top of .auth__grid instead, since that grid is vertically centered;
+// a negative e on side 'r' puts a doodle in the gap between the text column and the form card)
 // w = width, r = rotation. tier: "mid" 1200px+, "near" 1360px+, "far" 1700px+
 // when = only show if this selector exists on the page
 const APPLY_COMMON = [
@@ -789,6 +893,29 @@ const APPLY_COMMON = [
 ];
 
 const SCENES = {
+  login: { host: '.auth__grid', items: [
+    { s: 'keyGo', side: 'r', e: -165, t: 70, w: 150, r: -6, tier: 'mid' },
+    { s: 'podium', side: 'r', e: -160, t: 330, w: 115, r: 3, tier: 'mid', label: 'where do you land?' },
+    { s: 'doormat', side: 'r', e: 180, t: 530, w: 200, r: -2, tier: 'mid' },
+    { s: 'openbook', side: 'l', e: 590, t: 110, w: 110, r: -6, tier: 'near', label: 'where you left off' },
+    { s: 'chart', side: 'l', e: 595, t: 330, w: 95, r: 5, tier: 'near', label: 'points go up' },
+    { s: 'padlock', side: 'r', e: 560, t: 40, w: 78, r: 8, tier: 'near', label: 'unlocked' },
+    { s: 'sparkle', side: 'r', e: 600, t: 300, w: 24, tier: 'near', a: 'twinkle', color: C.teal },
+    { text: 'git pull', side: 'l', e: 720, t: 480, r: -6, tier: 'far' },
+    { s: 'sparkle', side: 'l', e: 760, t: 40, w: 28, tier: 'far', a: 'twinkle' },
+    { s: 'sparkle', side: 'r', e: 720, t: 180, w: 26, tier: 'far', a: 'twinkle', color: C.clay },
+  ]},
+  signup: { host: '.auth__grid', items: [
+    { s: 'blocks', side: 'r', e: -150, t: 150, w: 90, r: -4, tier: 'mid', label: 'one block at a time' },
+    { s: 'sneaker', side: 'r', e: -165, t: 520, w: 130, r: -8, tier: 'mid', label: 'on your mark' },
+    { s: 'sprout', side: 'l', e: 590, t: 140, w: 90, r: -4, tier: 'near', a: 'bob' },
+    { s: 'sparkle', side: 'l', e: 600, t: 420, w: 24, tier: 'near', a: 'twinkle', color: C.clay },
+    { s: 'shield', side: 'r', e: 560, t: 290, w: 80, r: 6, tier: 'near', label: 'strong password' },
+    { s: 'balloon', side: 'r', e: 565, t: 470, w: 85, r: -4, tier: 'near', label: 'up from here', a: 'drift' },
+    { text: 'git init', side: 'l', e: 700, t: 560, r: -6, tier: 'far' },
+    { s: 'sparkle', side: 'r', e: 720, t: 120, w: 26, tier: 'far', a: 'twinkle' },
+    { s: 'sparkle', side: 'l', e: 740, t: 330, w: 28, tier: 'far', a: 'twinkle', color: C.teal },
+  ]},
   dashboard: { host: '.dash', items: [
     { s: 'plant', side: 'l', e: 570, t: 120, w: 95, r: -4, tier: 'near', a: 'bob' },
     { s: 'stamp', side: 'r', e: 565, t: 250, w: 110, r: 8, tier: 'near' },
@@ -834,6 +961,7 @@ const SCENES = {
 };
 
 function detectScene() {
+  if (document.querySelector('.auth')) return location.pathname.startsWith('/signup') ? 'signup' : 'login';
   if (document.querySelector('.dash')) return 'dashboard';
   const apply = document.querySelector('.apply');
   if (!apply) return null;
@@ -861,8 +989,8 @@ function buildLayer(scene) {
     d.style.setProperty('--e', `${it.e}px`);
     d.style.setProperty('--t', `${it.t}px`);
     d.style.setProperty('--r', `${it.r || 0}deg`);
-    d.style.setProperty('--w', `${it.w}px`);
-    d.innerHTML = `<div class="tla-in ${it.a ? 'tla-a-' + it.a : ''}">${it.labelTop ? `<div class="tla-label">${it.labelTop}</div>` : ''}${art(it)}${it.label ? `<div class="tla-label">${it.label}</div>` : ''}</div>`;
+    if (it.w) d.style.setProperty('--w', `${it.w}px`);
+    d.innerHTML = it.text ? `<div class="tla-in tla-scribble">${it.text}</div>` : `<div class="tla-in ${it.a ? 'tla-a-' + it.a : ''}">${it.labelTop ? `<div class="tla-label">${it.labelTop}</div>` : ''}${art(it)}${it.label ? `<div class="tla-label">${it.label}</div>` : ''}</div>`;
     layer.appendChild(d);
   }
   return layer;
@@ -906,10 +1034,10 @@ export function startAppDoodles() {
 }
 ```
 
-### 4. Create `src/doodles/app-doodles.css` (dashboard + application)
+### 4. Create `src/doodles/app-doodles.css` (log in, sign up, dashboard, application)
 
 ```css
-/* Tech League app doodles (dashboard + application). Decoration only. */
+/* Tech League app doodles (log in, sign up, dashboard, application). Decoration only. */
 .tla-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 .tla-layer { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
 
@@ -917,7 +1045,7 @@ export function startAppDoodles() {
   position: absolute;
   display: none;
   top: var(--t);
-  width: var(--w);
+  width: var(--w, auto);
   transform: rotate(var(--r));
 }
 .tla-d.l { right: calc(50% + var(--e)); }
@@ -939,6 +1067,14 @@ export function startAppDoodles() {
   text-align: center;
   white-space: nowrap;
   margin-block: 4px;
+}
+
+.tla-scribble {
+  font-family: "Caveat", "Comic Sans MS", cursive;
+  font-weight: 700;
+  font-size: 1.55rem;
+  color: #8a8378;
+  white-space: nowrap;
 }
 
 .tla-a-bob { animation: tla-bob 6s ease-in-out infinite; }
@@ -996,7 +1132,7 @@ Then inside the `App` component, before the `return`:
 useEffect(() => startAppDoodles(), []);
 ```
 
-`startAppDoodles()` watches the page, figures out whether you are on the dashboard, a specific application step, or the "Application received" screen, and swaps doodles automatically. You do not need to pass it the route or the step.
+`startAppDoodles()` watches the page, figures out whether you are on log in, sign up, the dashboard, a specific application step, or the "Application received" screen, and swaps doodles automatically. You do not need to pass it the route or the step.
 
 If `useEffect` is already imported in either file, don't import it twice. Both functions return a cleanup function, so they are safe with React StrictMode.
 
@@ -1011,6 +1147,8 @@ These already exist in the site. Confirm each one matches before finishing:
 | `#timeline` | Homepage timeline |
 | `#partners` | Homepage partners |
 | `section.section:last-of-type` | Homepage "Ready to apply" |
+| `.auth` and `.auth__grid` | Log in and sign up pages (doodles attach to `.auth__grid`) |
+| `/signup` in the URL path | Tells sign up apart from log in (both use `.auth`) |
 | `.dash` | Dashboard page wrapper |
 | `.apply` | Application page wrapper |
 | `.apply__rail-item` with `.is-current` | Which application step is active |
@@ -1026,6 +1164,9 @@ Run the dev server and confirm:
 - [ ] Nothing in the original pages moved, changed color, or changed size
 - [ ] Homepage at 1440px wide: doodles beside every section, never covering text or cards
 - [ ] Homepage trophy card fills the empty third spot in the second row of the challenges grid
+- [ ] Log in at 1440px wide: key and podium sit in the gap between the text and the form, doormat sits under the form, nothing overlaps text or inputs
+- [ ] Sign up at 1440px wide: blocks and shoe sit in the gap between the text and the form, shield sits beside the password fields
+- [ ] Clicking "Create an account" on log in (and "Log in" on sign up) swaps the doodle set without a page refresh
 - [ ] Dashboard at 1440px wide: doodles on both sides of the cards
 - [ ] Application: going from step 1 to step 4 with Continue and Back swaps the step specific doodles each time
 - [ ] "Application received" screen shows the popper and winged envelope, and the "add your resume!" arrow only when the missing resume message is visible
@@ -1039,13 +1180,15 @@ Run the dev server and confirm:
 Each doodle entry in `LAYOUT` (homepage) or `SCENES` (app) has:
 
 - `e`: distance in px from the center of the page to the doodle's inner edge
-- `t`: distance in px from the top of its section (homepage) or page (app)
+- `t`: distance in px from the top of its section (homepage), the page (dashboard and application), or `.auth__grid` (log in and sign up)
 - `w`: width in px
 - `r`: rotation in degrees
 - `tier`: `mid` shows at 1200px and wider (app only), `near` at 1360px and wider, `far` only at 1700px and wider
 - `label` / `labelTop`: optional handwritten caption below or above the doodle
 - `a`: optional motion (`bob`, `drift`, `twinkle`, plus `ring` and `glow` on the homepage)
 - `when` (app only): only show the doodle if this selector is on the page
+
+A negative `e` on a right side (`side: 'r'`) doodle moves it left of center, which is how the log in and sign up doodles sit in the gap between the text column and the form.
 
 To move a doodle, change its numbers. To remove one, delete its line.
 

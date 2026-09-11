@@ -1,4 +1,4 @@
-/* Tech League app doodles (dashboard + application). Decoration only. */
+/* Tech League app doodles (log in, sign up, dashboard, application). Decoration only. */
 .tla-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 .tla-layer { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
 
@@ -6,7 +6,7 @@
   position: absolute;
   display: none;
   top: var(--t);
-  width: var(--w);
+  width: var(--w, auto);
   transform: rotate(var(--r));
 }
 .tla-d.l { right: calc(50% + var(--e)); }
@@ -28,6 +28,14 @@
   text-align: center;
   white-space: nowrap;
   margin-block: 4px;
+}
+
+.tla-scribble {
+  font-family: "Caveat", "Comic Sans MS", cursive;
+  font-weight: 700;
+  font-size: 1.55rem;
+  color: #8a8378;
+  white-space: nowrap;
 }
 
 .tla-a-bob { animation: tla-bob 6s ease-in-out infinite; }
