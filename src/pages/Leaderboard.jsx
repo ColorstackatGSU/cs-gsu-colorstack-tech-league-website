@@ -92,8 +92,8 @@ function TeamRow({ team, expanded, onToggle, maxComposite }) {
 
         <span className="lb-row__team">
           <span className="lb-row__name">{team.name}</span>
-          <span className="lb-row__org">
-            {team.org} · {team.members} members
+          <span className="lb-row__meta">
+            {team.members} {team.members === 1 ? 'member' : 'members'}
           </span>
         </span>
 

@@ -299,21 +299,24 @@ export function saveApplicationDraft(userId, application) {
    src/lib/season.js). Events a team has not played are simply absent from the
    scores object, which the compositing math reads as "not played" rather than
    as a zero.
+
+   Teams are cross-club: anyone can team with anyone, so a team carries no
+   org affiliation and the board never displays one.
    ============================================================ */
 
 export const STANDINGS_ARE_PREVIEW = true;
 
 const SEED_STANDINGS = [
-  { id: 't-segfault',  name: 'Segfault',          org: 'ColorStack', members: 4, scores: { 'kickoff-cup': 92, 'design-derby': 88 } },
-  { id: 't-null-ptr',  name: 'Null Pointers',     org: 'CS Club',    members: 4, scores: { 'kickoff-cup': 86, 'design-derby': 91 } },
-  { id: 't-merge',     name: 'Merge Conflict',    org: 'progsu',     members: 3, scores: { 'kickoff-cup': 90, 'design-derby': 83 } },
-  { id: 't-runtime',   name: 'Runtime Terror',    org: 'NSBE',       members: 4, scores: { 'kickoff-cup': 81, 'design-derby': 89 } },
-  { id: 't-stack',     name: 'Stack Overflow',    org: 'ColorStack', members: 4, scores: { 'kickoff-cup': 84, 'design-derby': 80 } },
-  { id: 't-cache',     name: 'Cache Money',       org: 'CS Club',    members: 3, scores: { 'kickoff-cup': 78, 'design-derby': 85 } },
-  { id: 't-ctrl-alt',  name: 'Ctrl Alt Elite',    org: 'NSBE',       members: 4, scores: { 'kickoff-cup': 76, 'design-derby': 79 } },
-  { id: 't-semicolon', name: 'Missing Semicolon', org: 'progsu',     members: 2, scores: { 'kickoff-cup': 71, 'design-derby': 74 } },
-  { id: 't-panic',     name: 'Kernel Panic',      org: 'ColorStack', members: 3, scores: { 'kickoff-cup': 69, 'design-derby': 72 } },
-  { id: 't-infinite',  name: 'Infinite Loop',     org: 'CS Club',    members: 4, scores: { 'kickoff-cup': 64, 'design-derby': 70 } },
+  { id: 't-segfault',  name: 'Segfault',          members: 4, scores: { 'kickoff-cup': 92, 'design-derby': 88 } },
+  { id: 't-null-ptr',  name: 'Null Pointers',     members: 4, scores: { 'kickoff-cup': 86, 'design-derby': 91 } },
+  { id: 't-merge',     name: 'Merge Conflict',    members: 3, scores: { 'kickoff-cup': 90, 'design-derby': 83 } },
+  { id: 't-runtime',   name: 'Runtime Terror',    members: 4, scores: { 'kickoff-cup': 81, 'design-derby': 89 } },
+  { id: 't-stack',     name: 'Stack Overflow',    members: 4, scores: { 'kickoff-cup': 84, 'design-derby': 80 } },
+  { id: 't-cache',     name: 'Cache Money',       members: 3, scores: { 'kickoff-cup': 78, 'design-derby': 85 } },
+  { id: 't-ctrl-alt',  name: 'Ctrl Alt Elite',    members: 4, scores: { 'kickoff-cup': 76, 'design-derby': 79 } },
+  { id: 't-semicolon', name: 'Missing Semicolon', members: 2, scores: { 'kickoff-cup': 71, 'design-derby': 74 } },
+  { id: 't-panic',     name: 'Kernel Panic',      members: 3, scores: { 'kickoff-cup': 69, 'design-derby': 72 } },
+  { id: 't-infinite',  name: 'Infinite Loop',     members: 4, scores: { 'kickoff-cup': 64, 'design-derby': 70 } },
 ];
 
 /**

@@ -223,7 +223,7 @@
   overflow-wrap: anywhere;
 }
 
-.lb-row__org {
+.lb-row__meta {
   display: block;
   font-size: var(--fs-xs);
   color: var(--text-subtle);
