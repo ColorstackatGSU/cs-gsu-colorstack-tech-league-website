@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
 import {
@@ -19,7 +19,9 @@ import {
   useIsSmallScreen,
 } from '../components/Motion';
 import PartnerCarousel from '../components/PartnerCarousel';
+import { mountDoodles } from '../doodles/doodles.js';
 import './Landing.css';
+import '../doodles/doodles.css';
 
 /* Content mirrors the official Program Overview & Scoring Guide. */
 
@@ -131,6 +133,9 @@ export default function Landing() {
   const heroRef = useRef(null);
   const reduce = useReducedMotion();
   const small = useIsSmallScreen();
+
+  // Decorative notebook doodles in the side gutters. Returns its own cleanup.
+  useEffect(() => mountDoodles(), []);
 
   // Scroll-linked motion is desktop-only. On a phone the viewport is short
   // enough that a drifting, fading hero still covers the section below it,
