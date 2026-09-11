@@ -114,7 +114,7 @@ export const EVENTS = [
     // Rubric is deliberately empty: the breakdown is still being finalized.
     rubric: [],
     tbdNote:
-      'Final scoring breakdown, exact date, and sponsor involvement (Prize Picks) still being finalized.',
+      'Final scoring breakdown, exact date, and sponsors still being finalized.',
   },
 ];
 
