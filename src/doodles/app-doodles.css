@@ -1,0 +1,51 @@
+/* Tech League app doodles (dashboard + application). Decoration only. */
+.tla-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.tla-layer { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+
+.tla-d {
+  position: absolute;
+  display: none;
+  top: var(--t);
+  width: var(--w);
+  transform: rotate(var(--r));
+}
+.tla-d.l { right: calc(50% + var(--e)); }
+.tla-d.r { left: calc(50% + var(--e)); }
+@media (min-width: 1200px) { .tla-d.mid { display: block; } }
+@media (min-width: 1360px) { .tla-d.near { display: block; } }
+@media (min-width: 1700px) { .tla-d.far { display: block; } }
+
+.tla-in { pointer-events: auto; will-change: transform; }
+.tla-in:hover { animation: tla-wiggle .6s ease-in-out; }
+.tla-d svg { display: block; width: 100%; height: auto; overflow: visible; filter: url(#tla-wobble); }
+
+.tla-label {
+  font-family: "Caveat", "Comic Sans MS", cursive;
+  font-weight: 700;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #5c574f;
+  text-align: center;
+  white-space: nowrap;
+  margin-block: 4px;
+}
+
+.tla-a-bob { animation: tla-bob 6s ease-in-out infinite; }
+.tla-a-drift { animation: tla-drift 5s ease-in-out infinite; }
+.tla-a-twinkle { animation: tla-twinkle 2.8s ease-in-out infinite; }
+.tla-steam path { animation: tla-steam 3s ease-in-out infinite; }
+.tla-steam path + path { animation-delay: .8s; }
+.tla-sand { animation: tla-sand 1s linear infinite; }
+.tla-burst { animation: tla-pop 2.4s ease-in-out infinite; transform-origin: 60px 90px; transform-box: view-box; }
+
+@keyframes tla-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes tla-drift { 0%, 100% { transform: translate(0, 0) rotate(0); } 50% { transform: translate(6px, -10px) rotate(-3deg); } }
+@keyframes tla-twinkle { 0%, 100% { transform: scale(1) rotate(0); opacity: 1; } 50% { transform: scale(.7) rotate(20deg); opacity: .7; } }
+@keyframes tla-steam { 0% { opacity: 0; transform: translateY(6px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); } }
+@keyframes tla-sand { to { stroke-dashoffset: -12; } }
+@keyframes tla-pop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08) rotate(3deg); } }
+@keyframes tla-wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-6deg); } 75% { transform: rotate(5deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tla-layer * { animation: none !important; }
+}

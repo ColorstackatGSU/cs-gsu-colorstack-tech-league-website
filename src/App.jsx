@@ -13,6 +13,8 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Apply from './pages/Apply';
+import { startAppDoodles } from './doodles/app-doodles.js';
+import './doodles/app-doodles.css';
 
 /** Sends signed-out visitors to login, remembering where they were headed. */
 function RequireAuth({ children }) {
@@ -54,6 +56,9 @@ function ScrollManager() {
 }
 
 export default function App() {
+  // Decorative doodles for the dashboard and application. Returns its own cleanup.
+  useEffect(() => startAppDoodles(), []);
+
   return (
     <BrowserRouter>
       <AuthProvider>
