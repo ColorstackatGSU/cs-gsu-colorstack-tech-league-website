@@ -90,6 +90,40 @@ export function AuthProvider({ children }) {
     [session]
   );
 
+  /* ---------- team ----------
+     addTeammate throws when the roster is full or the person is already on,
+     so callers surface the message rather than failing silently. */
+
+  const addTeammate = useCallback(
+    (member) => {
+      if (!session) return null;
+      const next = store.addTeammate(session.userId, member);
+      setProfile(next);
+      return next;
+    },
+    [session]
+  );
+
+  const removeTeammate = useCallback(
+    (memberId) => {
+      if (!session) return null;
+      const next = store.removeTeammate(session.userId, memberId);
+      setProfile(next);
+      return next;
+    },
+    [session]
+  );
+
+  const renameTeam = useCallback(
+    (name) => {
+      if (!session) return null;
+      const next = store.renameTeam(session.userId, name);
+      setProfile(next);
+      return next;
+    },
+    [session]
+  );
+
   const value = useMemo(
     () => ({
       session,
@@ -103,6 +137,9 @@ export function AuthProvider({ children }) {
       deleteResume,
       submitApplication,
       saveDraft,
+      addTeammate,
+      removeTeammate,
+      renameTeam,
     }),
     [
       session,
@@ -115,6 +152,9 @@ export function AuthProvider({ children }) {
       deleteResume,
       submitApplication,
       saveDraft,
+      addTeammate,
+      removeTeammate,
+      renameTeam,
     ]
   );
 

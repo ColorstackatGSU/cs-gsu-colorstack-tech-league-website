@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -12,9 +12,20 @@ import {
   Sparkle,
   ClipboardText,
   Clock,
+  UsersThree,
+  MagnifyingGlass,
+  Plus,
+  X,
+  PencilSimple,
 } from '@phosphor-icons/react';
 import { useAuth } from '../lib/AuthContext';
-import { GlassCard, Button, Badge, StatusMessage } from '../components/ui';
+import {
+  fetchMembers,
+  initialsOf,
+  TEAM_RULES,
+  MEMBERS_ARE_MOCK,
+} from '../lib/authStore';
+import { GlassCard, Button, Badge, StatusMessage, TextInput } from '../components/ui';
 import { Reveal, Stagger, StaggerItem } from '../components/Motion';
 import './Dashboard.css';
 
@@ -37,6 +48,265 @@ function formatDate(iso) {
   } catch {
     return '';
   }
+}
+
+
+/* ============================================================
+   Team builder
+
+   Search the member directory and pick teammates. Everything here runs
+   against mock data in authStore.js: once Google sign-in lands, fetchMembers
+   queries real accounts and this component does not change.
+   ============================================================ */
+
+function Avatar({ member }) {
+  if (member.picture) {
+    return <img className="teammate__avatar" src={member.picture} alt="" />;
+  }
+  return (
+    <span className="teammate__avatar teammate__avatar--initials" aria-hidden="true">
+      {initialsOf(member.name)}
+    </span>
+  );
+}
+
+function TeamPanel() {
+  const { profile, addTeammate, removeTeammate, renameTeam } = useAuth();
+
+  const team = profile?.team ?? { name: '', members: [] };
+  const roster = team.members ?? [];
+  // The user occupies one seat and is never in the members array.
+  const seatsUsed = roster.length + 1;
+  const isFull = seatsUsed >= TEAM_RULES.max;
+
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [error, setError] = useState('');
+  const [editingName, setEditingName] = useState(false);
+  const [draftName, setDraftName] = useState(team.name ?? '');
+
+  // Debounced directory lookup, so typing does not fire a request per keystroke.
+  useEffect(() => {
+    let cancelled = false;
+    setSearching(true);
+
+    const timer = setTimeout(() => {
+      fetchMembers(query)
+        .then((members) => {
+          if (!cancelled) setResults(members);
+        })
+        .finally(() => {
+          if (!cancelled) setSearching(false);
+        });
+    }, 220);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [query]);
+
+  // People already on the roster drop out of the results.
+  const available = useMemo(
+    () => results.filter((m) => !roster.some((r) => r.id === m.id)),
+    [results, roster]
+  );
+
+  function onAdd(member) {
+    setError('');
+    try {
+      addTeammate(member);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  function onSaveName() {
+    renameTeam(draftName);
+    setEditingName(false);
+  }
+
+  return (
+    <GlassCard className="panel team-panel">
+      <div className="panel__head">
+        <div>
+          <h2 className="panel__title">Your team</h2>
+          <p className="panel__subtitle">
+            Teams run {TEAM_RULES.min}&ndash;{TEAM_RULES.max} people, including you.
+            Search the roster and add who you want to compete with.
+          </p>
+        </div>
+        <Badge
+          tone={seatsUsed >= TEAM_RULES.min ? 'success' : 'neutral'}
+          icon={UsersThree}
+        >
+          {seatsUsed} of {TEAM_RULES.max}
+        </Badge>
+      </div>
+
+      {/* ---------- team name ---------- */}
+      <div className="team-name">
+        {editingName ? (
+          <div className="team-name__edit">
+            <label className="sr-only" htmlFor="team-name-input">
+              Team name
+            </label>
+            <TextInput
+              id="team-name-input"
+              value={draftName}
+              maxLength={40}
+              placeholder="e.g. Merge Conflict"
+              onChange={(e) => setDraftName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && onSaveName()}
+            />
+            <Button variant="secondary" size="sm" onClick={onSaveName}>
+              Save
+            </Button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="team-name__display"
+            onClick={() => {
+              setDraftName(team.name ?? '');
+              setEditingName(true);
+            }}
+          >
+            <span className="team-name__value">{team.name || 'Name your team'}</span>
+            <PencilSimple size={15} weight="bold" aria-hidden="true" />
+          </button>
+        )}
+      </div>
+
+      {/* ---------- current roster ---------- */}
+      <ul className="roster">
+        <li className="teammate teammate--you">
+          <Avatar member={{ name: profile?.application?.fullName || 'You' }} />
+          <div className="teammate__meta">
+            <p className="teammate__name wrap-anywhere">
+              {profile?.application?.fullName || 'You'}
+            </p>
+            <p className="teammate__sub">Team captain</p>
+          </div>
+          <Badge tone="accent">You</Badge>
+        </li>
+
+        <AnimatePresence initial={false}>
+          {roster.map((member) => (
+            <motion.li
+              key={member.id}
+              className="teammate"
+              layout
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, x: -12 }}
+              transition={{ duration: 0.22 }}
+            >
+              <Avatar member={member} />
+              <div className="teammate__meta">
+                <p className="teammate__name wrap-anywhere">{member.name}</p>
+                <p className="teammate__sub wrap-anywhere">
+                  {member.year} &middot; {member.major}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="teammate__remove"
+                onClick={() => removeTeammate(member.id)}
+                aria-label={`Remove ${member.name} from your team`}
+              >
+                <X size={15} weight="bold" aria-hidden="true" />
+              </button>
+            </motion.li>
+          ))}
+        </AnimatePresence>
+
+        {/* Empty seats, so the roster cap reads at a glance. */}
+        {Array.from({ length: Math.max(0, TEAM_RULES.max - seatsUsed) }).map((_, i) => (
+          <li key={`empty-${i}`} className="teammate teammate--empty" aria-hidden="true">
+            <span className="teammate__avatar teammate__avatar--empty">+</span>
+            <span className="teammate__sub">Open seat</span>
+          </li>
+        ))}
+      </ul>
+
+      {error && (
+        <p className="panel__error" role="alert">
+          <WarningCircle size={16} weight="fill" aria-hidden="true" />
+          <span>{error}</span>
+        </p>
+      )}
+
+      {seatsUsed < TEAM_RULES.min && (
+        <StatusMessage tone="success">
+          You need at least {TEAM_RULES.min} people to compete. Add{' '}
+          {TEAM_RULES.min - seatsUsed} more.
+        </StatusMessage>
+      )}
+
+      {/* ---------- directory search ---------- */}
+      <div className="finder">
+        <label className="finder__label" htmlFor="member-search">
+          Find teammates
+        </label>
+        <div className="finder__search">
+          <MagnifyingGlass size={17} weight="bold" aria-hidden="true" />
+          <TextInput
+            id="member-search"
+            type="search"
+            value={query}
+            placeholder="Search by name, major, or interest"
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+
+        <div className="finder__results" role="list">
+          {searching && available.length === 0 && (
+            <p className="finder__empty">Searching&hellip;</p>
+          )}
+
+          {!searching && available.length === 0 && (
+            <p className="finder__empty">
+              No one matches that search. Try a major or interest instead.
+            </p>
+          )}
+
+          {available.map((member) => (
+            <div className="finder__row" role="listitem" key={member.id}>
+              <Avatar member={member} />
+              <div className="teammate__meta">
+                <p className="teammate__name wrap-anywhere">{member.name}</p>
+                <p className="teammate__sub wrap-anywhere">
+                  {member.year} &middot; {member.major} &middot; {member.interest}
+                </p>
+              </div>
+              {member.status === 'on-team' ? (
+                <Badge tone="neutral">On a team</Badge>
+              ) : (
+                <Button
+                  variant="glass"
+                  size="sm"
+                  icon={Plus}
+                  disabled={isFull}
+                  onClick={() => onAdd(member)}
+                >
+                  Add
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {MEMBERS_ARE_MOCK && (
+          <p className="finder__note">
+            Preview roster. Once Google sign-in is live, this searches real League
+            members and sends them an invite instead of adding them directly.
+          </p>
+        )}
+      </div>
+    </GlassCard>
+  );
 }
 
 export default function Dashboard() {
@@ -351,6 +621,11 @@ export default function Dashboard() {
             </GlassCard>
           </Reveal>
         </div>
+
+        {/* ---------- team ---------- */}
+        <Reveal delay={0.18}>
+          <TeamPanel />
+        </Reveal>
 
         {/* ---------- challenge overview ---------- */}
         <Reveal delay={0.2}>
