@@ -115,14 +115,17 @@ export async function seedDemoAccounts() {
         },
         application: DEMO_APPLICATION,
         applicationStatus: 'submitted',
-        // Partially built team, so the team panel shows a populated roster
-        // with an open seat still left to fill.
+        // Partially built team: two accepted teammates, one request still
+        // waiting on an answer, so every invite state is visible at a glance.
         team: {
           name: 'Merge Conflict',
           members: [
             { id: 'm-amara', name: 'Amara Okafor', email: 'aokafor3@student.gsu.edu', picture: null, major: 'Computer Science', year: 'Junior', interest: 'Software Engineering', status: 'on-team' },
-            { id: 'm-devin', name: 'Devin Brooks', email: 'dbrooks12@student.gsu.edu', picture: null, major: 'Computer Science', year: 'Sophomore', interest: 'Backend', status: 'on-team' },
           ],
+          sent: [
+            { id: 'm-devin', name: 'Devin Brooks', email: 'dbrooks12@student.gsu.edu', picture: null, major: 'Computer Science', year: 'Sophomore', interest: 'Backend', status: 'open', sentAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(), message: '' },
+          ],
+          received: [],
         },
       },
     },
@@ -419,36 +422,112 @@ export async function fetchMembers(query = '') {
  * The signed-in user's team.
  *
  * Stored on the profile so it survives a refresh like everything else.
- * Shape: { name: string, members: Array<Member> }. `members` holds the
- * teammates the user picked, not counting the user themselves.
+ * Shape:
+ *   {
+ *     name: string,
+ *     members: Array<Member>,   // accepted teammates, never includes the user
+ *     sent: Array<Invite>,      // requests the user sent, awaiting an answer
+ *     received: Array<Invite>,  // requests sent TO the user
+ *   }
+ *
+ * An Invite is a Member plus { sentAt, message }. Joining a team is mutual:
+ * nobody lands on a roster until they accept, so `members` only ever grows
+ * through acceptTeamInvite / an accepted outgoing request.
  */
 export function getTeam(userId) {
-  return getProfile(userId).team ?? null;
+  const team = getProfile(userId).team;
+  if (!team) return null;
+  // Older saved teams predate invites; normalize so callers can assume arrays.
+  return { sent: [], received: [], ...team };
+}
+
+function currentTeam(userId) {
+  return getTeam(userId) ?? { name: '', members: [], sent: [], received: [] };
 }
 
 export function saveTeam(userId, team) {
   return saveProfile(userId, { team });
 }
 
-/** Adds a member, enforcing the roster cap (the user counts toward it). */
-export function addTeammate(userId, member) {
-  const team = getTeam(userId) ?? { name: '', members: [] };
+/** Seats taken: accepted teammates plus the user, who is never in `members`. */
+export function seatsUsed(team) {
+  return (team?.members?.length ?? 0) + 1;
+}
+
+/**
+ * Sends a join request. The person does NOT join here, they land in `sent`
+ * until they accept.
+ *
+ * Pending requests count against the cap so a user cannot paper the whole
+ * directory with requests and overfill the roster when they all say yes.
+ */
+export function requestTeammate(userId, member, message = '') {
+  const team = currentTeam(userId);
 
   if (team.members.some((m) => m.id === member.id)) {
     throw new Error(`${member.name} is already on your team.`);
   }
-  // +1 for the user themselves, who is never in the members array.
-  if (team.members.length + 1 >= TEAM_RULES.max) {
+  if (team.sent.some((m) => m.id === member.id)) {
+    throw new Error(`You already have a request out to ${member.name}.`);
+  }
+  if (seatsUsed(team) + team.sent.length >= TEAM_RULES.max) {
     throw new Error(
-      `Teams cap at ${TEAM_RULES.max} people, including you. Remove someone first.`
+      `That would put you over ${TEAM_RULES.max}, counting requests you are ` +
+        `still waiting on. Cancel one first.`
     );
   }
 
-  return saveTeam(userId, { ...team, members: [...team.members, { ...member }] });
+  return saveTeam(userId, {
+    ...team,
+    sent: [
+      ...team.sent,
+      { ...member, sentAt: new Date().toISOString(), message: message.trim() },
+    ],
+  });
+}
+
+/** Withdraws a request the user sent. */
+export function cancelTeamRequest(userId, memberId) {
+  const team = currentTeam(userId);
+  return saveTeam(userId, {
+    ...team,
+    sent: team.sent.filter((m) => m.id !== memberId),
+  });
+}
+
+/** Accepts a request someone sent the user: they move onto the roster. */
+export function acceptTeamInvite(userId, memberId) {
+  const team = currentTeam(userId);
+  const invite = team.received.find((m) => m.id === memberId);
+  if (!invite) throw new Error('That invite is no longer available.');
+
+  if (seatsUsed(team) >= TEAM_RULES.max) {
+    throw new Error(
+      `Your team is full at ${TEAM_RULES.max}. Remove someone before accepting.`
+    );
+  }
+
+  // Drop the invite envelope fields, a roster entry is just the member.
+  const { sentAt, message, ...member } = invite;
+
+  return saveTeam(userId, {
+    ...team,
+    members: [...team.members, { ...member, status: 'on-team' }],
+    received: team.received.filter((m) => m.id !== memberId),
+  });
+}
+
+/** Declines a request. It just disappears, the sender is not told why. */
+export function declineTeamInvite(userId, memberId) {
+  const team = currentTeam(userId);
+  return saveTeam(userId, {
+    ...team,
+    received: team.received.filter((m) => m.id !== memberId),
+  });
 }
 
 export function removeTeammate(userId, memberId) {
-  const team = getTeam(userId) ?? { name: '', members: [] };
+  const team = currentTeam(userId);
   return saveTeam(userId, {
     ...team,
     members: team.members.filter((m) => m.id !== memberId),
@@ -456,6 +535,60 @@ export function removeTeammate(userId, memberId) {
 }
 
 export function renameTeam(userId, name) {
-  const team = getTeam(userId) ?? { name: '', members: [] };
+  const team = currentTeam(userId);
   return saveTeam(userId, { ...team, name: name.trim().slice(0, 40) });
+}
+
+/* ---------- mock inbox ----------
+ *
+ * With no server there is nobody on the other end to send the user a request,
+ * so seedInvites() drops a couple of incoming ones in so the inbox has
+ * something to accept or decline. It runs once per account and only in dev.
+ * Delete this, and its call in the Dashboard, when real invites land.
+ */
+
+const SEEDED_INVITES_FLAG = 'invitesSeeded';
+
+export function seedInvites(userId) {
+  if (!import.meta.env.DEV) return null;
+
+  const profile = getProfile(userId);
+  if (profile[SEEDED_INVITES_FLAG]) return null;
+
+  const team = currentTeam(userId);
+  const pick = (id) => MOCK_MEMBERS.find((m) => m.id === id);
+
+  const incoming = [
+    {
+      ...pick('m-sofia'),
+      sentAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+      message: 'Saw you in CSC 3210, want to team up for the season?',
+    },
+    {
+      ...pick('m-jamal'),
+      sentAt: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
+      message: 'Looking for one more for the hackathon. You in?',
+    },
+  ].filter((m) => m.id && !team.members.some((r) => r.id === m.id));
+
+  return saveProfile(userId, {
+    [SEEDED_INVITES_FLAG]: true,
+    team: { ...team, received: [...team.received, ...incoming] },
+  });
+}
+
+/** Relative timestamp for invite rows: "5h ago". */
+export function timeAgo(iso) {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return '';
+
+  const mins = Math.floor((Date.now() - then) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  return days === 1 ? 'yesterday' : `${days}d ago`;
 }

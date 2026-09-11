@@ -14,14 +14,18 @@ import {
   Clock,
   UsersThree,
   MagnifyingGlass,
-  Plus,
+  PaperPlaneTilt,
   X,
+  Check,
   PencilSimple,
+  Envelope,
+  HourglassMedium,
 } from '@phosphor-icons/react';
 import { useAuth } from '../lib/AuthContext';
 import {
   fetchMembers,
   initialsOf,
+  timeAgo,
   TEAM_RULES,
   MEMBERS_ARE_MOCK,
 } from '../lib/authStore';
@@ -71,20 +75,40 @@ function Avatar({ member }) {
 }
 
 function TeamPanel() {
-  const { profile, addTeammate, removeTeammate, renameTeam } = useAuth();
+  const {
+    profile,
+    requestTeammate,
+    cancelTeamRequest,
+    acceptTeamInvite,
+    declineTeamInvite,
+    seedInvites,
+    removeTeammate,
+    renameTeam,
+  } = useAuth();
 
-  const team = profile?.team ?? { name: '', members: [] };
+  const team = profile?.team ?? { name: '', members: [], sent: [], received: [] };
   const roster = team.members ?? [];
-  // The user occupies one seat and is never in the members array.
+  const sent = team.sent ?? [];
+  const received = team.received ?? [];
+
+  // The user occupies one seat and is never in the members array. Pending
+  // requests are held too, so the roster cannot be oversubscribed.
   const seatsUsed = roster.length + 1;
-  const isFull = seatsUsed >= TEAM_RULES.max;
+  const isFull = seatsUsed + sent.length >= TEAM_RULES.max;
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [editingName, setEditingName] = useState(false);
   const [draftName, setDraftName] = useState(team.name ?? '');
+
+  // No server means nobody can send the user a request, so mock ones are
+  // dropped in once per account to make the inbox real.
+  useEffect(() => {
+    seedInvites();
+  }, [seedInvites]);
 
   // Debounced directory lookup, so typing does not fire a request per keystroke.
   useEffect(() => {
@@ -107,16 +131,36 @@ function TeamPanel() {
     };
   }, [query]);
 
-  // People already on the roster drop out of the results.
+  // Anyone already on the roster or already asked drops out of the results.
   const available = useMemo(
-    () => results.filter((m) => !roster.some((r) => r.id === m.id)),
-    [results, roster]
+    () =>
+      results.filter(
+        (m) =>
+          !roster.some((r) => r.id === m.id) && !sent.some((r) => r.id === m.id)
+      ),
+    [results, roster, sent]
   );
 
-  function onAdd(member) {
+  function flash(message) {
+    setNotice(message);
+    setTimeout(() => setNotice(''), 4000);
+  }
+
+  function onRequest(member) {
     setError('');
     try {
-      addTeammate(member);
+      requestTeammate(member);
+      flash(`Request sent to ${member.name}. They will see it in their inbox.`);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  function onAccept(invite) {
+    setError('');
+    try {
+      acceptTeamInvite(invite.id);
+      flash(`${invite.name} is on your team.`);
     } catch (err) {
       setError(err.message);
     }
@@ -134,7 +178,7 @@ function TeamPanel() {
           <h2 className="panel__title">Your team</h2>
           <p className="panel__subtitle">
             Teams run {TEAM_RULES.min}&ndash;{TEAM_RULES.max} people, including you.
-            Search the roster and add who you want to compete with.
+            Send a request and they join once they accept.
           </p>
         </div>
         <Badge
@@ -144,6 +188,68 @@ function TeamPanel() {
           {seatsUsed} of {TEAM_RULES.max}
         </Badge>
       </div>
+
+      {/* ---------- inbox: requests sent TO the user ---------- */}
+      {received.length > 0 && (
+        <section className="inbox" aria-labelledby="inbox-heading">
+          <div className="inbox__head">
+            <Envelope size={18} weight="duotone" aria-hidden="true" />
+            <h3 className="inbox__title" id="inbox-heading">
+              Team requests
+            </h3>
+            <Badge tone="accent">{received.length}</Badge>
+          </div>
+
+          <ul className="inbox__list">
+            <AnimatePresence initial={false}>
+              {received.map((invite) => (
+                <motion.li
+                  key={invite.id}
+                  className="invite"
+                  layout
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: -12 }}
+                  transition={{ duration: 0.22 }}
+                >
+                  <Avatar member={invite} />
+                  <div className="invite__meta">
+                    <p className="invite__name wrap-anywhere">
+                      <strong>{invite.name}</strong> wants to team up
+                    </p>
+                    <p className="invite__sub wrap-anywhere">
+                      {invite.year} &middot; {invite.major} &middot;{' '}
+                      {timeAgo(invite.sentAt)}
+                    </p>
+                    {invite.message && (
+                      <p className="invite__message wrap-anywhere">
+                        &ldquo;{invite.message}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                  <div className="invite__actions">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      icon={Check}
+                      onClick={() => onAccept(invite)}
+                    >
+                      Accept
+                    </Button>
+                    <Button
+                      variant="glass"
+                      size="sm"
+                      onClick={() => declineTeamInvite(invite.id)}
+                    >
+                      Decline
+                    </Button>
+                  </div>
+                </motion.li>
+              ))}
+            </AnimatePresence>
+          </ul>
+        </section>
+      )}
 
       {/* ---------- team name ---------- */}
       <div className="team-name">
@@ -220,10 +326,42 @@ function TeamPanel() {
               </button>
             </motion.li>
           ))}
+
+          {/* Requests waiting on an answer hold a seat, shown as pending. */}
+          {sent.map((invite) => (
+            <motion.li
+              key={invite.id}
+              className="teammate teammate--pending"
+              layout
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, x: -12 }}
+              transition={{ duration: 0.22 }}
+            >
+              <Avatar member={invite} />
+              <div className="teammate__meta">
+                <p className="teammate__name wrap-anywhere">{invite.name}</p>
+                <p className="teammate__sub">
+                  <HourglassMedium size={12} weight="fill" aria-hidden="true" />{' '}
+                  Waiting &middot; sent {timeAgo(invite.sentAt)}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="teammate__remove"
+                onClick={() => cancelTeamRequest(invite.id)}
+                aria-label={`Cancel your request to ${invite.name}`}
+              >
+                <X size={15} weight="bold" aria-hidden="true" />
+              </button>
+            </motion.li>
+          ))}
         </AnimatePresence>
 
         {/* Empty seats, so the roster cap reads at a glance. */}
-        {Array.from({ length: Math.max(0, TEAM_RULES.max - seatsUsed) }).map((_, i) => (
+        {Array.from({
+          length: Math.max(0, TEAM_RULES.max - seatsUsed - sent.length),
+        }).map((_, i) => (
           <li key={`empty-${i}`} className="teammate teammate--empty" aria-hidden="true">
             <span className="teammate__avatar teammate__avatar--empty">+</span>
             <span className="teammate__sub">Open seat</span>
@@ -238,12 +376,7 @@ function TeamPanel() {
         </p>
       )}
 
-      {seatsUsed < TEAM_RULES.min && (
-        <StatusMessage tone="success">
-          You need at least {TEAM_RULES.min} people to compete. Add{' '}
-          {TEAM_RULES.min - seatsUsed} more.
-        </StatusMessage>
-      )}
+      {notice && <StatusMessage tone="success">{notice}</StatusMessage>}
 
       {/* ---------- directory search ---------- */}
       <div className="finder">
@@ -268,7 +401,7 @@ function TeamPanel() {
 
           {!searching && available.length === 0 && (
             <p className="finder__empty">
-              No one matches that search. Try a major or interest instead.
+              Nobody left to ask here. Try a different name, major, or interest.
             </p>
           )}
 
@@ -287,11 +420,11 @@ function TeamPanel() {
                 <Button
                   variant="glass"
                   size="sm"
-                  icon={Plus}
+                  icon={PaperPlaneTilt}
                   disabled={isFull}
-                  onClick={() => onAdd(member)}
+                  onClick={() => onRequest(member)}
                 >
-                  Add
+                  Request
                 </Button>
               )}
             </div>
@@ -301,7 +434,7 @@ function TeamPanel() {
         {MEMBERS_ARE_MOCK && (
           <p className="finder__note">
             Preview roster. Once Google sign-in is live, this searches real League
-            members and sends them an invite instead of adding them directly.
+            members and your request lands in their inbox for real.
           </p>
         )}
       </div>

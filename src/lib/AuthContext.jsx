@@ -91,18 +91,59 @@ export function AuthProvider({ children }) {
   );
 
   /* ---------- team ----------
-     addTeammate throws when the roster is full or the person is already on,
-     so callers surface the message rather than failing silently. */
+     Joining is mutual: requestTeammate only sends an invite, and a person
+     lands on the roster when they accept. These throw when the roster is
+     full or the request is a duplicate, so callers surface the message
+     rather than failing silently. */
 
-  const addTeammate = useCallback(
-    (member) => {
+  const requestTeammate = useCallback(
+    (member, message) => {
       if (!session) return null;
-      const next = store.addTeammate(session.userId, member);
+      const next = store.requestTeammate(session.userId, member, message);
       setProfile(next);
       return next;
     },
     [session]
   );
+
+  const cancelTeamRequest = useCallback(
+    (memberId) => {
+      if (!session) return null;
+      const next = store.cancelTeamRequest(session.userId, memberId);
+      setProfile(next);
+      return next;
+    },
+    [session]
+  );
+
+  const acceptTeamInvite = useCallback(
+    (memberId) => {
+      if (!session) return null;
+      const next = store.acceptTeamInvite(session.userId, memberId);
+      setProfile(next);
+      return next;
+    },
+    [session]
+  );
+
+  const declineTeamInvite = useCallback(
+    (memberId) => {
+      if (!session) return null;
+      const next = store.declineTeamInvite(session.userId, memberId);
+      setProfile(next);
+      return next;
+    },
+    [session]
+  );
+
+  // Drops mock incoming invites in once per account (dev only), so the inbox
+  // has something to act on with no server to send them.
+  const seedInvites = useCallback(() => {
+    if (!session) return null;
+    const next = store.seedInvites(session.userId);
+    if (next) setProfile(next);
+    return next;
+  }, [session]);
 
   const removeTeammate = useCallback(
     (memberId) => {
@@ -137,7 +178,11 @@ export function AuthProvider({ children }) {
       deleteResume,
       submitApplication,
       saveDraft,
-      addTeammate,
+      requestTeammate,
+      cancelTeamRequest,
+      acceptTeamInvite,
+      declineTeamInvite,
+      seedInvites,
       removeTeammate,
       renameTeam,
     }),
@@ -152,7 +197,11 @@ export function AuthProvider({ children }) {
       deleteResume,
       submitApplication,
       saveDraft,
-      addTeammate,
+      requestTeammate,
+      cancelTeamRequest,
+      acceptTeamInvite,
+      declineTeamInvite,
+      seedInvites,
       removeTeammate,
       renameTeam,
     ]

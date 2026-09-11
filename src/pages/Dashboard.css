@@ -641,3 +641,105 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ---------- inbox: incoming team requests ---------- */
+
+.inbox {
+  margin-top: var(--sp-5);
+  padding: var(--sp-4);
+  background: var(--mustard-soft);
+  border: var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-pencil-sm);
+}
+
+.inbox__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+  color: var(--ink);
+}
+
+.inbox__title {
+  font-family: var(--font-hand);
+  font-size: var(--fs-hand-sm);
+  line-height: 1;
+  margin: 0;
+  flex: 1 1 auto;
+}
+
+.inbox__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.invite {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--card);
+  border: var(--line);
+  border-radius: var(--r-sm);
+  flex-wrap: wrap;
+}
+
+.invite__meta {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.invite__name {
+  font-size: var(--fs-sm);
+  color: var(--ink);
+  margin: 0;
+}
+
+.invite__sub {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  margin: 2px 0 0;
+}
+
+.invite__message {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.5;
+  margin: var(--sp-2) 0 0;
+  padding-left: var(--sp-3);
+  border-left: var(--line-soft);
+}
+
+.invite__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-shrink: 0;
+}
+
+/* ---------- pending outgoing request ---------- */
+
+.teammate--pending {
+  background: var(--paper-warm);
+  border: var(--line-dash);
+  box-shadow: none;
+}
+
+.teammate--pending .teammate__avatar {
+  opacity: 0.6;
+}
+
+.teammate--pending .teammate__sub {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-subtle);
+}
