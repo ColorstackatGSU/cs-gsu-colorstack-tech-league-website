@@ -14,9 +14,22 @@
  * (bcrypt/argon2). Do not ship this as the real login.
  */
 
+import { EVENTS } from './season.js';
+
 const USERS_KEY = 'cstl.users';
 const SESSION_KEY = 'cstl.session';
 const PROFILE_KEY = 'cstl.profiles';
+const STANDINGS_KEY = 'cstl.standings';
+
+/* Usernames allowed into the admin scoring tools. With no server there is no
+   real authorization here: this gates the UI, not the data. Anyone can edit
+   localStorage directly, so treat this as a convenience for e-board, not a
+   security boundary. A real deployment must check roles server-side. */
+const ADMIN_USERNAMES = ['admin', 'eboard', 'demo'];
+
+export function isAdminUsername(username) {
+  return ADMIN_USERNAMES.includes(String(username || '').toLowerCase());
+}
 
 /* ---------- storage helpers (defensive: storage can throw) ---------- */
 
@@ -328,10 +341,134 @@ const SEED_STANDINGS = [
  *   when the scoring rules change.
  */
 export async function fetchStandings() {
-  await delay(420);
+  await delay(260);
   return {
-    teams: SEED_STANDINGS.map((t) => ({ ...t, scores: { ...t.scores } })),
-    updatedAt: new Date().toISOString(),
+    teams: readStandings(),
+    updatedAt: readStandingsMeta().updatedAt,
     isPreview: STANDINGS_ARE_PREVIEW,
+  };
+}
+
+/* ---------- persistence ---------- */
+
+/**
+ * Standings live in their own localStorage key once an admin has touched
+ * them; until then the seed is the source. Reading through this function
+ * means the leaderboard and the admin console never disagree.
+ */
+function readStandings() {
+  const saved = read(STANDINGS_KEY, null);
+  if (saved && Array.isArray(saved.teams)) return saved.teams;
+  return SEED_STANDINGS.map((t) => ({ ...t, scores: { ...t.scores } }));
+}
+
+function readStandingsMeta() {
+  const saved = read(STANDINGS_KEY, null);
+  return { updatedAt: saved?.updatedAt ?? null };
+}
+
+function writeStandings(teams) {
+  const payload = { teams, updatedAt: new Date().toISOString() };
+  write(STANDINGS_KEY, payload);
+
+  /* localStorage only fires `storage` in OTHER tabs, so the tab that made the
+     edit gets a same-tab event to listen for. Together they give every open
+     leaderboard a live update. */
+  try {
+    window.dispatchEvent(new CustomEvent('cstl:standings', { detail: payload }));
+  } catch {
+    /* non-browser context (tests); the write still happened */
+  }
+  return payload;
+}
+
+/** Synchronous read for the admin console, which re-renders on every edit. */
+export function getStandings() {
+  return { teams: readStandings(), updatedAt: readStandingsMeta().updatedAt };
+}
+
+/**
+ * Sets one team's raw score for one event.
+ *
+ * @param {string} teamId
+ * @param {string} eventId
+ * @param {number|null} value raw points, or null to clear the score back to
+ *   "not played" (which the compositing math excludes rather than zeroes).
+ */
+export function setTeamScore(teamId, eventId, value) {
+  const event = EVENTS.find((e) => e.id === eventId);
+  const teams = readStandings().map((team) => {
+    if (team.id !== teamId) return team;
+    const scores = { ...team.scores };
+
+    if (value === null || value === undefined || value === '') {
+      delete scores[eventId];
+    } else {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return team; // ignore junk rather than storing NaN
+      // Clamp on write so out-of-range points never reach storage. The
+      // compositing math clamps too, but bad data should not sit around.
+      const max = event?.max ?? 100;
+      scores[eventId] = Math.max(0, Math.min(n, max));
+    }
+    return { ...team, scores };
+  });
+  return writeStandings(teams);
+}
+
+/** Renames a team or changes its member count. */
+export function updateTeam(teamId, patch) {
+  const teams = readStandings().map((team) =>
+    team.id === teamId ? { ...team, ...patch } : team
+  );
+  return writeStandings(teams);
+}
+
+export function addTeam({ name, members = 4 }) {
+  const teams = readStandings();
+  teams.push({
+    id: `t-${crypto.randomUUID().slice(0, 8)}`,
+    name: name || 'New team',
+    members,
+    scores: {},
+  });
+  return writeStandings(teams);
+}
+
+export function removeTeam(teamId) {
+  return writeStandings(readStandings().filter((t) => t.id !== teamId));
+}
+
+/** Drops admin edits and returns to the seeded preview standings. */
+export function resetStandings() {
+  try {
+    localStorage.removeItem(STANDINGS_KEY);
+  } catch {
+    /* ignore */
+  }
+  try {
+    window.dispatchEvent(new CustomEvent('cstl:standings', { detail: null }));
+  } catch {
+    /* ignore */
+  }
+  return getStandings();
+}
+
+/**
+ * Subscribes to standings changes from this tab and from others.
+ * Returns an unsubscribe function.
+ */
+export function subscribeToStandings(callback) {
+  function onCustom() {
+    callback(getStandings());
+  }
+  function onStorage(event) {
+    if (event.key === STANDINGS_KEY) callback(getStandings());
+  }
+  window.addEventListener('cstl:standings', onCustom);
+  window.addEventListener('storage', onStorage);
+  return () => {
+    window.removeEventListener('cstl:standings', onCustom);
+    window.removeEventListener('storage', onStorage);
   };
 }

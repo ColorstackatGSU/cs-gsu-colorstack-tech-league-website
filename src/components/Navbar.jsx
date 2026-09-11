@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { List, X, SignOut, UserCircle } from '@phosphor-icons/react';
 import { useAuth } from '../lib/AuthContext';
+import { isAdminUsername } from '../lib/authStore';
 import { Button } from './ui';
 import './Navbar.css';
 
@@ -66,6 +67,7 @@ export default function Navbar() {
   }
 
   const onLanding = location.pathname === '/';
+  const isAdmin = isAuthed && isAdminUsername(session?.username);
 
   return (
     <>
@@ -105,6 +107,16 @@ export default function Navbar() {
                 {link.label}
               </NavLink>
             ))}
+            {isAdmin && (
+              <NavLink
+                to="/admin"
+                className={({ isActive }) =>
+                  `nav__link ${isActive ? 'nav__link--active' : ''}`
+                }
+              >
+                Scoring console
+              </NavLink>
+            )}
             {isAuthed && (
               <NavLink
                 to="/dashboard"
@@ -213,6 +225,11 @@ export default function Navbar() {
                   <Link to="/apply" className="mobile-menu__link" onClick={closeMenu}>
                     Application
                   </Link>
+                  {isAdmin && (
+                    <Link to="/admin" className="mobile-menu__link" onClick={closeMenu}>
+                      Scoring console
+                    </Link>
+                  )}
                   <button className="mobile-menu__link" onClick={handleSignOut}>
                     Sign out
                   </button>

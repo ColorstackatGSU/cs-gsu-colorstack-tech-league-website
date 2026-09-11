@@ -10,7 +10,7 @@ import {
 } from '@phosphor-icons/react';
 import { GlassCard, Button, Badge, SectionHeading } from '../components/ui';
 import { Reveal } from '../components/Motion';
-import { fetchStandings } from '../lib/authStore';
+import { fetchStandings, subscribeToStandings } from '../lib/authStore';
 import { EVENTS, getEvent, rankTeams, formatScore, TOTAL_WEIGHT } from '../lib/season';
 import './Leaderboard.css';
 
@@ -153,8 +153,16 @@ export default function Leaderboard() {
         if (!alive) return;
         setState({ status: 'error', teams: [], isPreview: false });
       });
+    // Live updates: an admin saving a score in this tab or another one
+    // pushes straight into the board without a refresh.
+    const unsubscribe = subscribeToStandings((next) => {
+      if (!alive) return;
+      setState((cur) => ({ ...cur, status: 'ready', teams: next.teams }));
+    });
+
     return () => {
       alive = false;
+      unsubscribe();
     };
   }, []);
 

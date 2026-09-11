@@ -1,0 +1,397 @@
+/* ============================================================
+   Admin scoring console
+   Denser than the public pages on purpose: this is a data-entry
+   surface, so legibility and hit targets beat decoration.
+   ============================================================ */
+
+.admin {
+  position: relative;
+  background: var(--paper);
+  min-height: 100vh;
+}
+
+.admin .section {
+  position: relative;
+  padding-block: var(--sp-6);
+  z-index: 1;
+}
+
+.admin__hero {
+  padding-top: calc(var(--nav-h) + var(--sp-6));
+}
+
+.admin__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  flex-wrap: wrap;
+}
+
+.admin__title {
+  font-family: var(--font-hand);
+  font-size: var(--fs-hand-lg);
+  line-height: 1.05;
+  color: var(--ink);
+  margin-top: var(--sp-3);
+  margin-bottom: var(--sp-2);
+}
+
+.admin__lede {
+  max-width: 62ch;
+  color: var(--text-muted);
+  font-size: var(--fs-base);
+  line-height: 1.6;
+}
+
+.admin__headactions {
+  flex-shrink: 0;
+}
+
+/* Reserve the row so a save message doesn't shift the table. */
+.admin__saved {
+  min-height: 2.4rem;
+  margin-top: var(--sp-4);
+}
+
+/* ---------------- Denied ---------------- */
+
+.admin__denied {
+  max-width: 460px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.admin__denied svg {
+  color: var(--clay);
+}
+
+.admin__denied-title {
+  font-family: var(--font-hand);
+  font-size: var(--fs-hand-md);
+  color: var(--ink);
+  margin: var(--sp-3) 0 var(--sp-2);
+}
+
+.admin__denied-body {
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: var(--sp-5);
+}
+
+/* ---------------- Table ---------------- */
+
+.admin__card {
+  overflow: hidden;
+}
+
+.admin__scroll {
+  overflow-x: auto;
+  /* Keeps the focus ring on edge inputs from being clipped by the scroller. */
+  padding: 3px;
+  margin: -3px;
+}
+
+.admin__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 860px;
+}
+
+.admin__table th,
+.admin__table td {
+  padding: var(--sp-2) var(--sp-3);
+  text-align: left;
+  border-bottom: var(--line-dash);
+  vertical-align: middle;
+}
+
+.admin__table thead th {
+  border-bottom: var(--line);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+.admin__th-event {
+  min-width: 108px;
+}
+
+.admin__th-name {
+  display: block;
+  white-space: normal;
+  max-width: 12ch;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.admin__th-weight {
+  display: block;
+  margin-top: 2px;
+  color: var(--clay);
+  font-weight: 700;
+}
+
+.admin__th-rank {
+  width: 2.5rem;
+}
+
+.admin__th-total {
+  text-align: right !important;
+}
+
+.admin__table tbody tr:hover {
+  background: var(--paper-warm);
+}
+
+.admin__rank {
+  font-weight: 700;
+  color: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin__teamcell {
+  min-width: 180px;
+}
+
+/* ---------------- Editable team name ---------------- */
+
+.adm-team {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.adm-team__input {
+  width: 100%;
+  min-width: 0;
+  padding: var(--sp-1) var(--sp-2);
+  font-family: var(--font-hand);
+  font-size: var(--fs-xl);
+  line-height: 1.2;
+  color: var(--ink);
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: var(--r-sm);
+}
+
+.adm-team__input:hover {
+  border-color: var(--paper-deep);
+}
+
+.adm-team__input:focus {
+  outline: none;
+  background: var(--card);
+  border-color: var(--teal-deep);
+}
+
+.adm-team__pencil {
+  flex-shrink: 0;
+  color: var(--ink-light);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.adm-team:hover .adm-team__pencil {
+  opacity: 1;
+}
+
+.adm-members {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-top: 2px;
+  padding-left: var(--sp-2);
+  font-size: var(--fs-xs);
+  color: var(--text-subtle);
+}
+
+.adm-members input {
+  width: 3rem;
+  padding: 2px var(--sp-1);
+  font: inherit;
+  color: var(--text);
+  background: var(--card);
+  border: 1.5px solid var(--paper-deep);
+  border-radius: var(--r-sm);
+}
+
+.adm-members input:focus {
+  outline: 2px solid var(--teal-deep);
+  outline-offset: 1px;
+}
+
+/* ---------------- Score inputs ---------------- */
+
+.admin__scorecell {
+  text-align: center;
+}
+
+.adm-score {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.adm-score__input {
+  width: 3.6rem;
+  padding: var(--sp-2);
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  font-weight: 700;
+  text-align: center;
+  color: var(--ink);
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-pencil-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* An unplayed event should read as absent, not as a zero. */
+.adm-score__input.is-empty {
+  border-style: dashed;
+  border-color: var(--ink-light);
+  box-shadow: none;
+  background: transparent;
+}
+
+.adm-score__input:focus {
+  outline: 3px solid var(--teal-deep);
+  outline-offset: 1px;
+  border-style: solid;
+  border-color: var(--ink);
+  background: var(--card);
+}
+
+/* Spinners steal width and invite mis-clicks during fast entry. */
+.adm-score__input::-webkit-outer-spin-button,
+.adm-score__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.adm-score__input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.adm-score__max {
+  font-size: var(--fs-xs);
+  color: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- Totals + actions ---------------- */
+
+.admin__total {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.admin__composite {
+  font-family: var(--font-hand);
+  font-size: var(--fs-hand-sm);
+  font-weight: 700;
+  color: var(--clay);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin__outof {
+  display: block;
+  font-size: var(--fs-xs);
+  color: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin__actions {
+  text-align: right;
+}
+
+.admin__remove {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: var(--r-sm);
+  color: var(--ink-light);
+  cursor: pointer;
+  transition: color var(--dur-fast), background var(--dur-fast),
+    border-color var(--dur-fast);
+}
+
+.admin__remove:hover {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-color: var(--danger);
+}
+
+.admin__remove:focus-visible {
+  outline: 3px solid var(--teal-deep);
+  outline-offset: 1px;
+}
+
+.admin__hint {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: var(--line-dash);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+  color: var(--text-subtle);
+}
+
+/* ---------------- Tools ---------------- */
+
+.admin__tools {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+@media (min-width: 760px) {
+  .admin__tools {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.admin__tool-title {
+  font-family: var(--font-hand);
+  font-size: var(--fs-hand-sm);
+  color: var(--ink);
+  margin-bottom: var(--sp-2);
+}
+
+.admin__tool-body {
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin-bottom: var(--sp-4);
+}
+
+.admin__addform {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.admin__addinput {
+  flex: 1 1 160px;
+  min-width: 0;
+  padding: var(--sp-3);
+  font: inherit;
+  color: var(--text);
+  background: var(--card);
+  border: var(--line);
+  border-radius: var(--r-sm);
+}
+
+.admin__addinput:focus {
+  outline: 3px solid var(--teal-deep);
+  outline-offset: 1px;
+}

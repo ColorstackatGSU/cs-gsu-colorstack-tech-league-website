@@ -16,6 +16,7 @@ import Dashboard from './pages/Dashboard';
 import Apply from './pages/Apply';
 import Scoring from './pages/Scoring';
 import Leaderboard from './pages/Leaderboard';
+import Admin from './pages/Admin';
 import { startAppDoodles } from './doodles/app-doodles.js';
 import './doodles/app-doodles.css';
 
@@ -98,6 +99,14 @@ export default function App() {
               element={
                 <RequireAuth>
                   <Dashboard />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <RequireAuth>
+                  <Admin />
                 </RequireAuth>
               }
             />
