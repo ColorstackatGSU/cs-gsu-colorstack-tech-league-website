@@ -14,6 +14,8 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Apply from './pages/Apply';
+import Scoring from './pages/Scoring';
+import Leaderboard from './pages/Leaderboard';
 import { startAppDoodles } from './doodles/app-doodles.js';
 import './doodles/app-doodles.css';
 
@@ -73,6 +75,8 @@ export default function App() {
           <Navbar />
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/scoring" element={<Scoring />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
             <Route
               path="/login"
               element={

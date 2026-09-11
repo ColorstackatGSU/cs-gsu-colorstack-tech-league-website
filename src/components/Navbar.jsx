@@ -12,6 +12,12 @@ const PUBLIC_LINKS = [
   { to: '/#partners', label: 'Partners' },
 ];
 
+/* Real routes, so these show on every page rather than only the landing. */
+const ROUTE_LINKS = [
+  { to: '/leaderboard', label: 'Leaderboard' },
+  { to: '/scoring', label: 'Scoring' },
+];
+
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -88,6 +94,17 @@ export default function Navbar() {
                   {link.label}
                 </a>
               ))}
+            {ROUTE_LINKS.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className={({ isActive }) =>
+                  `nav__link ${isActive ? 'nav__link--active' : ''}`
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
             {isAuthed && (
               <NavLink
                 to="/dashboard"
@@ -175,7 +192,18 @@ export default function Navbar() {
                   </a>
                 ))}
 
-              {onLanding && <span className="mobile-menu__divider" aria-hidden="true" />}
+              {ROUTE_LINKS.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="mobile-menu__link"
+                  onClick={closeMenu}
+                >
+                  {link.label}
+                </Link>
+              ))}
+
+              <span className="mobile-menu__divider" aria-hidden="true" />
 
               {isAuthed ? (
                 <>
