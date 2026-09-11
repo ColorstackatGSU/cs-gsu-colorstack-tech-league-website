@@ -8,7 +8,6 @@ import {
   FileText,
   Microphone,
   Trophy,
-  Sparkle,
 } from '@phosphor-icons/react';
 import { GlassCard, Button, Badge, SectionHeading } from '../components/ui';
 import {
@@ -182,9 +181,9 @@ export default function Landing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Badge tone="accent" icon={Sparkle}>
+            <p className="hero__status">
               Fall semester &middot; Applications open
-            </Badge>
+            </p>
           </motion.div>
 
           <RevealText
