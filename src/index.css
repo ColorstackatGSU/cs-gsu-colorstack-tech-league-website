@@ -136,7 +136,25 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  scroll-behavior: smooth;
+}
+
+/* Lenis (see components/SmoothScroll.jsx) eases scrolling itself. Native
+   `scroll-behavior: smooth` would ease the same movement a second time and
+   the two curves fight, so it only applies when Lenis is absent — which is
+   the reduced-motion path, handled in the media query below. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+/* Lenis stops driving the page during a native-scroll hand-off (a `scrollTo`
+   with immediate, an input focus). Selection there would otherwise stick. */
+.lenis.lenis-stopped {
+  overflow: clip;
 }
 
 body {
@@ -256,6 +274,8 @@ p {
    ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
+  /* No Lenis on this path, so the browser owns scrolling again. Anchor jumps
+     stay instant rather than smooth — that's the point of the setting. */
   html {
     scroll-behavior: auto;
   }

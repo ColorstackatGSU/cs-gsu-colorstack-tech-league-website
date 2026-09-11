@@ -8,6 +8,7 @@ import {
 } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/AuthContext';
 import Navbar from './components/Navbar';
+import SmoothScroll, { useSmoothScroll } from './components/SmoothScroll';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -40,17 +41,22 @@ function RedirectIfAuthed({ children }) {
  */
 function ScrollManager() {
   const { pathname, hash } = useLocation();
+  const { scrollTo } = useSmoothScroll();
 
   useEffect(() => {
+    // Routed through the smooth-scroll API rather than window.scrollTo so
+    // Lenis stays the single owner of scroll position. Calling the native
+    // method directly would move the page out from under Lenis, which then
+    // eases back from where it thought it was and reads as a snap-back.
     if (hash) {
       const el = document.querySelector(hash);
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
+        scrollTo(el);
         return;
       }
     }
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [pathname, hash]);
+    scrollTo(0, { immediate: true });
+  }, [pathname, hash, scrollTo]);
 
   return null;
 }
@@ -62,44 +68,46 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ScrollManager />
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route
-            path="/login"
-            element={
-              <RedirectIfAuthed>
-                <Login />
-              </RedirectIfAuthed>
-            }
-          />
-          <Route
-            path="/signup"
-            element={
-              <RedirectIfAuthed>
-                <Signup />
-              </RedirectIfAuthed>
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <RequireAuth>
-                <Dashboard />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/apply"
-            element={
-              <RequireAuth>
-                <Apply />
-              </RequireAuth>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <SmoothScroll>
+          <ScrollManager />
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route
+              path="/login"
+              element={
+                <RedirectIfAuthed>
+                  <Login />
+                </RedirectIfAuthed>
+              }
+            />
+            <Route
+              path="/signup"
+              element={
+                <RedirectIfAuthed>
+                  <Signup />
+                </RedirectIfAuthed>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <RequireAuth>
+                  <Dashboard />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/apply"
+              element={
+                <RequireAuth>
+                  <Apply />
+                </RequireAuth>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </SmoothScroll>
       </AuthProvider>
     </BrowserRouter>
   );
