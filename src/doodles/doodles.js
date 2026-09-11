@@ -218,6 +218,21 @@ const SVGS = {
     <path d="M42 20 L54 8 L64 22" stroke-width="2.6"/>
   `),
 
+  // Hand drawn AWS cloud: puffy cloud outline, the smile arrow, and a little rack below.
+  awsCloud: svg('0 0 170 150', `
+    <path d="M44 96 C 22 96, 14 80, 26 68 C 20 48, 42 34, 58 44 C 66 22, 100 20, 110 42 C 134 36, 150 56, 142 74 C 156 82, 150 98, 132 96 Z" fill="${C.card}"/>
+    <path d="M30 66 C 34 58, 42 54, 48 56" stroke="${C.tealLine}" stroke-width="1.8"/>
+    ${txt(86, 78, 30, 'aws', C.ink)}
+    <path d="M56 86 C 76 98, 108 98, 120 88" stroke="${C.mustard}" stroke-width="3.4"/>
+    <path d="M112 82 L122 88 L113 95" stroke="${C.mustard}" stroke-width="3.4"/>
+    <path d="M84 96 V112" stroke-width="2" stroke-dasharray="4 5"/>
+    <rect x="44" y="112" width="80" height="14" rx="3" fill="${C.tealSoft}"/>
+    <rect x="44" y="130" width="80" height="14" rx="3" fill="${C.warm}"/>
+    <circle cx="54" cy="119" r="3" fill="${C.teal}" stroke="none"/>
+    <circle cx="54" cy="137" r="3" fill="${C.clay}" stroke="none"/>
+    <path d="M66 119 H112 M66 137 H112" stroke="${C.light}" stroke-width="1.6"/>
+  `),
+
   sparkle: (fill = C.mustard) => svg('0 0 40 40', star(20, 20, 18, fill)),
 };
 
@@ -259,9 +274,10 @@ const LAYOUT = [
     { s: 'sparkle', side: 'r', e: 280, t: 130, w: 20, tier: 'near', a: 'twinkle', color: C.teal },
     { s: 'calendar', side: 'l', e: 450, t: 250, w: 115, r: -6, tier: 'near', label: 'kickoff!' },
     { s: 'clock', side: 'l', e: 460, t: 640, w: 95, r: 6, tier: 'near', a: 'ring' },
-    { s: 'pizza', side: 'l', e: 450, t: 1030, w: 105, r: -8, tier: 'near', label: 'hackathon fuel' },
+    { s: 'pizza', side: 'l', e: 450, t: 1120, w: 105, r: -8, tier: 'near', label: 'hackathon fuel' },
     { s: 'rocket', side: 'r', e: 460, t: 280, w: 90, r: 14, tier: 'near', label: 'ship it', a: 'bob' },
     { s: 'sticky', args: ['teams lock', 'after kickoff!', false], side: 'r', e: 450, t: 660, w: 118, r: 5, tier: 'near' },
+    { s: 'awsCloud', side: 'l', e: 455, t: 850, w: 130, r: -5, tier: 'near', label: 'challenge night w/ AWS', a: 'bob' },
     { s: 'paper', side: 'r', e: 470, t: 1070, w: 62, r: 0, tier: 'near' },
     { text: 'final_v2_FINAL.js', side: 'r', e: 450, t: 1160, r: -4, tier: 'near' },
     { s: 'sparkle', side: 'l', e: 640, t: 420, w: 26, tier: 'far', a: 'twinkle', color: C.clay },

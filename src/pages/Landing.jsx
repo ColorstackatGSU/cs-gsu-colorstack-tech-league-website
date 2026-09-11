@@ -104,19 +104,19 @@ const PHASES = [
   },
   {
     phase: 'Phase 2',
-    week: 'October',
+    week: 'October 14',
     title: 'Internal Challenge 1',
     body: 'The first scored challenge, run with a partner organization. Submit proof, get scored on the rubric, and watch your points post to the leaderboard.',
   },
   {
     phase: 'Phase 3',
-    week: 'November',
+    week: 'October 23',
     title: 'Challenge Night',
-    body: 'A live head-to-head night. Everyone competes in the same room on the same prompt, with points on the board that evening.',
+    body: "A live head-to-head night with AWS. Everyone competes in the same room on the same prompt, learning and building with AWS's Kiro and Kiro Crew platform, with points on the board that evening.",
   },
   {
     phase: 'Phase 4',
-    week: 'November',
+    week: 'November 6',
     title: 'Internal Challenge 2',
     body: 'The second scored challenge, run with a different partner organization, so you get reps in front of a new set of mentors and judges.',
   },
