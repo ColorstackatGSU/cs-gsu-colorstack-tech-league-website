@@ -8,6 +8,7 @@ import {
   Clock,
   Question,
 } from '@phosphor-icons/react';
+import { useAuth } from '../lib/AuthContext';
 import { GlassCard, Button, Badge, SectionHeading } from '../components/ui';
 import { Reveal, Stagger, StaggerItem } from '../components/Motion';
 import { EVENTS, COMBINE, TOTAL_WEIGHT } from '../lib/season';
@@ -84,6 +85,10 @@ function EventCard({ event, index }) {
 }
 
 export default function Scoring() {
+  // Standings are members-only, so signed-out visitors get pointed at signup
+  // rather than bounced through a login redirect.
+  const { isAuthed } = useAuth();
+
   return (
     <main className="scoring">
       {/* ---------------- Header ---------------- */}
@@ -105,9 +110,9 @@ export default function Scoring() {
               AWS is confirmed on board for the season.
             </p>
             <div className="scoring__actions">
-              <Link to="/leaderboard">
+              <Link to={isAuthed ? '/leaderboard' : '/signup'}>
                 <Button variant="primary" size="lg" iconRight={ArrowRight}>
-                  View the leaderboard
+                  {isAuthed ? 'View the leaderboard' : 'Apply to the League'}
                 </Button>
               </Link>
             </div>
@@ -259,13 +264,19 @@ export default function Scoring() {
               </h2>
               <p className="scoring__cta-body">That could be your team on Dec 4.</p>
               <div className="scoring__cta-actions">
-                <Link to="/leaderboard">
-                  <Button variant="primary" size="lg" iconRight={ArrowRight}>
-                    See the standings
-                  </Button>
-                </Link>
+                {isAuthed && (
+                  <Link to="/leaderboard">
+                    <Button variant="primary" size="lg" iconRight={ArrowRight}>
+                      See the standings
+                    </Button>
+                  </Link>
+                )}
                 <Link to="/signup">
-                  <Button variant="ghost" size="lg">
+                  <Button
+                    variant={isAuthed ? 'ghost' : 'primary'}
+                    size="lg"
+                    iconRight={isAuthed ? undefined : ArrowRight}
+                  >
                     Apply to the League
                   </Button>
                 </Link>

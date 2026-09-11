@@ -13,9 +13,12 @@ const PUBLIC_LINKS = [
 ];
 
 /* Real routes, so these show on every page rather than only the landing. */
-const ROUTE_LINKS = [
+const ROUTE_LINKS = [{ to: '/scoring', label: 'Scoring' }];
+
+/* Standings are for members only, so these follow the session. */
+const MEMBER_LINKS = [
   { to: '/leaderboard', label: 'Leaderboard' },
-  { to: '/scoring', label: 'Scoring' },
+  { to: '/dashboard', label: 'Dashboard' },
 ];
 
 export default function Navbar() {
@@ -105,16 +108,18 @@ export default function Navbar() {
                 {link.label}
               </NavLink>
             ))}
-            {isAuthed && (
-              <NavLink
-                to="/dashboard"
-                className={({ isActive }) =>
-                  `nav__link ${isActive ? 'nav__link--active' : ''}`
-                }
-              >
-                Dashboard
-              </NavLink>
-            )}
+            {isAuthed &&
+              MEMBER_LINKS.map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className={({ isActive }) =>
+                    `nav__link ${isActive ? 'nav__link--active' : ''}`
+                  }
+                >
+                  {link.label}
+                </NavLink>
+              ))}
           </nav>
 
           <div className="nav__actions">
@@ -207,6 +212,13 @@ export default function Navbar() {
 
               {isAuthed ? (
                 <>
+                  <Link
+                    to="/leaderboard"
+                    className="mobile-menu__link"
+                    onClick={closeMenu}
+                  >
+                    Leaderboard
+                  </Link>
                   <Link to="/dashboard" className="mobile-menu__link" onClick={closeMenu}>
                     Dashboard
                   </Link>

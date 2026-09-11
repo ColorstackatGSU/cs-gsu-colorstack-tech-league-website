@@ -76,7 +76,14 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/scoring" element={<Scoring />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route
+              path="/leaderboard"
+              element={
+                <RequireAuth>
+                  <Leaderboard />
+                </RequireAuth>
+              }
+            />
             <Route
               path="/login"
               element={
