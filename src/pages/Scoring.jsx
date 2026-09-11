@@ -42,7 +42,7 @@ function EventCard({ event, index }) {
           </div>
           <h3 className="score-event__name">{event.name}</h3>
           <p className="score-event__event">
-            {event.event}
+            {event.phase}
             {event.date && <span className="score-event__date"> · {event.date}</span>}
           </p>
         </div>
@@ -191,7 +191,7 @@ export default function Scoring() {
                   </caption>
                   <thead>
                     <tr>
-                      <th scope="col">Category</th>
+                      <th scope="col">Phase</th>
                       <th scope="col">Event</th>
                       <th scope="col" className="weights__num">Weight</th>
                     </tr>
@@ -199,9 +199,9 @@ export default function Scoring() {
                   <tbody>
                     {EVENTS.map((e) => (
                       <tr key={e.id}>
-                        <th scope="row">{e.name}</th>
+                        <th scope="row">{e.phase}</th>
                         <td>
-                          {e.event}
+                          {e.name}
                           {e.status === 'tbd' && ' (TBD)'}
                         </td>
                         <td className="weights__num">

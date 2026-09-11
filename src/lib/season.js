@@ -2,7 +2,8 @@
  * Fall 2026 season definition + scoring math.
  *
  * This is the single source of truth for the scoring system: the five graded
- * events, their rubrics, and their weights. The Scoring page renders it and
+ * events, their rubrics, and their weights. Event names match the
+ * milestones on the landing page exactly, so the site uses one vocabulary. The Scoring page renders it and
  * the Leaderboard computes against it, so a rule change happens here once.
  *
  * Scoring model
@@ -28,9 +29,9 @@
  */
 export const EVENTS = [
   {
-    id: 'kickoff-cup',
-    name: 'Kickoff Cup',
-    event: 'US Soccer Mini Hackathon',
+    id: 'kickoff',
+    name: 'Build Night & Mock Interviews',
+    phase: 'Kickoff',
     date: 'Sept 30',
     weight: 15,
     max: 100,
@@ -47,9 +48,9 @@ export const EVENTS = [
     ],
   },
   {
-    id: 'design-derby',
-    name: 'Design Derby',
-    event: 'Internal Challenge #1 (UI Build)',
+    id: 'internal-1',
+    name: 'Internal Challenge 1',
+    phase: 'Phase 2',
     date: 'October 14',
     weight: 15,
     max: 100,
@@ -65,10 +66,10 @@ export const EVENTS = [
     ],
   },
   {
-    id: 'crew-clash',
-    name: 'Crew Clash',
-    event: 'AWS / Kiro Crew Challenge',
-    date: 'Oct 23',
+    id: 'challenge-night',
+    name: 'Challenge Night',
+    phase: 'Phase 3',
+    date: 'October 23',
     weight: 15,
     max: 100,
     status: 'upcoming',
@@ -84,9 +85,9 @@ export const EVENTS = [
     ],
   },
   {
-    id: 'hack-in-the-box',
-    name: 'Hack in the Box',
-    event: 'Internal Challenge #2 (Cybersecurity)',
+    id: 'internal-2',
+    name: 'Internal Challenge 2',
+    phase: 'Phase 4',
     date: 'November 6',
     weight: 15,
     max: 100,
@@ -101,10 +102,10 @@ export const EVENTS = [
     ],
   },
   {
-    id: 'championship',
-    name: 'Championship Round',
-    event: 'Capstone Hackathon',
-    date: 'Dec 4',
+    id: 'finale',
+    name: 'Mini Hackathon',
+    phase: 'Finale',
+    date: 'Dec 4 · 12-6pm',
     weight: 40,
     max: 100,
     status: 'tbd',

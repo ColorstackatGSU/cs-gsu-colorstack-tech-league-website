@@ -293,7 +293,7 @@ export default function Leaderboard() {
                 <li key={e.id} className="lb-weight">
                   <span className="lb-weight__pct">{e.weight}%</span>
                   <span className="lb-weight__name">{e.name}</span>
-                  <span className="lb-weight__event">{e.event}</span>
+                  <span className="lb-weight__event">{e.phase} · {e.date}</span>
                 </li>
               ))}
             </ul>
