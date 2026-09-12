@@ -362,9 +362,3 @@ export function fetchAdminScores() {
 export function saveScore({ teamId, eventId, points }) {
   return request('PUT', '/admin/scores', { teamId, eventId, points });
 }
-
-export const PURGE_PHRASE = 'DELETE ALL RESUMES';
-
-export function purgeResumes(confirm) {
-  return request('POST', '/admin/resumes/purge', { confirm });
-}

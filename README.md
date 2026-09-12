@@ -78,7 +78,7 @@ headings, numbers, and short labels.
 | `/apply` | auth | Four-step League application; final once submitted |
 | `/teams` | auth | Every team, and the member directory (accepted members only) |
 | `/leaderboard` | auth | Standings, ranked from server-held scores |
-| `/admin` | admin | Application review and decisions, score entry, resume retirement |
+| `/admin` | admin | Application review and decisions, score entry |
 
 Signed-out visitors hitting a protected route are sent to `/login` and returned
 to where they were headed after signing in.
@@ -105,8 +105,8 @@ to Supabase directly and holds no keys.
   `src/lib/season.js` ranks for display over numbers the server returned.
 - **Applications are final once submitted.** Only an admin can reopen one.
 - **Resumes** are private files in Supabase Storage, shared with League partners
-  (deleting one is the opt-out), and retired from `/admin` about a month after
-  the season.
+  (deleting one is the opt-out). They are kept for about a month after the
+  season, when the Supabase project is deleted.
 
 ### Deploying
 

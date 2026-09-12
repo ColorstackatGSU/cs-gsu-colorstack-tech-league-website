@@ -5,8 +5,8 @@
 -- member at <user id>/resume.pdf in a private bucket; the API streams it back to its owner
 -- and to admins, and nothing is ever served from a public URL.
 --
--- Retention: resumes are kept for about a month after the season, then the whole bucket is
--- emptied from the admin page when the site is retired. See POST /api/admin/resumes/purge.
+-- Retention: resumes are kept for about a month after the season, then the whole Supabase
+-- project is deleted when the site is retired.
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('resumes', 'resumes', false, 4194304, array['application/pdf']);

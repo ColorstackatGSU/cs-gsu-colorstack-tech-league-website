@@ -4,16 +4,15 @@ import { decisionEmail } from '../_lib/emails.js';
 import { HttpError, parse, unwrap } from '../_lib/errors.js';
 import { sendMail } from '../_lib/mailer.js';
 import type { AuthedEnv } from '../_lib/session.js';
-import { RESUME_BUCKET, resumePath, service } from '../_lib/supabase.js';
+import { RESUME_BUCKET, resumePath } from '../_lib/supabase.js';
 import { pdfResponse } from './account.js';
 
 /**
- * The /admin page's API: reviewing applications, entering scores, retiring resumes.
+ * The /admin page's API: reviewing applications and entering scores.
  *
- * Everything still runs as the signed-in admin, not the service role, so the same RLS
- * policies decide what they can do. The check below only turns a non-admin away early
- * with a clear message; it is not what protects the data. The one exception is the resume
- * purge, which needs to list and empty the whole bucket.
+ * Everything runs as the signed-in admin, not the service role, so the same RLS policies
+ * decide what they can do. The check below only turns a non-admin away early with a clear
+ * message; it is not what protects the data.
  */
 const admin = new Hono<AuthedEnv>();
 
@@ -241,56 +240,6 @@ admin.put('/scores', async (c) => {
   }
 
   return c.json({ ok: true });
-});
-
-/* ---------- retiring resumes ---------- */
-
-const PURGE_PHRASE = 'DELETE ALL RESUMES';
-
-/**
- * Empties the resume bucket and clears every resume on file. This is how the retention
- * promise is kept: resumes are held for about a month after the season, then this runs
- * once when the site is retired. It cannot be undone, so the admin types the phrase.
- */
-admin.post('/resumes/purge', async (c) => {
-  parse(
-    z.object({ confirm: z.literal(PURGE_PHRASE, `Type ${PURGE_PHRASE} to confirm.`) }),
-    await body(c)
-  );
-
-  const storage = service().storage.from(RESUME_BUCKET);
-  let deleted = 0;
-
-  // One folder per member. Listing folder by folder rather than trusting profiles, so a
-  // file whose row was already cleared (a failed delete, a manual edit) goes too.
-  for (;;) {
-    const { data: folders, error } = await storage.list('', { limit: 100 });
-    if (error) throw error;
-    if (!folders || folders.length === 0) break;
-
-    // Guards the loop: a pass that removes nothing would otherwise list the same folders
-    // forever.
-    const before = deleted;
-    for (const folder of folders) {
-      const { data: files, error: listError } = await storage.list(folder.name, { limit: 100 });
-      if (listError) throw listError;
-      const paths = (files ?? []).map((file) => `${folder.name}/${file.name}`);
-      if (paths.length === 0) continue;
-      const { error: removeError } = await storage.remove(paths);
-      if (removeError) throw removeError;
-      deleted += paths.length;
-    }
-    if (deleted === before) break;
-  }
-
-  unwrap(
-    await service()
-      .from('profiles')
-      .update({ resume_name: null, resume_size: null, resume_uploaded_at: null, resume_source: null })
-      .not('resume_name', 'is', null)
-  );
-
-  return c.json({ deleted });
 });
 
 export default admin;

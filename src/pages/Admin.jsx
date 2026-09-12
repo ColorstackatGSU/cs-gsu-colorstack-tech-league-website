@@ -8,28 +8,25 @@ import {
   ArrowCounterClockwise,
   DownloadSimple,
   WarningCircle,
-  Trash,
 } from '@phosphor-icons/react';
 import {
   adminResumeUrl,
   decideApplication,
   fetchAdminApplications,
   fetchAdminScores,
-  purgeResumes,
-  PURGE_PHRASE,
   reopenApplication,
   resendDecisionEmail,
   saveScore,
   TEAM_RULES,
 } from '../lib/authStore';
-import { GlassCard, Button, Badge, StatusMessage, TextInput } from '../components/ui';
+import { GlassCard, Button, Badge, StatusMessage } from '../components/ui';
 import { Reveal } from '../components/Motion';
 import './Dashboard.css';
 import './Teams.css';
 import './Admin.css';
 
 /* ============================================================
-   Admin: reviewing applications, entering scores, retiring resumes.
+   Admin: reviewing applications and entering scores.
 
    Every action here is checked again by the API against the signed-in account, so this
    page being reachable is not what grants anything. It only exists to make the admin's
@@ -414,69 +411,11 @@ function Scores() {
   );
 }
 
-/* ---------- resumes ---------- */
-
-function Resumes() {
-  const [phrase, setPhrase] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState({ tone: 'success', message: '' });
-
-  async function purge(event) {
-    event.preventDefault();
-    setBusy(true);
-    setResult({ tone: 'success', message: '' });
-    try {
-      const { deleted } = await purgeResumes(phrase);
-      setPhrase('');
-      setResult({
-        tone: 'success',
-        message: `Deleted ${deleted} resume ${deleted === 1 ? 'file' : 'files'}. Nobody's resume is on file anymore.`,
-      });
-    } catch (err) {
-      setResult({ tone: 'error', message: err.message });
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <form className="admin-purge" onSubmit={purge}>
-      <h3 className="team-section-title">Retire every resume</h3>
-      <p className="panel__subtitle">
-        Resumes are kept for about a month after the season, then deleted when the Tech
-        League site is retired. This deletes every resume file and clears every member&apos;s
-        resume. It cannot be undone, and there is no copy anywhere else.
-      </p>
-      <label className="field__label" htmlFor="purge-phrase">
-        Type <strong>{PURGE_PHRASE}</strong> to confirm
-      </label>
-      <TextInput
-        id="purge-phrase"
-        value={phrase}
-        autoComplete="off"
-        onChange={(e) => setPhrase(e.target.value)}
-      />
-      <Button
-        type="submit"
-        variant="danger"
-        size="md"
-        icon={Trash}
-        loading={busy}
-        disabled={phrase !== PURGE_PHRASE}
-      >
-        Delete all resumes
-      </Button>
-      <StatusMessage tone={result.tone}>{result.message}</StatusMessage>
-    </form>
-  );
-}
-
 /* ---------- page ---------- */
 
 const TABS = [
   { key: 'applications', label: 'Applications', Component: Applications },
   { key: 'scores', label: 'Scores', Component: Scores },
-  { key: 'resumes', label: 'Resumes', Component: Resumes },
 ];
 
 export default function Admin() {

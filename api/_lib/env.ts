@@ -16,7 +16,7 @@ const schema = z.object({
   // JWT is what grants access, and for the auth calls that take a password or a token.
   SUPABASE_ANON_KEY: z.string().min(1),
   // Bypasses RLS. Only for work with no member session behind it yet: creating accounts,
-  // the ColorStack callback, the email rate limit, and the resume purge.
+  // the ColorStack callback, and the email rate limit.
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
 
   // Where links in emails point. No trailing slash.
