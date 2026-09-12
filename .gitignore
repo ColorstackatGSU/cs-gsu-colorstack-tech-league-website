@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Ad-hoc screenshots and scratch notes at repo root (not project assets/docs)
+/*.png
+/*.jpg
+/*.jpeg
+/*.gif
+/*.md
+!/README.md
