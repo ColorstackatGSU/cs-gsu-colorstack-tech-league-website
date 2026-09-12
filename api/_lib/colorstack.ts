@@ -78,9 +78,10 @@ export async function exchangeCode(code: string, verifier: string) {
 }
 
 /**
- * Every claim except sub can be missing: a member may have left the field blank in the
- * portal or refused that scope. So every field is optional, and blank strings are treated
- * the same as absent rather than written over something we already had.
+ * Every claim except sub can be missing. Consent is all or nothing, so a member who allows
+ * the sign-in grants every scope we asked for, but the portal omits a claim whose field
+ * the member left blank on their profile. So every field is optional, and blank strings
+ * are treated the same as absent rather than written over something we already had.
  */
 const optionalText = z
   .string()
