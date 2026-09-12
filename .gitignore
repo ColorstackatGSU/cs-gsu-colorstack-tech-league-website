@@ -30,3 +30,4 @@ dist-ssr
 /*.gif
 /*.md
 !/README.md
+.vercel
