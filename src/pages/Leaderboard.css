@@ -80,29 +80,6 @@
   color: var(--text-subtle);
 }
 
-/* ---------------- Preview banner ---------------- */
-
-.lb-preview {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--sp-2);
-  max-width: 900px;
-  margin: 0 auto var(--sp-5);
-  padding: var(--sp-3) var(--sp-4);
-  background: var(--mustard-soft);
-  border: var(--line-dash);
-  border-radius: var(--r-md);
-  font-size: var(--fs-sm);
-  line-height: 1.6;
-  color: var(--text-muted);
-}
-
-.lb-preview svg {
-  flex-shrink: 0;
-  margin-top: 3px;
-  color: var(--clay);
-}
-
 /* ---------------- Board ---------------- */
 
 .lb-card {

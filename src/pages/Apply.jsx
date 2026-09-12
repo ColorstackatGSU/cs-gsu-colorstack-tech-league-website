@@ -54,12 +54,26 @@ const INTERESTS = [
   'Still figuring it out',
 ];
 
+// Teams are 3 or 4 people and every League member competes on one. This only tells
+// e-board who still needs help finding people once applications are accepted.
 const TEAM_PREFS = [
-  { value: 'team', label: 'Put me on a team of 2-4' },
-  { value: 'solo', label: 'I want to compete solo' },
-  { value: 'have-team', label: 'I already have a team' },
-  { value: 'either', label: 'Either works for me' },
+  { value: 'team', label: 'Help me find a team of 3-4' },
+  { value: 'have-team', label: 'I already have teammates in mind' },
 ];
+
+// The same 2024 SPD-15 categories the member portal asks, so the chapter's numbers line up
+// across both. "Prefer not to say" stands alone: ticking it clears the rest, and ticking
+// anything else clears it.
+const RACE_ETHNICITY = [
+  'American Indian or Alaska Native',
+  'Asian',
+  'Black or African American',
+  'Hispanic or Latino',
+  'Middle Eastern or North African',
+  'Native Hawaiian or Pacific Islander',
+  'White',
+];
+const DECLINE = 'Prefer not to say';
 
 /**
  * Graduation terms, generated from today so the list never goes stale.
@@ -90,8 +104,8 @@ const GRAD_TERMS = buildGradTerms();
 
 const EMPTY = {
   fullName: '',
-  schoolEmail: '',
   personalEmail: '',
+  raceEthnicity: [],
   year: '',
   major: '',
   gradTerm: '',
@@ -101,26 +115,35 @@ const EMPTY = {
   goals: '',
   experience: '',
   commitment: '',
-  consentShare: false,
 };
 
 const STEPS = [
-  { id: 0, title: 'About you', fields: ['fullName', 'schoolEmail', 'personalEmail'] },
+  { id: 0, title: 'About you', fields: ['fullName', 'personalEmail', 'raceEthnicity'] },
   { id: 1, title: 'Academics', fields: ['year', 'major', 'gradTerm', 'interest'] },
   { id: 2, title: 'Short answers', fields: ['whyJoin', 'goals', 'experience'] },
-  { id: 3, title: 'Logistics', fields: ['teamPref', 'commitment', 'consentShare'] },
+  { id: 3, title: 'Logistics', fields: ['teamPref', 'commitment'] },
 ];
 
 const MIN_WHY = 40;
 
 export default function Apply() {
-  const { profile, submitApplication, saveDraft } = useAuth();
+  const { session, profile, submitApplication, saveDraft } = useAuth();
+  // The account is a verified student address, so it is the school email. Never typed.
+  const schoolEmail = session?.email ?? '';
 
   const [step, setStep] = useState(0);
-  const [values, setValues] = useState(() => ({ ...EMPTY, ...profile?.application }));
+  // Only the fields the form edits; the school email above is not one of them.
+  const [values, setValues] = useState(() => {
+    const answers = profile?.application ?? {};
+    return Object.fromEntries(Object.keys(EMPTY).map((key) => [key, answers[key] ?? EMPTY[key]]));
+  });
   const [errors, setErrors] = useState({});
   const [saved, setSaved] = useState('');
-  const [submitted, setSubmitted] = useState(profile?.applicationStatus === 'submitted');
+  const [saving, setSaving] = useState(null); // 'draft' | 'submit' | null
+  const [actionError, setActionError] = useState('');
+  // Straight from the server: a submitted application is final, so there is no local
+  // "edit my answers" state that could pretend otherwise.
+  const submitted = profile?.applicationStatus === 'submitted';
 
   const summaryRef = useRef(null);
   const topRef = useRef(null);
@@ -135,30 +158,38 @@ export default function Apply() {
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: null }));
   }
 
+  function toggleRace(option) {
+    const current = values.raceEthnicity;
+    let next;
+    if (option === DECLINE) {
+      next = current.includes(DECLINE) ? [] : [DECLINE];
+    } else if (current.includes(option)) {
+      next = current.filter((v) => v !== option);
+    } else {
+      next = [...current.filter((v) => v !== DECLINE), option];
+    }
+    set('raceEthnicity', next);
+  }
+
   function validateStep(index) {
     const found = {};
     const v = values;
 
     if (index === 0) {
       if (!v.fullName.trim()) found.fullName = 'Enter your full name.';
-      if (!v.schoolEmail.trim()) {
-        found.schoolEmail = 'Enter your school email.';
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.schoolEmail.trim())) {
-        found.schoolEmail = 'Enter a valid email address.';
-      } else if (!/\.edu$/i.test(v.schoolEmail.trim())) {
-        found.schoolEmail = 'Please use your school (.edu) email address.';
-      }
 
       if (!v.personalEmail.trim()) {
         found.personalEmail = 'Enter a personal email.';
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.personalEmail.trim())) {
         found.personalEmail = 'Enter a valid email address.';
-      } else if (
-        v.personalEmail.trim().toLowerCase() === v.schoolEmail.trim().toLowerCase()
-      ) {
+      } else if (v.personalEmail.trim().toLowerCase() === schoolEmail.toLowerCase()) {
         // A student address can lapse after graduation, which is exactly when
         // recruiters follow up, so the two have to differ.
         found.personalEmail = 'Use a different address from your school email.';
+      }
+
+      if (v.raceEthnicity.length === 0) {
+        found.raceEthnicity = 'Choose at least one option, or "Prefer not to say".';
       }
     }
 
@@ -179,14 +210,14 @@ export default function Apply() {
     }
 
     if (index === 3) {
-      if (!v.teamPref) found.teamPref = 'Let us know how you want to compete.';
+      if (!v.teamPref) found.teamPref = 'Let us know how you are finding teammates.';
       if (!v.commitment) found.commitment = 'Select your expected time commitment.';
     }
 
     return found;
   }
 
-  function goNext() {
+  async function goNext() {
     const found = validateStep(step);
     setErrors(found);
 
@@ -199,22 +230,39 @@ export default function Apply() {
     if (step < STEPS.length - 1) {
       setStep((s) => s + 1);
       setSaved('');
-    } else {
-      submitApplication(values);
-      setSubmitted(true);
+      return;
+    }
+
+    setSaving('submit');
+    setActionError('');
+    try {
+      await submitApplication(values);
+    } catch (error) {
+      setActionError(error.message);
+    } finally {
+      setSaving(null);
     }
   }
 
   function goBack() {
     setErrors({});
     setSaved('');
+    setActionError('');
     if (step > 0) setStep((s) => s - 1);
   }
 
-  function onSaveDraft() {
-    saveDraft(values);
-    setSaved('Draft saved. You can come back and finish later.');
-    setTimeout(() => setSaved(''), 4200);
+  async function onSaveDraft() {
+    setSaving('draft');
+    setActionError('');
+    try {
+      await saveDraft(values);
+      setSaved('Draft saved. You can come back and finish later, on any device.');
+      setTimeout(() => setSaved(''), 4200);
+    } catch (error) {
+      setActionError(error.message);
+    } finally {
+      setSaving(null);
+    }
   }
 
   function jumpToField(field) {
@@ -243,9 +291,13 @@ export default function Apply() {
                 Thanks, {values.fullName.split(' ')[0] || 'for applying'}. E-board reviews
                 applications on a rolling basis and will email a decision to{' '}
                 <strong className="wrap-anywhere">
-                  {values.personalEmail || values.schoolEmail}
+                  {values.personalEmail || schoolEmail}
                 </strong>
                 . Spots are limited, so not every applicant is accepted each cycle.
+              </p>
+              <p className="apply__done-body">
+                Submitted applications can no longer be edited. If something needs fixing,
+                email official@colorstackatgsu.com.
               </p>
 
               <div className="apply__recap">
@@ -253,14 +305,18 @@ export default function Apply() {
                 <dl className="apply__recap-list">
                   {[
                     ['Name', values.fullName],
-                    ['School email', values.schoolEmail],
+                    ['School email', schoolEmail],
                     ['Personal email', values.personalEmail],
+                    [
+                      'Race / ethnicity',
+                      values.raceEthnicity.join(', '),
+                    ],
                     ['Year', values.year],
                     ['Major', values.major],
                     ['Graduating', values.gradTerm],
                     ['Interest', values.interest],
                     [
-                      'Competing',
+                      'Teammates',
                       TEAM_PREFS.find((t) => t.value === values.teamPref)?.label ?? '-',
                     ],
                   ].map(([label, value]) => (
@@ -285,16 +341,6 @@ export default function Apply() {
                     Back to dashboard
                   </Button>
                 </Link>
-                <Button
-                  variant="glass"
-                  size="md"
-                  onClick={() => {
-                    setSubmitted(false);
-                    setStep(0);
-                  }}
-                >
-                  Edit my answers
-                </Button>
               </div>
             </GlassCard>
           </motion.div>
@@ -390,24 +436,17 @@ export default function Apply() {
                   <Field
                     label="School email"
                     htmlFor="schoolEmail"
-                    required
-                    error={errors.schoolEmail}
-                    helper="Use your GSU address so we can verify you're a student."
+                    helper="From your account, which is already verified as a GSU student address."
                   >
-                    {({ errorId, helperId }) => (
+                    {({ helperId }) => (
                       <TextInput
                         id="schoolEmail"
                         name="schoolEmail"
                         type="email"
-                        inputMode="email"
-                        autoComplete="school email"
-                        autoCapitalize="none"
-                        spellCheck="false"
-                        placeholder="jrivera1@student.gsu.edu"
-                        value={values.schoolEmail}
-                        invalid={Boolean(errors.schoolEmail)}
-                        aria-describedby={errors.schoolEmail ? errorId : helperId}
-                        onChange={(e) => set('schoolEmail', e.target.value)}
+                        value={schoolEmail}
+                        readOnly
+                        disabled
+                        aria-describedby={helperId}
                       />
                     )}
                   </Field>
@@ -436,6 +475,45 @@ export default function Apply() {
                       />
                     )}
                   </Field>
+
+                  <fieldset className="apply__fieldset" id="raceEthnicity">
+                    <legend className="field__label">
+                      How do you identify?
+                      <span className="field__required" aria-hidden="true">
+                        *
+                      </span>
+                    </legend>
+                    <p className="field__helper">
+                      Choose all that apply. Only League admins see this. It is how the chapter
+                      reports who the League serves, and it never affects whether you are
+                      accepted.
+                    </p>
+                    <div className="apply__options">
+                      {[...RACE_ETHNICITY, DECLINE].map((option) => {
+                        const checked = values.raceEthnicity.includes(option);
+                        return (
+                          <label
+                            key={option}
+                            className={`apply__option ${checked ? 'is-selected' : ''}`}
+                          >
+                            <input
+                              type="checkbox"
+                              name="raceEthnicity"
+                              value={option}
+                              checked={checked}
+                              onChange={() => toggleRace(option)}
+                            />
+                            <span>{option}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {errors.raceEthnicity && (
+                      <p className="field__error" role="alert">
+                        <span>{errors.raceEthnicity}</span>
+                      </p>
+                    )}
+                  </fieldset>
                 </>
               )}
 
@@ -606,7 +684,7 @@ export default function Apply() {
                 <>
                   <fieldset className="apply__fieldset">
                     <legend className="field__label">
-                      How do you want to compete?
+                      How are you finding teammates?
                       <span className="field__required" aria-hidden="true">
                         *
                       </span>
@@ -662,25 +740,19 @@ export default function Apply() {
                     )}
                   </Field>
 
-                  <label className="apply__consent">
-                    <input
-                      type="checkbox"
-                      checked={values.consentShare}
-                      onChange={(e) => set('consentShare', e.target.checked)}
-                    />
-                    <span>
-                      <strong>Share my profile with partner recruiters.</strong> If I'm a
-                      top performer, ColorStack can share my resume and standing with
-                      partner recruiting contacts for internship opportunities. Optional,
-                      and I can change this later.
-                    </span>
-                  </label>
+                  <p className="apply__notice">
+                    <strong>Your resume is shared with League partners.</strong> Any resume
+                    you upload goes into the resume book partner recruiters use for
+                    internships. To take yours out, delete it from your dashboard. Resumes
+                    are deleted about a month after the season ends.
+                  </p>
                 </>
               )}
             </motion.div>
           </AnimatePresence>
 
           {saved && <StatusMessage tone="success">{saved}</StatusMessage>}
+          {actionError && <StatusMessage tone="error">{actionError}</StatusMessage>}
 
           <div className="apply__actions">
             <div className="apply__actions-left">
@@ -691,13 +763,22 @@ export default function Apply() {
               )}
             </div>
             <div className="apply__actions-right">
-              <Button variant="glass" size="md" icon={FloppyDisk} onClick={onSaveDraft}>
+              <Button
+                variant="glass"
+                size="md"
+                icon={FloppyDisk}
+                loading={saving === 'draft'}
+                disabled={saving === 'submit'}
+                onClick={onSaveDraft}
+              >
                 Save draft
               </Button>
               <Button
                 variant="primary"
                 size="md"
                 onClick={goNext}
+                loading={saving === 'submit'}
+                disabled={saving === 'draft'}
                 iconRight={step === STEPS.length - 1 ? undefined : ArrowRight}
                 icon={step === STEPS.length - 1 ? PaperPlaneTilt : undefined}
               >

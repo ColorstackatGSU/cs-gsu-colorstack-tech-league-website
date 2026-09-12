@@ -567,10 +567,10 @@
 
 /* ---------- directory search ---------- */
 
+/* The Teams page's member search. It sits right under the tabs, whose own dashed rule
+   already separates it, so it carries no border of its own. */
 .finder {
-  margin-top: var(--sp-6);
-  padding-top: var(--sp-5);
-  border-top: var(--line-dash);
+  display: block;
 }
 
 .finder__label {
@@ -742,4 +742,120 @@
   align-items: center;
   gap: 4px;
   color: var(--text-subtle);
+}
+
+/* ---------- resume copied from ColorStack ---------- */
+
+.resume-file__note {
+  flex-basis: 100%;
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+/* ---------- team panel states ---------- */
+
+.team-locked {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  margin: var(--sp-4) 0;
+}
+
+.team-section-title {
+  font-family: var(--font-hand);
+  font-size: var(--fs-hand-sm);
+  line-height: 1.1;
+  color: var(--ink);
+  margin: 0 0 var(--sp-3);
+}
+
+.team-requests {
+  margin-top: var(--sp-5);
+}
+
+.roster--single {
+  grid-template-columns: 1fr !important;
+}
+
+.team-start {
+  margin-top: var(--sp-5);
+  display: grid;
+  gap: var(--sp-5);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 760px) {
+  .team-start {
+    grid-template-columns: 3fr 2fr;
+  }
+}
+
+.team-create,
+.team-browse {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border: var(--line-dash);
+  border-radius: var(--r-md);
+  background: var(--paper);
+}
+
+.team-create__fields {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--sp-2);
+  width: 100%;
+}
+
+.team-size {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.team-size__label {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.team-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 2px dashed var(--paper-deep);
+}
+
+.team-footer .finder__note {
+  margin: 0;
+  flex: 1 1 220px;
+}
+
+.team-leave {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.team-leave__text {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* The reset makes svg a block, which would put the crown on a line of its own. */
+.teammate__sub svg {
+  display: inline-block;
+  vertical-align: -1px;
+  color: var(--mustard);
 }

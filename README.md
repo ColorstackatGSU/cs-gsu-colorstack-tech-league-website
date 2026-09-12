@@ -10,15 +10,40 @@ Scoring Guide* (included in the repo).
 
 ## Running it
 
-```bash
-npm install
-npm run dev      # http://localhost:5173
-```
+The site is a Vite + React SPA, and its backend is a Hono API in `api/` that
+runs as one Vercel Function beside it. Data lives in the Tech League's own
+Supabase project (Postgres, Auth, Storage). Locally, Supabase runs in Docker
+and Vite serves the API from the same process, so there is one origin exactly
+as in production.
 
 ```bash
-npm run build    # production build into dist/
-npm run preview  # serve the production build
-npm run lint     # oxlint
+npm install
+npx supabase start            # Docker must be running. Ports 54431-54439.
+cp .env.example .env.local    # then paste the keys from `npx supabase status`
+npm run dev                   # http://localhost:5175, site and /api together
+```
+
+Port 5175 is not a preference: it is part of the redirect URI the member portal
+has registered for Sign in with ColorStack, which is matched literally.
+
+With no Gmail credentials in `.env.local`, emails are printed to the terminal
+instead of sent, confirmation links included. That is how you sign up locally.
+To make yourself an admin, open Studio at http://127.0.0.1:54433 and set
+`is_admin` on your row in `profiles`.
+
+```bash
+npm run build          # production build into dist/
+npm run preview        # serve the production build (no /api)
+npm run lint           # oxlint
+npm run typecheck:api  # tsc over api/
+npx supabase db reset  # rebuild the local database from supabase/migrations
+```
+
+The database rules have their own test, which runs as real members rather than
+as postgres so RLS is actually exercised:
+
+```bash
+docker exec -i supabase_db_tech-league psql -U postgres -v ON_ERROR_STOP=1 < supabase/tests/league_rules.sql
 ```
 
 ## Design
@@ -44,56 +69,52 @@ headings, numbers, and short labels.
 | Route | Access | What it does |
 |---|---|---|
 | `/` | public | Landing hub: hero, five challenges, timeline, partners, apply CTA |
-| `/login` | public | Username + password sign-in |
-| `/signup` | public | Account creation with password strength meter |
-| `/dashboard` | auth | Progress tracker, resume upload, application status |
-| `/apply` | auth | Four-step League application |
+| `/scoring` | public | The scoring system, from `src/lib/season.js` |
+| `/login` | public | Student email + password, or Sign in with ColorStack at GSU |
+| `/signup` | public | Account creation; sends a confirmation link |
+| `/verify` | public | Where the confirmation link lands |
+| `/forgot-password`, `/reset-password` | public | Password reset by email |
+| `/dashboard` | auth | Progress, resume, application status, team |
+| `/apply` | auth | Four-step League application; final once submitted |
+| `/teams` | auth | Every team, and the member directory (accepted members only) |
+| `/leaderboard` | auth | Standings, ranked from server-held scores |
+| `/admin` | admin | Application review and decisions, score entry, resume retirement |
 
 Signed-out visitors hitting a protected route are sent to `/login` and returned
 to where they were headed after signing in.
 
-## Demo accounts (dev only)
+## Data and auth
 
-Two accounts are seeded automatically when you run `npm run dev`, so you can
-click the whole flow without registering:
+[src/lib/authStore.js](src/lib/authStore.js) is the only frontend file that
+knows where data lives, and it only ever calls `/api`. The browser never talks
+to Supabase directly and holds no keys.
 
-| Username | Password | State |
-|---|---|---|
-| `demo` | `demo1234` | Fresh account, nothing uploaded or applied yet |
-| `applied` | `demo1234` | Resume uploaded and application already submitted |
+- **Accounts** are Supabase Auth users with a `@student.gsu.edu` address,
+  enforced in the database, not just the form. Sessions are HttpOnly cookies set
+  by the API. Confirmation and reset emails are sent by the API through Gmail as
+  official@colorstackatgsu.com, the same way the member portal sends mail,
+  because Supabase's built-in mailer only reaches the project's own team.
+- **Sign in with ColorStack at GSU** is an option beside email signup, not a
+  replacement: most GSU students are not ColorStack members. It prefills the
+  application from the portal and copies the member's portal resume.
+- **Rules live in the database.** Row level security on every table, and every
+  team action is a Postgres function in
+  [supabase/migrations](supabase/migrations). The API validates shapes and passes
+  the database's refusals through as sentences.
+- **Scores are server-authoritative.** Only admins write them;
+  `src/lib/season.js` ranks for display over numbers the server returned.
+- **Applications are final once submitted.** Only an admin can reopen one.
+- **Resumes** are private files in Supabase Storage, shared with League partners
+  (deleting one is the opt-out), and retired from `/admin` about a month after
+  the season.
 
-Seeding lives in `seedDemoAccounts()` in
-[src/lib/authStore.js](src/lib/authStore.js) and is called from
-[src/main.jsx](src/main.jsx). It **no-ops in a production build** and never
-overwrites an account that already exists, so changes you make while clicking
-around stick. Delete both the function and its call when real auth lands.
+### Deploying
 
-To reset a demo account to its seeded state, clear site data for localhost in
-your browser's devtools (Application → Storage → Clear site data) and reload.
-
-## Data and auth, read this before deploying
-
-`src/lib/authStore.js` is the **only** file that knows where data lives.
-Everything else calls its functions. It currently persists to `localStorage`:
-
-- Accounts live in `cstl.users`, the session in `cstl.session`, resumes and
-  application answers in `cstl.profiles`.
-- Resumes are stored as base64 data URLs, capped at 2 MB (localStorage tops out
-  around 5 MB).
-- Passwords are SHA-256 hashed so they aren't sitting in plain text.
-
-**This is not production auth.** There is no salt and no server, anything in
-`localStorage` is readable and editable by the person sitting at the browser,
-and data lives only in that one browser. Before real students use this, move
-verification server-side (Supabase, Firebase, or your own API with
-bcrypt/argon2) and store resumes in real object storage.
-
-Because every call site goes through `authStore.js`, that swap means rewriting
-the function bodies in that one file. The signatures and return shapes are
-designed to stay the same.
-
-Recruiter-facing views (browsing submitted resumes and applications) are not
-built yet, that is the natural next phase.
+Set every variable in `.env.example` on the Vercel project, pointed at the
+hosted Supabase project, then apply the migrations with
+`npx supabase link` and `npx supabase db push`. `COLORSTACK_REDIRECT_URI` must be
+`https://techleague.colorstackatgsu.com/api/auth/callback`, matching
+`TECH_LEAGUE_REDIRECT_URI` on the portal.
 
 ## Animation
 

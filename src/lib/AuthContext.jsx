@@ -1,209 +1,204 @@
-import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import * as store from './authStore';
 
 const AuthContext = createContext(null);
 
+/**
+ * The signed-in member, loaded from the server.
+ *
+ * `status` is 'loading' until the first /api/me answers, then 'ready'. Route guards wait
+ * for 'ready' before deciding anything, because "we have not asked yet" and "signed out"
+ * are different answers, and treating the first as the second would bounce every signed-in
+ * member to the login page on every refresh.
+ *
+ * `loadError` is set when that first request could not reach the server at all, so the
+ * app can say so instead of pretending the member is signed out.
+ *
+ * Every action returns the server's fresh copy and replaces local state with it. There is
+ * no local cache to go stale.
+ */
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(() => store.getSession());
-  const [profile, setProfile] = useState(() => {
-    const s = store.getSession();
-    return s ? store.getProfile(s.userId) : null;
-  });
+  const [status, setStatus] = useState('loading');
+  const [loadError, setLoadError] = useState('');
+  const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
 
-  // Keep tabs in sync: signing out in one tab signs out the others.
-  useEffect(() => {
-    function onStorage(event) {
-      if (event.key === 'cstl.session') {
-        const next = store.getSession();
-        setSession(next);
-        setProfile(next ? store.getProfile(next.userId) : null);
-      }
+  const apply = useCallback((me) => {
+    setSession(me?.session ?? null);
+    setProfile(me?.profile ?? null);
+    return me;
+  }, []);
+
+  // Team actions answer with just the team payload; fold it into the profile.
+  const applyTeam = useCallback((payload) => {
+    setProfile((prev) =>
+      prev
+        ? { ...prev, teamEligible: payload.eligible, team: payload.team, teamInbox: payload.inbox }
+        : prev
+    );
+    return payload;
+  }, []);
+
+  const refresh = useCallback(async () => {
+    try {
+      const me = await store.fetchMe();
+      apply(me);
+      setLoadError('');
+    } catch (error) {
+      setLoadError(error.message);
+    } finally {
+      setStatus('ready');
     }
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
+  }, [apply]);
 
-  const signIn = useCallback(async (credentials) => {
-    const next = await store.signIn(credentials);
-    setSession(next);
-    setProfile(store.getProfile(next.userId));
-    return next;
-  }, []);
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
-  const signUp = useCallback(async (credentials) => {
-    const next = await store.signUp(credentials);
-    setSession(next);
-    setProfile(store.getProfile(next.userId));
-    return next;
-  }, []);
+  // Coming back to the tab re-reads the server, so an invite accepted on another device
+  // shows up without a manual refresh. Throttled so tab-flicking does not hammer the API.
+  const lastRefresh = useRef(0);
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() - lastRefresh.current < 15_000) return;
+      lastRefresh.current = Date.now();
+      refresh();
+    }
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [refresh]);
 
-  const signOut = useCallback(() => {
-    store.signOut();
-    setSession(null);
-    setProfile(null);
-  }, []);
+  // The API said the session is gone (expired, or signed out elsewhere).
+  useEffect(() => {
+    function onSignedOut() {
+      apply(null);
+    }
+    window.addEventListener(store.SIGNED_OUT_EVENT, onSignedOut);
+    return () => window.removeEventListener(store.SIGNED_OUT_EVENT, onSignedOut);
+  }, [apply]);
 
-  const updateProfile = useCallback(
-    (patch) => {
-      if (!session) return null;
-      const next = store.saveProfile(session.userId, patch);
-      setProfile(next);
-      return next;
-    },
-    [session]
-  );
+  const signIn = useCallback(async (credentials) => apply(await store.signIn(credentials)), [apply]);
 
-  const uploadResume = useCallback(
-    (file) => {
-      if (!session) return null;
-      const next = store.saveResume(session.userId, file);
-      setProfile(next);
-      return next;
-    },
-    [session]
-  );
+  // No session yet: the member is signed in when they open the emailed link.
+  const signUp = useCallback((credentials) => store.signUp(credentials), []);
 
-  const deleteResume = useCallback(() => {
-    if (!session) return null;
-    const next = store.removeResume(session.userId);
-    setProfile(next);
-    return next;
-  }, [session]);
+  const verifyEmail = useCallback(async (params) => apply(await store.verifyEmail(params)), [apply]);
 
+  const resetPassword = useCallback(async (params) => apply(await store.resetPassword(params)), [apply]);
+
+  const signOut = useCallback(async () => {
+    try {
+      await store.signOut();
+    } finally {
+      // Signed out locally even if the request failed: the member asked to leave, and
+      // the server clears the cookies on the next request it does receive anyway.
+      apply(null);
+    }
+  }, [apply]);
+
+  const updateProfile = useCallback(async (patch) => apply(await store.saveProfile(patch)), [apply]);
+  const uploadResume = useCallback(async (file) => apply(await store.saveResume(file)), [apply]);
+  const deleteResume = useCallback(async () => apply(await store.removeResume()), [apply]);
   const submitApplication = useCallback(
-    (application) => {
-      if (!session) return null;
-      const next = store.saveApplication(session.userId, application);
-      setProfile(next);
-      return next;
-    },
-    [session]
+    async (application) => apply(await store.saveApplication(application)),
+    [apply]
   );
-
   const saveDraft = useCallback(
-    (application) => {
-      if (!session) return null;
-      const next = store.saveApplicationDraft(session.userId, application);
-      setProfile(next);
-      return next;
-    },
-    [session]
+    async (application) => apply(await store.saveApplicationDraft(application)),
+    [apply]
   );
 
   /* ---------- team ----------
-     Joining is mutual: requestTeammate only sends an invite, and a person
-     lands on the roster when they accept. These throw when the roster is
-     full or the request is a duplicate, so callers surface the message
-     rather than failing silently. */
+     Joining is mutual either way round: an invite waits for the invitee, a request
+     waits for the captain. These throw with the server's reason when a rule refuses
+     (team full, already on a team, not the captain), so callers show the message. */
 
+  const createTeam = useCallback(async (input) => applyTeam(await store.createTeam(input)), [applyTeam]);
+  const updateTeam = useCallback(async (patch) => applyTeam(await store.updateTeam(patch)), [applyTeam]);
+  const renameTeam = useCallback(async (name) => applyTeam(await store.renameTeam(name)), [applyTeam]);
+  const leaveTeam = useCallback(async () => applyTeam(await store.leaveTeam()), [applyTeam]);
   const requestTeammate = useCallback(
-    (member, message) => {
-      if (!session) return null;
-      const next = store.requestTeammate(session.userId, member, message);
-      setProfile(next);
-      return next;
-    },
-    [session]
+    async (userId, message) => applyTeam(await store.requestTeammate(userId, message)),
+    [applyTeam]
   );
-
+  const requestToJoin = useCallback(
+    async (teamId, message) => applyTeam(await store.requestToJoin(teamId, message)),
+    [applyTeam]
+  );
   const cancelTeamRequest = useCallback(
-    (memberId) => {
-      if (!session) return null;
-      const next = store.cancelTeamRequest(session.userId, memberId);
-      setProfile(next);
-      return next;
-    },
-    [session]
+    async (inviteId) => applyTeam(await store.cancelTeamRequest(inviteId)),
+    [applyTeam]
   );
-
   const acceptTeamInvite = useCallback(
-    (memberId) => {
-      if (!session) return null;
-      const next = store.acceptTeamInvite(session.userId, memberId);
-      setProfile(next);
-      return next;
-    },
-    [session]
+    async (inviteId) => applyTeam(await store.acceptTeamInvite(inviteId)),
+    [applyTeam]
   );
-
   const declineTeamInvite = useCallback(
-    (memberId) => {
-      if (!session) return null;
-      const next = store.declineTeamInvite(session.userId, memberId);
-      setProfile(next);
-      return next;
-    },
-    [session]
+    async (inviteId) => applyTeam(await store.declineTeamInvite(inviteId)),
+    [applyTeam]
   );
-
-  // Drops mock incoming invites in once per account (dev only), so the inbox
-  // has something to act on with no server to send them.
-  const seedInvites = useCallback(() => {
-    if (!session) return null;
-    const next = store.seedInvites(session.userId);
-    if (next) setProfile(next);
-    return next;
-  }, [session]);
-
   const removeTeammate = useCallback(
-    (memberId) => {
-      if (!session) return null;
-      const next = store.removeTeammate(session.userId, memberId);
-      setProfile(next);
-      return next;
-    },
-    [session]
-  );
-
-  const renameTeam = useCallback(
-    (name) => {
-      if (!session) return null;
-      const next = store.renameTeam(session.userId, name);
-      setProfile(next);
-      return next;
-    },
-    [session]
+    async (userId) => applyTeam(await store.removeTeammate(userId)),
+    [applyTeam]
   );
 
   const value = useMemo(
     () => ({
+      status,
+      loadError,
       session,
       profile,
       isAuthed: Boolean(session),
+      isAdmin: Boolean(session?.isAdmin),
+      refresh,
       signIn,
       signUp,
+      verifyEmail,
+      resetPassword,
       signOut,
       updateProfile,
       uploadResume,
       deleteResume,
       submitApplication,
       saveDraft,
+      createTeam,
+      updateTeam,
+      renameTeam,
+      leaveTeam,
       requestTeammate,
+      requestToJoin,
       cancelTeamRequest,
       acceptTeamInvite,
       declineTeamInvite,
-      seedInvites,
       removeTeammate,
-      renameTeam,
     }),
     [
+      status,
+      loadError,
       session,
       profile,
+      refresh,
       signIn,
       signUp,
+      verifyEmail,
+      resetPassword,
       signOut,
       updateProfile,
       uploadResume,
       deleteResume,
       submitApplication,
       saveDraft,
+      createTeam,
+      updateTeam,
+      renameTeam,
+      leaveTeam,
       requestTeammate,
+      requestToJoin,
       cancelTeamRequest,
       acceptTeamInvite,
       declineTeamInvite,
-      seedInvites,
       removeTeammate,
-      renameTeam,
     ]
   );
 
@@ -214,4 +209,9 @@ export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
   return ctx;
+}
+
+/** What to call the member: their name once we have one, otherwise their email. */
+export function displayName(session) {
+  return session?.name?.trim() || session?.email || '';
 }

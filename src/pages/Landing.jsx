@@ -100,7 +100,7 @@ const PHASES = [
     phase: 'Kickoff',
     week: 'Sept 30',
     title: 'Build Night & Mock Interviews',
-    body: 'A mini build night paired with mock interviews. Register solo or in teams of 2-4, meet the other orgs, and get your scorecard. Teams lock after kickoff so scoring stays consistent.',
+    body: 'A mini build night paired with mock interviews. Compete in a team of 3-4, meet the other orgs, and get your scorecard. Teams lock after kickoff so scoring stays consistent.',
   },
   {
     phase: 'Phase 2',
@@ -231,7 +231,7 @@ export default function Landing() {
             {[
               { value: '5', label: 'Challenge types' },
               { value: '550', label: 'Points on the board' },
-              { value: '2-4', label: 'Members per team' },
+              { value: '3-4', label: 'Members per team' },
               { value: '1', label: 'Capstone hackathon' },
             ].map((stat) => (
               <div className="hero__stat" key={stat.label}>

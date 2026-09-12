@@ -1,165 +1,79 @@
 /**
- * Auth + data persistence layer.
+ * Auth + data layer.
  *
- * This is the ONLY file that knows where data lives. Everything else in the
- * app talks to these functions. To move to Supabase/Firebase later, rewrite
- * the bodies here to make network calls, every call site keeps working
- * because the signatures and return shapes stay the same.
+ * This is the ONLY file that knows where data lives. Everything else in the app talks to
+ * these functions, and these functions talk to the League API at /api (see api/ at the
+ * repo root), which is the only thing that talks to the database.
  *
- * Current backing store: localStorage (per-browser, survives refresh).
+ * Nothing here caches. Every read goes to the server, and every write returns the
+ * server's fresh copy of whatever it changed, so a member who accepts an invite on their
+ * phone and refreshes on their laptop sees the same team.
  *
- * SECURITY NOTE: passwords are hashed with SHA-256 so they are not sitting in
- * localStorage in plain text, but this is NOT production-grade auth, there is
- * no salt and no server. A real deployment must move verification server-side
- * (bcrypt/argon2). Do not ship this as the real login.
+ * Every function either resolves with data or throws an Error whose message is a sentence
+ * a member can read. The API writes those sentences; request() below passes them through
+ * and supplies one when the network itself failed.
  */
 
-const USERS_KEY = 'cstl.users';
-const SESSION_KEY = 'cstl.session';
-const PROFILE_KEY = 'cstl.profiles';
+/* ---------- transport ---------- */
 
-/* ---------- storage helpers (defensive: storage can throw) ---------- */
-
-function read(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function write(key, value) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/* ---------- hashing ---------- */
-
-async function hashPassword(password) {
-  try {
-    const data = new TextEncoder().encode(password);
-    const digest = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(digest))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
-  } catch {
-    // crypto.subtle needs a secure context; fall back so dev over plain http works
-    return `plain:${password}`;
-  }
-}
-
-/* ---------- simulated latency so loading states are real ---------- */
-
-const delay = (ms = 620) => new Promise((r) => setTimeout(r, ms));
-
-/* ---------- demo accounts ----------
- *
- * Two seeded logins so the whole flow can be clicked through without
- * registering first:
- *
- *   demo / demo1234  , fresh account, nothing done yet
- *   applied / demo1234, resume uploaded + application already submitted
- *
- * Seeding is skipped entirely in a production build, and it never
- * overwrites an account that already exists (so edits you make while
- * clicking around survive a refresh). Delete this block, and the call in
- * main.jsx, when real auth lands.
+/**
+ * Fired when the API says the session has ended, so AuthContext can sign the page out
+ * instead of every component discovering it separately.
  */
+export const SIGNED_OUT_EVENT = 'cstl:signed-out';
 
-const DEMO_PASSWORD = 'demo1234';
-
-const DEMO_APPLICATION = {
-  fullName: 'Jordan Rivera',
-  schoolEmail: 'jrivera1@student.gsu.edu',
-  personalEmail: 'jordan.rivera@gmail.com',
-  year: 'Sophomore',
-  major: 'Computer Science',
-  gradTerm: 'Spring 2028',
-  interest: 'Software Engineering',
-  teamPref: 'team',
-  whyJoin:
-    'I want structured practice instead of cramming before career fairs. The League gives me a reason to build and interview every single week.',
-  goals:
-    'Land a summer internship, get two solid projects on my resume, and stop freezing up in technical interviews.',
-  experience:
-    'Took CSC 2720 and 3210. Built a small budgeting app in React and a Python scraper for class schedules.',
-  commitment: '3-5',
-  consentShare: true,
-};
-
-export async function seedDemoAccounts() {
-  if (!import.meta.env.DEV) return;
-
-  const users = read(USERS_KEY, {});
-  const profiles = read(PROFILE_KEY, {});
-  let changed = false;
-
-  const seeds = [
-    { username: 'demo', profile: null },
-    {
-      username: 'applied',
-      profile: {
-        resume: {
-          name: 'jordan-rivera-resume.pdf',
-          size: 148_000,
-          type: 'application/pdf',
-          // 1-page valid PDF so the download link actually opens
-          dataUrl:
-            'data:application/pdf;base64,JVBERi0xLjQKMSAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PgplbmRvYmoKMiAwIG9iago8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PgplbmRvYmoKMyAwIG9iago8PC9UeXBlL1BhZ2UvUGFyZW50IDIgMCBSL01lZGlhQm94WzAgMCAyMDAgMjAwXT4+CmVuZG9iagp4cmVmCjAgNAowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1NiAwMDAwMCBuIAowMDAwMDAwMTExIDAwMDAwIG4gCnRyYWlsZXIKPDwvU2l6ZSA0L1Jvb3QgMSAwIFI+PgpzdGFydHhyZWYKMTkwCiUlRU9G',
-          uploadedAt: new Date().toISOString(),
-        },
-        application: DEMO_APPLICATION,
-        applicationStatus: 'submitted',
-        // Partially built team: two accepted teammates, one request still
-        // waiting on an answer, so every invite state is visible at a glance.
-        team: {
-          name: 'Merge Conflict',
-          members: [
-            { id: 'm-amara', name: 'Amara Okafor', email: 'aokafor3@student.gsu.edu', picture: null, major: 'Computer Science', year: 'Junior', interest: 'Software Engineering', status: 'on-team' },
-          ],
-          sent: [
-            { id: 'm-devin', name: 'Devin Brooks', email: 'dbrooks12@student.gsu.edu', picture: null, major: 'Computer Science', year: 'Sophomore', interest: 'Backend', status: 'open', sentAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(), message: '' },
-          ],
-          received: [],
-        },
-      },
-    },
-  ];
-
-  for (const seed of seeds) {
-    if (users[seed.username]) continue; // never clobber existing data
-
-    const id = crypto.randomUUID();
-    users[seed.username] = {
-      id,
-      username: seed.username,
-      passwordHash: await hashPassword(DEMO_PASSWORD),
-      createdAt: new Date().toISOString(),
-    };
-    if (seed.profile) profiles[id] = seed.profile;
-    changed = true;
+async function request(method, path, body) {
+  const init = { method, credentials: 'same-origin', headers: {} };
+  if (body instanceof FormData) {
+    init.body = body;
+  } else if (body !== undefined) {
+    init.headers['Content-Type'] = 'application/json';
+    init.body = JSON.stringify(body);
   }
 
-  if (changed) {
-    write(USERS_KEY, users);
-    write(PROFILE_KEY, profiles);
+  let response;
+  try {
+    response = await fetch(`/api${path}`, init);
+  } catch {
+    throw new Error('We could not reach the League server. Check your connection and try again.');
   }
+
+  if (response.status === 204) return null;
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    // A body that is not JSON is never something a member should see: it is a proxy
+    // error page, or index.html because the /api rewrite is missing.
+  }
+
+  if (!response.ok) {
+    const error = new Error(data?.error ?? 'Something went wrong on our end. Try again in a minute.');
+    error.status = response.status;
+    error.code = data?.code;
+    if (response.status === 401 && !path.startsWith('/auth/')) {
+      window.dispatchEvent(new Event(SIGNED_OUT_EVENT));
+    }
+    throw error;
+  }
+  if (data === null) {
+    throw new Error('Something went wrong on our end. Try again in a minute.');
+  }
+  return data;
 }
 
 /* ---------- validation ---------- */
 
-export function validateUsername(username) {
-  const v = (username ?? '').trim();
-  if (!v) return 'Username is required.';
-  if (v.length < 3) return 'Username must be at least 3 characters.';
-  if (v.length > 24) return 'Username must be 24 characters or fewer.';
-  if (!/^[a-zA-Z0-9_.]+$/.test(v)) {
-    return 'Use only letters, numbers, underscores, and periods.';
+const STUDENT_EMAIL = /^[^@\s]+@student\.gsu\.edu$/i;
+
+/** The same rule the API and the database enforce, said before the round trip. */
+export function validateEmail(email) {
+  const v = (email ?? '').trim();
+  if (!v) return 'Enter your GSU student email.';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Enter a valid email address.';
+  if (!STUDENT_EMAIL.test(v)) {
+    return 'Use your GSU student email, the one ending in @student.gsu.edu.';
   }
   return null;
 }
@@ -168,6 +82,7 @@ export function validatePassword(password) {
   const v = password ?? '';
   if (!v) return 'Password is required.';
   if (v.length < 8) return 'Password must be at least 8 characters.';
+  if (v.length > 72) return 'Password must be 72 characters or fewer.';
   if (!/[a-zA-Z]/.test(v) || !/[0-9]/.test(v)) {
     return 'Include at least one letter and one number.';
   }
@@ -188,205 +103,133 @@ export function passwordStrength(password) {
   return { score, label: ['Too weak', 'Weak', 'Fair', 'Strong', 'Excellent'][score] };
 }
 
-/* ---------- auth ---------- */
+/* ---------- auth ----------
+ *
+ * The "me" shape every sign-in function resolves with, and what fetchMe returns:
+ *   {
+ *     session: { userId, email, name, isAdmin },
+ *     profile: { fullName, resume, application, applicationStatus, decision,
+ *                teamEligible, team, teamInbox, ... },
+ *   }
+ */
 
-export async function signUp({ username, password }) {
-  await delay();
-
-  const nameError = validateUsername(username);
-  if (nameError) throw new Error(nameError);
-  const passError = validatePassword(password);
-  if (passError) throw new Error(passError);
-
-  const key = username.trim().toLowerCase();
-  const users = read(USERS_KEY, {});
-  if (users[key]) {
-    throw new Error('That username is already taken. Try another.');
-  }
-
-  users[key] = {
-    id: crypto.randomUUID(),
-    username: username.trim(),
-    passwordHash: await hashPassword(password),
-    createdAt: new Date().toISOString(),
-  };
-
-  if (!write(USERS_KEY, users)) {
-    throw new Error('Could not save your account. Check that browser storage is enabled.');
-  }
-
-  const session = { userId: users[key].id, username: users[key].username };
-  write(SESSION_KEY, session);
-  return session;
+/**
+ * Creates the account and emails a confirmation link. There is no session yet: the
+ * member is signed in when they open that link.
+ *
+ * @returns {Promise<{ status: 'verify', email: string }>}
+ */
+export function signUp({ email, password }) {
+  return request('POST', '/auth/signup', { email: email.trim(), password });
 }
 
-export async function signIn({ username, password }) {
-  await delay();
-
-  if (!username?.trim()) throw new Error('Username is required.');
-  if (!password) throw new Error('Password is required.');
-
-  const key = username.trim().toLowerCase();
-  const users = read(USERS_KEY, {});
-  const user = users[key];
-
-  // Same message for unknown user and wrong password: never reveal which
-  // usernames exist.
-  const genericError = 'Incorrect username or password.';
-  if (!user) throw new Error(genericError);
-
-  const attempted = await hashPassword(password);
-  if (attempted !== user.passwordHash) throw new Error(genericError);
-
-  const session = { userId: user.id, username: user.username };
-  write(SESSION_KEY, session);
-  return session;
+export function verifyEmail({ tokenHash, type }) {
+  return request('POST', '/auth/verify', { tokenHash, type });
 }
 
-export function signOut() {
+export function resendVerification(email) {
+  return request('POST', '/auth/resend', { email: email.trim() });
+}
+
+export function signIn({ email, password }) {
+  return request('POST', '/auth/login', { email: email.trim(), password });
+}
+
+export async function signOut() {
+  await request('POST', '/auth/logout');
+}
+
+export function requestPasswordReset(email) {
+  return request('POST', '/auth/password/forgot', { email: email.trim() });
+}
+
+export function resetPassword({ tokenHash, password }) {
+  return request('POST', '/auth/password/reset', { tokenHash, password });
+}
+
+/** A navigation, not a fetch: the portal login is a full-page redirect. */
+export function colorstackSignInUrl(next = '/dashboard') {
+  return `/api/auth/colorstack?next=${encodeURIComponent(next)}`;
+}
+
+/**
+ * The signed-in member, or null when nobody is. A network failure still throws: "we
+ * could not tell" is not the same as "signed out", and treating it that way would bounce
+ * a member to the login page every time the wifi blinked.
+ */
+export async function fetchMe() {
   try {
-    localStorage.removeItem(SESSION_KEY);
-  } catch {
-    /* nothing to do */
+    return await request('GET', '/me');
+  } catch (error) {
+    if (error.status === 401) return null;
+    throw error;
   }
-}
-
-export function getSession() {
-  return read(SESSION_KEY, null);
 }
 
 /* ---------- profile: resume + application ---------- */
 
-export function getProfile(userId) {
-  const profiles = read(PROFILE_KEY, {});
-  return (
-    profiles[userId] ?? {
-      resume: null,
-      application: null,
-      applicationStatus: 'not-started',
-    }
-  );
+export function saveProfile(patch) {
+  return request('PATCH', '/me', patch);
 }
 
-export function saveProfile(userId, patch) {
-  const profiles = read(PROFILE_KEY, {});
-  const next = { ...getProfile(userId), ...patch };
-  profiles[userId] = next;
-  write(PROFILE_KEY, profiles);
-  return next;
+/** Uploads a PDF. The server checks the bytes are a PDF, not just the extension. */
+export function saveResume(file) {
+  const form = new FormData();
+  form.append('file', file);
+  return request('POST', '/resume', form);
 }
 
-/**
- * Stores a resume as a base64 data URL so it survives a refresh and can be
- * re-downloaded. localStorage caps around 5MB, hence the 2MB file limit
- * enforced in the UI.
- */
-export function saveResume(userId, { name, size, type, dataUrl }) {
-  return saveProfile(userId, {
-    resume: { name, size, type, dataUrl, uploadedAt: new Date().toISOString() },
-  });
+export function removeResume() {
+  return request('DELETE', '/resume');
 }
 
-export function removeResume(userId) {
-  return saveProfile(userId, { resume: null });
+/** Same-origin, so the session cookie rides along on a plain link. */
+export const RESUME_DOWNLOAD_URL = '/api/resume';
+
+/** Submits for review. Rejected if already submitted: a submission is final. */
+export function saveApplication(application) {
+  return request('POST', '/application', application);
 }
 
-export function saveApplication(userId, application) {
-  return saveProfile(userId, { application, applicationStatus: 'submitted' });
-}
-
-export function saveApplicationDraft(userId, application) {
-  return saveProfile(userId, { application, applicationStatus: 'draft' });
+export function saveApplicationDraft(application) {
+  return request('PUT', '/application/draft', application);
 }
 
 /* ============================================================
    Leaderboard standings
 
-   Preview data. There is no server yet, so standings are seeded here and the
-   rest of the app reads them through fetchStandings(). When a real backend
-   lands, rewrite this function's body to make a network call: the return shape
-   is the contract, and the Leaderboard page keeps working unchanged.
-
-   Raw scores are per-event points against that event's own rubric max (see
-   src/lib/season.js). Events a team has not played are simply absent from the
-   scores object, which the compositing math reads as "not played" rather than
-   as a zero.
-
-   Teams are cross-club: anyone can team with anyone, so a team carries no
-   org affiliation and the board never displays one.
+   Teams carry raw per-event points as the server stores them. Ranking and composite math
+   live in src/lib/season.js, which only ever runs over these numbers; nothing a member
+   sends can change them. Events a team has not played are absent from `scores`, which
+   the math reads as "not played" rather than as a zero.
    ============================================================ */
 
-export const STANDINGS_ARE_PREVIEW = true;
-
-const SEED_STANDINGS = [
-  { id: 't-segfault',  name: 'Segfault',          members: 4, scores: { 'kickoff': 92, 'internal-1': 88 } },
-  { id: 't-null-ptr',  name: 'Null Pointers',     members: 4, scores: { 'kickoff': 86, 'internal-1': 91 } },
-  { id: 't-merge',     name: 'Merge Conflict',    members: 3, scores: { 'kickoff': 90, 'internal-1': 83 } },
-  { id: 't-runtime',   name: 'Runtime Terror',    members: 4, scores: { 'kickoff': 81, 'internal-1': 89 } },
-  { id: 't-stack',     name: 'Stack Overflow',    members: 4, scores: { 'kickoff': 84, 'internal-1': 80 } },
-  { id: 't-cache',     name: 'Cache Money',       members: 3, scores: { 'kickoff': 78, 'internal-1': 85 } },
-  { id: 't-ctrl-alt',  name: 'Ctrl Alt Elite',    members: 4, scores: { 'kickoff': 76, 'internal-1': 79 } },
-  { id: 't-semicolon', name: 'Missing Semicolon', members: 2, scores: { 'kickoff': 71, 'internal-1': 74 } },
-  { id: 't-panic',     name: 'Kernel Panic',      members: 3, scores: { 'kickoff': 69, 'internal-1': 72 } },
-  { id: 't-infinite',  name: 'Infinite Loop',     members: 4, scores: { 'kickoff': 64, 'internal-1': 70 } },
-];
-
-/**
- * Current season standings.
- *
- * @returns {Promise<{ teams: Array, updatedAt: string, isPreview: boolean }>}
- *   Teams carry raw per-event scores; ranking and composite math live in
- *   src/lib/season.js so the display layer stays the only thing that changes
- *   when the scoring rules change.
- */
-export async function fetchStandings() {
-  await delay(420);
-  return {
-    teams: SEED_STANDINGS.map((t) => ({ ...t, scores: { ...t.scores } })),
-    updatedAt: new Date().toISOString(),
-    isPreview: STANDINGS_ARE_PREVIEW,
-  };
+/** @returns {Promise<{ teams: Array, updatedAt: string | null }>} */
+export function fetchStandings() {
+  return request('GET', '/standings');
 }
 
 /* ============================================================
-   Member directory + teams
+   Teams
 
-   MOCK DATA. There is no server and no Google sign-in yet, so the pool of
-   people you can team up with is seeded here. Every member is shaped like a
-   Google account payload (`name`, `email`, `picture`) plus the League fields
-   we collect ourselves, so when Google auth lands this array gets replaced by
-   a real query and the call sites below keep working unchanged.
-
-   `avatar` holds initials rather than a photo URL: a real Google profile
-   picture drops into `picture` and the UI falls back to initials when it is
-   missing, which is also what happens for members who never set one.
-
-   Team rules live in TEAM_RULES so the Dashboard and any future server-side
-   check read the same numbers.
+   Team rules live in the database; TEAM_RULES only mirrors the numbers for display.
+   Every team function resolves with the member's team payload:
+     {
+       eligible: boolean,            // accepted into the League, so teams are open to them
+       team: null | {
+         id, name, capacity, role,   // role is the member's own: 'captain' | 'member'
+         members: Array<Member & { role, isYou }>,
+         invites: Array<{ id, member, message, sentAt }>,   // sent by the team, pending
+         requests: Array<{ id, member, message, sentAt }>,  // asking to join, pending
+       },
+       inbox: {
+         invites: Array<{ id, team, message, sentAt }>,     // teams inviting the member
+         requests: Array<{ id, team, message, sentAt }>,    // the member's own asks
+       },
+     }
    ============================================================ */
 
-export const MEMBERS_ARE_MOCK = true;
-
-export const TEAM_RULES = { min: 2, max: 4 };
-
-const MOCK_MEMBERS = [
-  { id: 'm-amara',   name: 'Amara Okafor',      email: 'aokafor3@student.gsu.edu',   picture: null, major: 'Computer Science',        year: 'Junior',    interest: 'Software Engineering', status: 'open' },
-  { id: 'm-devin',   name: 'Devin Brooks',      email: 'dbrooks12@student.gsu.edu',  picture: null, major: 'Computer Science',        year: 'Sophomore', interest: 'Backend',              status: 'open' },
-  { id: 'm-priya',   name: 'Priya Raman',       email: 'praman1@student.gsu.edu',    picture: null, major: 'Computer Information Systems', year: 'Senior', interest: 'Data',             status: 'open' },
-  { id: 'm-marcus',  name: 'Marcus Hall',       email: 'mhall28@student.gsu.edu',    picture: null, major: 'Computer Science',        year: 'Freshman',  interest: 'Frontend',             status: 'open' },
-  { id: 'm-sofia',   name: 'Sofia Delgado',     email: 'sdelgado4@student.gsu.edu',  picture: null, major: 'Mathematics',             year: 'Junior',    interest: 'Machine Learning',     status: 'open' },
-  { id: 'm-tyrone',  name: 'Tyrone Jackson',    email: 'tjackson19@student.gsu.edu', picture: null, major: 'Computer Science',        year: 'Sophomore', interest: 'Software Engineering', status: 'open' },
-  { id: 'm-hana',    name: 'Hana Kim',          email: 'hkim7@student.gsu.edu',      picture: null, major: 'Computer Information Systems', year: 'Junior', interest: 'Product',          status: 'open' },
-  { id: 'm-luis',    name: 'Luis Moreno',       email: 'lmoreno2@student.gsu.edu',   picture: null, major: 'Computer Science',        year: 'Senior',    interest: 'Cloud / DevOps',       status: 'on-team' },
-  { id: 'm-chloe',   name: 'Chloe Bennett',     email: 'cbennett5@student.gsu.edu',  picture: null, major: 'Data Science',            year: 'Sophomore', interest: 'Data',                 status: 'open' },
-  { id: 'm-andre',   name: 'Andre Whitfield',   email: 'awhitfield6@student.gsu.edu',picture: null, major: 'Computer Science',        year: 'Junior',    interest: 'Backend',              status: 'on-team' },
-  { id: 'm-naomi',   name: 'Naomi Osei',        email: 'nosei1@student.gsu.edu',     picture: null, major: 'Computer Science',        year: 'Freshman',  interest: 'Frontend',             status: 'open' },
-  { id: 'm-jamal',   name: 'Jamal Carter',      email: 'jcarter31@student.gsu.edu',  picture: null, major: 'Cybersecurity',           year: 'Senior',    interest: 'Security',             status: 'open' },
-  { id: 'm-elena',   name: 'Elena Petrova',     email: 'epetrova2@student.gsu.edu',  picture: null, major: 'Computer Science',        year: 'Junior',    interest: 'Machine Learning',     status: 'open' },
-  { id: 'm-kwame',   name: 'Kwame Mensah',      email: 'kmensah8@student.gsu.edu',   picture: null, major: 'Computer Information Systems', year: 'Sophomore', interest: 'Product',       status: 'open' },
-  { id: 'm-riley',   name: 'Riley Thompson',    email: 'rthompson14@student.gsu.edu',picture: null, major: 'Computer Science',        year: 'Senior',    interest: 'Software Engineering', status: 'open' },
-  { id: 'm-ximena',  name: 'Ximena Flores',     email: 'xflores3@student.gsu.edu',   picture: null, major: 'Data Science',            year: 'Junior',    interest: 'Data',                 status: 'open' },
-];
+export const TEAM_RULES = { min: 3, max: 4 };
 
 /** Initials fallback for members with no profile picture. */
 export function initialsOf(name = '') {
@@ -398,183 +241,73 @@ export function initialsOf(name = '') {
     .join('');
 }
 
+/** Seats taken: teammates, including the member, plus invites still pending. */
+export function seatsUsed(team) {
+  return (team?.members?.length ?? 0) + (team?.invites?.length ?? 0);
+}
+
 /**
- * Searchable member directory.
- *
- * @param {string} query  Matched against name, email, major, and interest.
- * @returns {Promise<Array>} Members, already excluding nobody: the caller
- *   filters out people already on its team so this stays a pure lookup.
+ * The member directory: accepted members only, never with an email. Already ordered by
+ * the server: people on no team, then people on a team with room, then full teams.
  */
 export async function fetchMembers(query = '') {
-  await delay(260);
-
-  const q = query.trim().toLowerCase();
-  if (!q) return MOCK_MEMBERS.map((m) => ({ ...m }));
-
-  return MOCK_MEMBERS.filter((m) =>
-    [m.name, m.email, m.major, m.interest].some((field) =>
-      field.toLowerCase().includes(q)
-    )
-  ).map((m) => ({ ...m }));
+  const data = await request('GET', `/members?q=${encodeURIComponent(query.trim())}`);
+  return data.members;
 }
 
-/**
- * The signed-in user's team.
- *
- * Stored on the profile so it survives a refresh like everything else.
- * Shape:
- *   {
- *     name: string,
- *     members: Array<Member>,   // accepted teammates, never includes the user
- *     sent: Array<Invite>,      // requests the user sent, awaiting an answer
- *     received: Array<Invite>,  // requests sent TO the user
- *   }
- *
- * An Invite is a Member plus { sentAt, message }. Joining a team is mutual:
- * nobody lands on a roster until they accept, so `members` only ever grows
- * through acceptTeamInvite / an accepted outgoing request.
- */
-export function getTeam(userId) {
-  const team = getProfile(userId).team;
-  if (!team) return null;
-  // Older saved teams predate invites; normalize so callers can assume arrays.
-  return { sent: [], received: [], ...team };
+/** Every team with at least one member, open teams first. */
+export async function fetchTeams() {
+  const data = await request('GET', '/teams');
+  return data.teams;
 }
 
-function currentTeam(userId) {
-  return getTeam(userId) ?? { name: '', members: [], sent: [], received: [] };
+export function getTeam() {
+  return request('GET', '/team');
 }
 
-export function saveTeam(userId, team) {
-  return saveProfile(userId, { team });
+export function createTeam({ name, capacity }) {
+  return request('POST', '/teams', { name: name.trim(), capacity: Number(capacity) });
 }
 
-/** Seats taken: accepted teammates plus the user, who is never in `members`. */
-export function seatsUsed(team) {
-  return (team?.members?.length ?? 0) + 1;
+export function updateTeam(patch) {
+  return request('PATCH', '/team', patch);
 }
 
-/**
- * Sends a join request. The person does NOT join here, they land in `sent`
- * until they accept.
- *
- * Pending requests count against the cap so a user cannot paper the whole
- * directory with requests and overfill the roster when they all say yes.
- */
-export function requestTeammate(userId, member, message = '') {
-  const team = currentTeam(userId);
-
-  if (team.members.some((m) => m.id === member.id)) {
-    throw new Error(`${member.name} is already on your team.`);
-  }
-  if (team.sent.some((m) => m.id === member.id)) {
-    throw new Error(`You already have a request out to ${member.name}.`);
-  }
-  if (seatsUsed(team) + team.sent.length >= TEAM_RULES.max) {
-    throw new Error(
-      `That would put you over ${TEAM_RULES.max}, counting requests you are ` +
-        `still waiting on. Cancel one first.`
-    );
-  }
-
-  return saveTeam(userId, {
-    ...team,
-    sent: [
-      ...team.sent,
-      { ...member, sentAt: new Date().toISOString(), message: message.trim() },
-    ],
-  });
+export function renameTeam(name) {
+  return updateTeam({ name: name.trim() });
 }
 
-/** Withdraws a request the user sent. */
-export function cancelTeamRequest(userId, memberId) {
-  const team = currentTeam(userId);
-  return saveTeam(userId, {
-    ...team,
-    sent: team.sent.filter((m) => m.id !== memberId),
-  });
+export function leaveTeam() {
+  return request('POST', '/team/leave');
 }
 
-/** Accepts a request someone sent the user: they move onto the roster. */
-export function acceptTeamInvite(userId, memberId) {
-  const team = currentTeam(userId);
-  const invite = team.received.find((m) => m.id === memberId);
-  if (!invite) throw new Error('That invite is no longer available.');
-
-  if (seatsUsed(team) >= TEAM_RULES.max) {
-    throw new Error(
-      `Your team is full at ${TEAM_RULES.max}. Remove someone before accepting.`
-    );
-  }
-
-  // Drop the invite envelope fields, a roster entry is just the member.
-  const { sentAt, message, ...member } = invite;
-
-  return saveTeam(userId, {
-    ...team,
-    members: [...team.members, { ...member, status: 'on-team' }],
-    received: team.received.filter((m) => m.id !== memberId),
-  });
+/** Captain only. The person must be on no team; they join when they accept. */
+export function requestTeammate(userId, message = '') {
+  return request('POST', '/team/invites', { userId, message: message.trim() });
 }
 
-/** Declines a request. It just disappears, the sender is not told why. */
-export function declineTeamInvite(userId, memberId) {
-  const team = currentTeam(userId);
-  return saveTeam(userId, {
-    ...team,
-    received: team.received.filter((m) => m.id !== memberId),
-  });
+/** Asks to join a team with room. The captain accepts or declines. */
+export function requestToJoin(teamId, message = '') {
+  return request('POST', `/teams/${teamId}/requests`, { message: message.trim() });
 }
 
-export function removeTeammate(userId, memberId) {
-  const team = currentTeam(userId);
-  return saveTeam(userId, {
-    ...team,
-    members: team.members.filter((m) => m.id !== memberId),
-  });
+/** Withdraws something the member sent: a captain's invite, or their own request. */
+export function cancelTeamRequest(inviteId) {
+  return request('DELETE', `/team/invites/${inviteId}`);
 }
 
-export function renameTeam(userId, name) {
-  const team = currentTeam(userId);
-  return saveTeam(userId, { ...team, name: name.trim().slice(0, 40) });
+/** Accepts an invite to the member, or (as captain) a request to the team. */
+export function acceptTeamInvite(inviteId) {
+  return request('POST', `/team/invites/${inviteId}/accept`);
 }
 
-/* ---------- mock inbox ----------
- *
- * With no server there is nobody on the other end to send the user a request,
- * so seedInvites() drops a couple of incoming ones in so the inbox has
- * something to accept or decline. It runs once per account and only in dev.
- * Delete this, and its call in the Dashboard, when real invites land.
- */
+export function declineTeamInvite(inviteId) {
+  return request('POST', `/team/invites/${inviteId}/decline`);
+}
 
-const SEEDED_INVITES_FLAG = 'invitesSeeded';
-
-export function seedInvites(userId) {
-  if (!import.meta.env.DEV) return null;
-
-  const profile = getProfile(userId);
-  if (profile[SEEDED_INVITES_FLAG]) return null;
-
-  const team = currentTeam(userId);
-  const pick = (id) => MOCK_MEMBERS.find((m) => m.id === id);
-
-  const incoming = [
-    {
-      ...pick('m-sofia'),
-      sentAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-      message: 'Saw you in CSC 3210, want to team up for the season?',
-    },
-    {
-      ...pick('m-jamal'),
-      sentAt: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
-      message: 'Looking for one more for the hackathon. You in?',
-    },
-  ].filter((m) => m.id && !team.members.some((r) => r.id === m.id));
-
-  return saveProfile(userId, {
-    [SEEDED_INVITES_FLAG]: true,
-    team: { ...team, received: [...team.received, ...incoming] },
-  });
+/** Captain only. */
+export function removeTeammate(userId) {
+  return request('DELETE', `/team/members/${userId}`);
 }
 
 /** Relative timestamp for invite rows: "5h ago". */
@@ -591,4 +324,47 @@ export function timeAgo(iso) {
 
   const days = Math.floor(hours / 24);
   return days === 1 ? 'yesterday' : `${days}d ago`;
+}
+
+/* ============================================================
+   Admin
+
+   The server checks the signed-in account is an admin on every call. These are hidden
+   from non-admins in the UI for tidiness, not for safety.
+   ============================================================ */
+
+export async function fetchAdminApplications() {
+  const data = await request('GET', '/admin/applications');
+  return data.applications;
+}
+
+/** @returns {Promise<{ application, emailed: boolean, emailError?: string }>} */
+export function decideApplication(userId, decision) {
+  return request('POST', `/admin/applications/${userId}/decision`, { decision });
+}
+
+export function resendDecisionEmail(userId) {
+  return request('POST', `/admin/applications/${userId}/email`);
+}
+
+export function reopenApplication(userId) {
+  return request('POST', `/admin/applications/${userId}/reopen`);
+}
+
+export const adminResumeUrl = (userId) => `/api/admin/applications/${userId}/resume`;
+
+/** @returns {Promise<{ events: Array, teams: Array }>} */
+export function fetchAdminScores() {
+  return request('GET', '/admin/scores');
+}
+
+/** `points: null` clears the score. */
+export function saveScore({ teamId, eventId, points }) {
+  return request('PUT', '/admin/scores', { teamId, eventId, points });
+}
+
+export const PURGE_PHRASE = 'DELETE ALL RESUMES';
+
+export function purgeResumes(confirm) {
+  return request('POST', '/admin/resumes/purge', { confirm });
 }

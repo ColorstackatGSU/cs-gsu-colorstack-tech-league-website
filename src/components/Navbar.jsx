@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { List, X, SignOut, UserCircle } from '@phosphor-icons/react';
-import { useAuth } from '../lib/AuthContext';
+import { useAuth, displayName } from '../lib/AuthContext';
 import { Button } from './ui';
 import './Navbar.css';
 
@@ -18,13 +18,17 @@ const ROUTE_LINKS = [{ to: '/scoring', label: 'Scoring' }];
 /* Standings are for members only, so these follow the session. */
 const MEMBER_LINKS = [
   { to: '/leaderboard', label: 'Leaderboard' },
+  { to: '/teams', label: 'Teams' },
   { to: '/dashboard', label: 'Dashboard' },
 ];
+
+const ADMIN_LINK = { to: '/admin', label: 'Admin' };
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const { isAuthed, session, signOut } = useAuth();
+  const { isAuthed, isAdmin, session, signOut } = useAuth();
+  const memberLinks = isAdmin ? [...MEMBER_LINKS, ADMIN_LINK] : MEMBER_LINKS;
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -62,9 +66,9 @@ export default function Navbar() {
 
   const closeMenu = () => setMenuOpen(false);
 
-  function handleSignOut() {
+  async function handleSignOut() {
     setMenuOpen(false);
-    signOut();
+    await signOut();
     navigate('/');
   }
 
@@ -109,7 +113,7 @@ export default function Navbar() {
               </NavLink>
             ))}
             {isAuthed &&
-              MEMBER_LINKS.map((link) => (
+              memberLinks.map((link) => (
                 <NavLink
                   key={link.to}
                   to={link.to}
@@ -127,7 +131,7 @@ export default function Navbar() {
               <>
                 <Link to="/dashboard" className="nav__user">
                   <UserCircle size={20} weight="fill" aria-hidden="true" />
-                  <span className="wrap-anywhere">{session.username}</span>
+                  <span className="wrap-anywhere">{displayName(session)}</span>
                 </Link>
                 <Button variant="ghost" size="sm" icon={SignOut} onClick={handleSignOut}>
                   Sign out
@@ -212,16 +216,16 @@ export default function Navbar() {
 
               {isAuthed ? (
                 <>
-                  <Link
-                    to="/leaderboard"
-                    className="mobile-menu__link"
-                    onClick={closeMenu}
-                  >
-                    Leaderboard
-                  </Link>
-                  <Link to="/dashboard" className="mobile-menu__link" onClick={closeMenu}>
-                    Dashboard
-                  </Link>
+                  {memberLinks.map((link) => (
+                    <Link
+                      key={link.to}
+                      to={link.to}
+                      className="mobile-menu__link"
+                      onClick={closeMenu}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
                   <Link to="/apply" className="mobile-menu__link" onClick={closeMenu}>
                     Application
                   </Link>

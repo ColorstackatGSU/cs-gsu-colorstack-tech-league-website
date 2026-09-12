@@ -1,12 +1,20 @@
 import { useState, useRef, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, ArrowLeft, CheckCircle, Sparkle } from '@phosphor-icons/react';
+import {
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle,
+  Sparkle,
+  EnvelopeSimple,
+  PaperPlaneTilt,
+} from '@phosphor-icons/react';
 import { useAuth } from '../lib/AuthContext';
 import {
-  validateUsername,
+  validateEmail,
   validatePassword,
   passwordStrength,
+  resendVerification,
 } from '../lib/authStore';
 import {
   GlassCard,
@@ -16,29 +24,32 @@ import {
   PasswordInput,
   StatusMessage,
 } from '../components/ui';
+import ColorStackButton from '../components/ColorStackButton';
 import './Auth.css';
 
 export default function Signup() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
+  // Set once the account exists and the confirmation email is on its way.
+  const [sentTo, setSentTo] = useState('');
+  const [resendState, setResendState] = useState({ loading: false, message: '', tone: 'success' });
 
-  const usernameRef = useRef(null);
+  const emailRef = useRef(null);
   const passwordRef = useRef(null);
   const confirmRef = useRef(null);
 
   const { signUp } = useAuth();
-  const navigate = useNavigate();
 
   const strength = useMemo(() => passwordStrength(password), [password]);
 
   function validate() {
     const next = {};
-    const nameError = validateUsername(username);
-    if (nameError) next.username = nameError;
+    const emailError = validateEmail(email);
+    if (emailError) next.email = emailError;
     const passError = validatePassword(password);
     if (passError) next.password = passError;
     if (!confirm) next.confirm = 'Re-enter your password.';
@@ -53,7 +64,7 @@ export default function Signup() {
     const found = validate();
     setErrors(found);
     if (Object.keys(found).length > 0) {
-      if (found.username) usernameRef.current?.focus();
+      if (found.email) emailRef.current?.focus();
       else if (found.password) passwordRef.current?.focus();
       else confirmRef.current?.focus();
       return;
@@ -61,14 +72,27 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      await signUp({ username, password });
-      // New members land on the resume step, which is the point of the account
-      navigate('/dashboard', { replace: true, state: { welcome: true } });
+      const result = await signUp({ email, password });
+      setSentTo(result.email);
     } catch (error) {
       setFormError(error.message);
-      usernameRef.current?.focus();
+      emailRef.current?.focus();
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    setResendState({ loading: true, message: '', tone: 'success' });
+    try {
+      await resendVerification(sentTo);
+      setResendState({
+        loading: false,
+        message: 'Sent. It can take a minute or two to arrive.',
+        tone: 'success',
+      });
+    } catch (error) {
+      setResendState({ loading: false, message: error.message, tone: 'error' });
     }
   }
 
@@ -125,143 +149,184 @@ export default function Signup() {
           transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
         >
           <GlassCard className="auth__card">
-            <div className="auth__card-head">
-              <h2 className="auth__title">Create your account</h2>
-              <p className="auth__subtitle">
-                Takes about a minute. You can upload your resume right after.
-              </p>
-            </div>
-
-            {formError && <StatusMessage tone="error">{formError}</StatusMessage>}
-
-            <form className="auth__form" onSubmit={handleSubmit} noValidate>
-              <Field
-                label="Username"
-                htmlFor="username"
-                required
-                error={errors.username}
-                helper="3-24 characters. Letters, numbers, underscores, and periods."
-              >
-                {({ errorId, helperId }) => (
-                  <TextInput
-                    ref={usernameRef}
-                    id="username"
-                    name="username"
-                    type="text"
-                    autoComplete="username"
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    spellCheck="false"
-                    placeholder="your.username"
-                    value={username}
-                    invalid={Boolean(errors.username)}
-                    aria-describedby={errors.username ? errorId : helperId}
-                    onChange={(e) => {
-                      setUsername(e.target.value);
-                      if (errors.username) setErrors((p) => ({ ...p, username: null }));
-                    }}
-                    onBlur={() => {
-                      const err = validateUsername(username);
-                      if (err && username) setErrors((p) => ({ ...p, username: err }));
-                    }}
-                  />
-                )}
-              </Field>
-
-              <div>
-                <Field
-                  label="Password"
-                  htmlFor="new-password"
-                  required
-                  error={errors.password}
-                  helper="At least 8 characters, with a letter and a number."
-                >
-                  {({ errorId, helperId }) => (
-                    <PasswordInput
-                      ref={passwordRef}
-                      id="new-password"
-                      name="new-password"
-                      autoComplete="new-password"
-                      placeholder="Create a password"
-                      value={password}
-                      invalid={Boolean(errors.password)}
-                      aria-describedby={errors.password ? errorId : helperId}
-                      onChange={(e) => {
-                        setPassword(e.target.value);
-                        if (errors.password) setErrors((p) => ({ ...p, password: null }));
-                      }}
-                    />
-                  )}
-                </Field>
-
-                {password && (
-                  <div className="strength" aria-live="polite">
-                    <div className="strength__bars">
-                      {[0, 1, 2, 3].map((i) => (
-                        <span
-                          key={i}
-                          className={`strength__bar ${
-                            i < strength.score ? `is-on is-lvl-${strength.score}` : ''
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="strength__label">{strength.label}</span>
-                  </div>
-                )}
-              </div>
-
-              <Field
-                label="Confirm password"
-                htmlFor="confirm-password"
-                required
-                error={errors.confirm}
-              >
-                {({ errorId }) => (
-                  <PasswordInput
-                    ref={confirmRef}
-                    id="confirm-password"
-                    name="confirm-password"
-                    autoComplete="new-password"
-                    placeholder="Re-enter your password"
-                    value={confirm}
-                    invalid={Boolean(errors.confirm)}
-                    aria-describedby={errors.confirm ? errorId : undefined}
-                    onChange={(e) => {
-                      setConfirm(e.target.value);
-                      if (errors.confirm) setErrors((p) => ({ ...p, confirm: null }));
-                    }}
-                    onBlur={() => {
-                      if (confirm && confirm !== password) {
-                        setErrors((p) => ({ ...p, confirm: 'Passwords do not match.' }));
-                      }
-                    }}
-                  />
-                )}
-              </Field>
-
-              {confirm && confirm === password && !errors.confirm && (
-                <p className="auth__match">
-                  <CheckCircle size={15} weight="fill" aria-hidden="true" />
-                  Passwords match
+            {sentTo ? (
+              <div className="auth__sent" aria-live="polite">
+                <span className="auth__sent-icon" aria-hidden="true">
+                  <EnvelopeSimple size={34} weight="duotone" />
+                </span>
+                <h2 className="auth__title">Check your inbox</h2>
+                <p className="auth__subtitle">
+                  We sent a confirmation link to{' '}
+                  <strong className="wrap-anywhere">{sentTo}</strong>. Open it to finish
+                  creating your account. The link expires in an hour.
                 </p>
-              )}
+                <p className="auth__subtitle">
+                  Nothing there? Check your junk folder, then send another.
+                </p>
 
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                loading={loading}
-                iconRight={ArrowRight}
-                className="auth__submit"
-              >
-                {loading ? 'Creating your account' : 'Create account'}
-              </Button>
-            </form>
+                <StatusMessage tone={resendState.tone}>{resendState.message}</StatusMessage>
 
-            <p className="auth__switch">
-              Already a member? <Link to="/login">Log in</Link>
-            </p>
+                <Button
+                  variant="glass"
+                  size="md"
+                  icon={PaperPlaneTilt}
+                  loading={resendState.loading}
+                  onClick={handleResend}
+                >
+                  Send the link again
+                </Button>
+
+                <p className="auth__switch">
+                  Wrong address?{' '}
+                  <button type="button" className="auth__link-button" onClick={() => setSentTo('')}>
+                    Start over
+                  </button>
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="auth__card-head">
+                  <h2 className="auth__title">Create your account</h2>
+                  <p className="auth__subtitle">
+                    Use your GSU student email. We will send you a link to confirm it.
+                  </p>
+                </div>
+
+                {formError && <StatusMessage tone="error">{formError}</StatusMessage>}
+
+                <form className="auth__form" onSubmit={handleSubmit} noValidate>
+                  <Field
+                    label="Student email"
+                    htmlFor="email"
+                    required
+                    error={errors.email}
+                    helper="The one ending in @student.gsu.edu."
+                  >
+                    {({ errorId, helperId }) => (
+                      <TextInput
+                        ref={emailRef}
+                        id="email"
+                        name="email"
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck="false"
+                        placeholder="jrivera1@student.gsu.edu"
+                        value={email}
+                        invalid={Boolean(errors.email)}
+                        aria-describedby={errors.email ? errorId : helperId}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (errors.email) setErrors((p) => ({ ...p, email: null }));
+                        }}
+                        onBlur={() => {
+                          const err = validateEmail(email);
+                          if (err && email) setErrors((p) => ({ ...p, email: err }));
+                        }}
+                      />
+                    )}
+                  </Field>
+
+                  <div>
+                    <Field
+                      label="Password"
+                      htmlFor="new-password"
+                      required
+                      error={errors.password}
+                      helper="At least 8 characters, with a letter and a number."
+                    >
+                      {({ errorId, helperId }) => (
+                        <PasswordInput
+                          ref={passwordRef}
+                          id="new-password"
+                          name="new-password"
+                          autoComplete="new-password"
+                          placeholder="Create a password"
+                          value={password}
+                          invalid={Boolean(errors.password)}
+                          aria-describedby={errors.password ? errorId : helperId}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            if (errors.password) setErrors((p) => ({ ...p, password: null }));
+                          }}
+                        />
+                      )}
+                    </Field>
+
+                    {password && (
+                      <div className="strength" aria-live="polite">
+                        <div className="strength__bars">
+                          {[0, 1, 2, 3].map((i) => (
+                            <span
+                              key={i}
+                              className={`strength__bar ${
+                                i < strength.score ? `is-on is-lvl-${strength.score}` : ''
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="strength__label">{strength.label}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <Field
+                    label="Confirm password"
+                    htmlFor="confirm-password"
+                    required
+                    error={errors.confirm}
+                  >
+                    {({ errorId }) => (
+                      <PasswordInput
+                        ref={confirmRef}
+                        id="confirm-password"
+                        name="confirm-password"
+                        autoComplete="new-password"
+                        placeholder="Re-enter your password"
+                        value={confirm}
+                        invalid={Boolean(errors.confirm)}
+                        aria-describedby={errors.confirm ? errorId : undefined}
+                        onChange={(e) => {
+                          setConfirm(e.target.value);
+                          if (errors.confirm) setErrors((p) => ({ ...p, confirm: null }));
+                        }}
+                        onBlur={() => {
+                          if (confirm && confirm !== password) {
+                            setErrors((p) => ({ ...p, confirm: 'Passwords do not match.' }));
+                          }
+                        }}
+                      />
+                    )}
+                  </Field>
+
+                  {confirm && confirm === password && !errors.confirm && (
+                    <p className="auth__match">
+                      <CheckCircle size={15} weight="fill" aria-hidden="true" />
+                      Passwords match
+                    </p>
+                  )}
+
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    loading={loading}
+                    iconRight={ArrowRight}
+                    className="auth__submit"
+                  >
+                    {loading ? 'Creating your account' : 'Create account'}
+                  </Button>
+                </form>
+
+                <ColorStackButton />
+
+                <p className="auth__switch">
+                  Already a member? <Link to="/login">Log in</Link>
+                </p>
+              </>
+            )}
           </GlassCard>
         </motion.main>
       </div>

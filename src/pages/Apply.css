@@ -245,12 +245,9 @@
   cursor: pointer;
 }
 
-/* ---------- consent ---------- */
+/* ---------- resume sharing notice ---------- */
 
-.apply__consent {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--sp-3);
+.apply__notice {
   padding: var(--sp-4);
   background: var(--paper-warm);
   border: 2px dashed var(--ink-light);
@@ -258,24 +255,10 @@
   font-size: var(--fs-sm);
   color: var(--text-muted);
   line-height: 1.7;
-  cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease-out);
+  margin: 0;
 }
 
-.apply__consent:hover {
-  border-color: var(--teal);
-}
-
-.apply__consent input {
-  accent-color: var(--teal-deep);
-  width: 19px;
-  height: 19px;
-  flex-shrink: 0;
-  margin-top: 3px;
-  cursor: pointer;
-}
-
-.apply__consent strong {
+.apply__notice strong {
   color: var(--ink);
   display: block;
   margin-bottom: 2px;

@@ -232,6 +232,18 @@ p {
   min-width: 0;
 }
 
+/* Holds a protected page's place while the session check is in flight. */
+.session-pending {
+  min-height: 100dvh;
+  padding: calc(var(--nav-h) + var(--sp-8)) var(--sp-5) var(--sp-8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  color: var(--text-muted);
+  text-align: center;
+}
+
 /* ============================================================
    Focus, a drawn teal ring
    ============================================================ */

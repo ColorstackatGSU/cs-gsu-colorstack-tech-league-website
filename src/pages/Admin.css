@@ -1,0 +1,200 @@
+/* ---------- application review ---------- */
+
+.admin-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+.admin-apps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.admin-app {
+  border: var(--line-soft);
+  border-radius: var(--r-md);
+  background: var(--paper);
+}
+
+.admin-app.is-open {
+  border: var(--line);
+  background: var(--card);
+  box-shadow: var(--shadow-pencil-sm);
+}
+
+.admin-app__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--sp-3) var(--sp-4);
+  background: none;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  flex-wrap: wrap;
+}
+
+.admin-app__who {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.admin-app__name {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.admin-app__email,
+.admin-app__date,
+.admin-app__muted {
+  font-size: var(--fs-xs);
+  color: var(--text-subtle);
+}
+
+.admin-app__badges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.admin-app__caret {
+  transition: transform var(--dur-mid) var(--ease-out);
+}
+
+.admin-app.is-open .admin-app__caret {
+  transform: rotate(180deg);
+}
+
+.admin-app__detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: 0 var(--sp-4) var(--sp-4);
+  border-top: 2px dashed var(--paper-deep);
+  padding-top: var(--sp-4);
+}
+
+.admin-app__facts {
+  display: grid;
+  gap: var(--sp-3);
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  margin: 0;
+}
+
+.admin-app__facts dt {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.admin-app__facts dd {
+  margin: 2px 0 0;
+  font-size: var(--fs-sm);
+  color: var(--ink);
+}
+
+.admin-app__answer h4 {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  margin: 0 0 var(--sp-1);
+}
+
+.admin-app__answer p {
+  margin: 0;
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.admin-app__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* ---------- score grid ---------- */
+
+/* The grid is wider than a phone; it scrolls inside its own box, never the page. */
+.admin-table-wrap {
+  overflow-x: auto;
+  margin-top: var(--sp-4);
+  border: var(--line-soft);
+  border-radius: var(--r-md);
+}
+
+.admin-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 720px;
+  font-size: var(--fs-sm);
+}
+
+.admin-table th,
+.admin-table td {
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 2px dashed var(--paper-deep);
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-table thead th {
+  background: var(--paper-warm);
+  font-weight: 700;
+}
+
+.admin-table tbody th {
+  font-weight: 700;
+  min-width: 160px;
+}
+
+.admin-table__sub {
+  display: block;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--text-subtle);
+}
+
+.admin-score__input {
+  width: 88px;
+  min-height: 40px;
+}
+
+.admin-score--saved .admin-score__input {
+  border-color: var(--success);
+}
+
+.admin-score--error .admin-score__input {
+  border-color: var(--danger);
+}
+
+.admin-score__error {
+  display: block;
+  max-width: 160px;
+  margin-top: 4px;
+  font-size: var(--fs-xs);
+  color: var(--danger);
+}
+
+/* ---------- resume purge ---------- */
+
+.admin-purge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  max-width: 560px;
+}

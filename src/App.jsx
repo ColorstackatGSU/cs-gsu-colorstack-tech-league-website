@@ -16,23 +16,59 @@ import Dashboard from './pages/Dashboard';
 import Apply from './pages/Apply';
 import Scoring from './pages/Scoring';
 import Leaderboard from './pages/Leaderboard';
+import Verify from './pages/Verify';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import Teams from './pages/Teams';
+import Admin from './pages/Admin';
 import { startAppDoodles } from './doodles/app-doodles.js';
 import './doodles/app-doodles.css';
 
+/**
+ * Shown while the first session check is in flight, and when it could not reach the
+ * server. Deciding "signed out" before the server has answered would bounce every
+ * signed-in member to the login page on every refresh.
+ */
+function SessionPending() {
+  const { status, loadError, refresh } = useAuth();
+  return (
+    <div className="session-pending on-dark" id="main" aria-live="polite">
+      {status === 'loading' ? (
+        <p>Loading your account&hellip;</p>
+      ) : (
+        <>
+          <p>{loadError}</p>
+          <button type="button" className="btn btn--glass btn--md" onClick={refresh}>
+            <span>Try again</span>
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 /** Sends signed-out visitors to login, remembering where they were headed. */
 function RequireAuth({ children }) {
-  const { isAuthed } = useAuth();
+  const { status, loadError, isAuthed } = useAuth();
   const location = useLocation();
 
+  if (status === 'loading' || (!isAuthed && loadError)) return <SessionPending />;
   if (!isAuthed) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
   return children;
 }
 
+/** /admin for admins. The API refuses everyone else regardless; this just says so first. */
+function RequireAdmin({ children }) {
+  const { isAdmin } = useAuth();
+  return <RequireAuth>{isAdmin ? children : <Navigate to="/dashboard" replace />}</RequireAuth>;
+}
+
 /** Signed-in users have no reason to see login/signup. */
 function RedirectIfAuthed({ children }) {
-  const { isAuthed } = useAuth();
+  const { status, isAuthed } = useAuth();
+  if (status === 'loading') return <SessionPending />;
   if (isAuthed) return <Navigate to="/dashboard" replace />;
   return children;
 }
@@ -116,6 +152,33 @@ export default function App() {
                 </RequireAuth>
               }
             />
+            <Route
+              path="/teams"
+              element={
+                <RequireAuth>
+                  <Teams />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <RequireAdmin>
+                  <Admin />
+                </RequireAdmin>
+              }
+            />
+            {/* Reached from emailed links, so they work signed in or out. */}
+            <Route path="/verify" element={<Verify />} />
+            <Route
+              path="/forgot-password"
+              element={
+                <RedirectIfAuthed>
+                  <ForgotPassword />
+                </RedirectIfAuthed>
+              }
+            />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </SmoothScroll>

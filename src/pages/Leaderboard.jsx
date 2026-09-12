@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Trophy,
-  Info,
   CaretDown,
   ArrowRight,
   WarningCircle,
@@ -139,7 +138,7 @@ function TeamRow({ team, expanded, onToggle, maxComposite }) {
 }
 
 export default function Leaderboard() {
-  const [state, setState] = useState({ status: 'loading', teams: [], isPreview: false });
+  const [state, setState] = useState({ status: 'loading', teams: [] });
   const [openId, setOpenId] = useState(null);
 
   useEffect(() => {
@@ -147,11 +146,11 @@ export default function Leaderboard() {
     fetchStandings()
       .then((data) => {
         if (!alive) return;
-        setState({ status: 'ready', teams: data.teams, isPreview: data.isPreview });
+        setState({ status: 'ready', teams: data.teams });
       })
       .catch(() => {
         if (!alive) return;
-        setState({ status: 'error', teams: [], isPreview: false });
+        setState({ status: 'error', teams: [] });
       });
     return () => {
       alive = false;
@@ -161,10 +160,15 @@ export default function Leaderboard() {
   const ranked = useMemo(() => rankTeams(state.teams), [state.teams]);
   const maxComposite = ranked.length > 0 ? ranked[0].composite : 0;
 
-  // How much of the season has actually been decided. Every team plays the
-  // same events, so reading it off the leader is accurate.
-  const decidedWeight = ranked.length > 0 ? ranked[0].earnedWeight : 0;
-  const scoredEvents = EVENTS.filter((e) => e.status === 'complete');
+  // Events count as scored once the server holds a score for them, not when
+  // season.js says their date has passed: a finished event nobody has graded
+  // yet has decided nothing.
+  const scoredEvents = useMemo(
+    () => EVENTS.filter((e) => state.teams.some((t) => typeof t.scores?.[e.id] === 'number')),
+    [state.teams]
+  );
+  const decidedWeight = scoredEvents.reduce((sum, e) => sum + e.weight, 0);
+  const anyScores = scoredEvents.length > 0;
 
   return (
     <main className="leaderboard">
@@ -204,18 +208,6 @@ export default function Leaderboard() {
 
       <section className="section on-dark">
         <div className="container">
-          {state.isPreview && (
-            <Reveal>
-              <p className="lb-preview" role="note">
-                <Info size={17} weight="fill" aria-hidden="true" />
-                <span>
-                  <strong>Preview data.</strong> These standings are placeholders for
-                  layout. Real scores post after each event.
-                </span>
-              </p>
-            </Reveal>
-          )}
-
           {state.status === 'loading' && (
             <GlassCard className="lb-card">
               <ul className="lb-list lb-list--loading" aria-live="polite" aria-busy="true">
@@ -238,17 +230,19 @@ export default function Leaderboard() {
             </GlassCard>
           )}
 
-          {state.status === 'ready' && ranked.length === 0 && (
+          {state.status === 'ready' && !anyScores && (
             <GlassCard className="lb-card">
               <p className="lb-empty">
                 <Trophy size={22} weight="fill" aria-hidden="true" />
-                No scores posted yet. First results go up after the Kickoff Cup on
-                Sept 30.
+                No scores posted yet. First results go up after {EVENTS[0].name} on{' '}
+                {EVENTS[0].date}.
+                {ranked.length > 0 &&
+                  ` ${ranked.length} ${ranked.length === 1 ? 'team is' : 'teams are'} ready to compete.`}
               </p>
             </GlassCard>
           )}
 
-          {state.status === 'ready' && ranked.length > 0 && (
+          {state.status === 'ready' && anyScores && (
             <Reveal>
               <GlassCard className="lb-card" title="standings.csv">
                 <div className="lb-head" aria-hidden="true">

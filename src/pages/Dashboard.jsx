@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -12,28 +12,18 @@ import {
   Sparkle,
   ClipboardText,
   Clock,
+  Confetti,
   UsersThree,
-  MagnifyingGlass,
-  PaperPlaneTilt,
-  X,
-  Check,
-  PencilSimple,
-  Envelope,
-  HourglassMedium,
 } from '@phosphor-icons/react';
-import { useAuth } from '../lib/AuthContext';
-import {
-  fetchMembers,
-  initialsOf,
-  timeAgo,
-  TEAM_RULES,
-  MEMBERS_ARE_MOCK,
-} from '../lib/authStore';
-import { GlassCard, Button, Badge, StatusMessage, TextInput } from '../components/ui';
+import { useAuth, displayName } from '../lib/AuthContext';
+import { RESUME_DOWNLOAD_URL } from '../lib/authStore';
+import { GlassCard, Button, Badge, StatusMessage } from '../components/ui';
 import { Reveal, Stagger, StaggerItem } from '../components/Motion';
+import TeamPanel from '../components/TeamPanel';
 import './Dashboard.css';
 
-const MAX_BYTES = 2 * 1024 * 1024; // 2MB; localStorage caps near 5MB total
+// The API refuses anything larger: Vercel caps a request body at 4.5 MB.
+const MAX_BYTES = 4 * 1024 * 1024;
 const ACCEPTED = ['application/pdf'];
 
 function formatSize(bytes) {
@@ -55,395 +45,9 @@ function formatDate(iso) {
 }
 
 
-/* ============================================================
-   Team builder
-
-   Search the member directory and pick teammates. Everything here runs
-   against mock data in authStore.js: once Google sign-in lands, fetchMembers
-   queries real accounts and this component does not change.
-   ============================================================ */
-
-function Avatar({ member }) {
-  if (member.picture) {
-    return <img className="teammate__avatar" src={member.picture} alt="" />;
-  }
-  return (
-    <span className="teammate__avatar teammate__avatar--initials" aria-hidden="true">
-      {initialsOf(member.name)}
-    </span>
-  );
-}
-
-function TeamPanel() {
-  const {
-    profile,
-    requestTeammate,
-    cancelTeamRequest,
-    acceptTeamInvite,
-    declineTeamInvite,
-    seedInvites,
-    removeTeammate,
-    renameTeam,
-  } = useAuth();
-
-  const team = profile?.team ?? { name: '', members: [], sent: [], received: [] };
-  const roster = team.members ?? [];
-  const sent = team.sent ?? [];
-  const received = team.received ?? [];
-
-  // The user occupies one seat and is never in the members array. Pending
-  // requests are held too, so the roster cannot be oversubscribed.
-  const seatsUsed = roster.length + 1;
-  const isFull = seatsUsed + sent.length >= TEAM_RULES.max;
-
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
-  const [searching, setSearching] = useState(false);
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
-  const [editingName, setEditingName] = useState(false);
-  const [draftName, setDraftName] = useState(team.name ?? '');
-
-  // No server means nobody can send the user a request, so mock ones are
-  // dropped in once per account to make the inbox real.
-  useEffect(() => {
-    seedInvites();
-  }, [seedInvites]);
-
-  // Debounced directory lookup, so typing does not fire a request per keystroke.
-  useEffect(() => {
-    let cancelled = false;
-    setSearching(true);
-
-    const timer = setTimeout(() => {
-      fetchMembers(query)
-        .then((members) => {
-          if (!cancelled) setResults(members);
-        })
-        .finally(() => {
-          if (!cancelled) setSearching(false);
-        });
-    }, 220);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [query]);
-
-  // Anyone already on the roster or already asked drops out of the results.
-  const available = useMemo(
-    () =>
-      results.filter(
-        (m) =>
-          !roster.some((r) => r.id === m.id) && !sent.some((r) => r.id === m.id)
-      ),
-    [results, roster, sent]
-  );
-
-  function flash(message) {
-    setNotice(message);
-    setTimeout(() => setNotice(''), 4000);
-  }
-
-  function onRequest(member) {
-    setError('');
-    try {
-      requestTeammate(member);
-      flash(`Request sent to ${member.name}. They will see it in their inbox.`);
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  function onAccept(invite) {
-    setError('');
-    try {
-      acceptTeamInvite(invite.id);
-      flash(`${invite.name} is on your team.`);
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  function onSaveName() {
-    renameTeam(draftName);
-    setEditingName(false);
-  }
-
-  return (
-    <GlassCard className="panel team-panel">
-      <div className="panel__head">
-        <div>
-          <h2 className="panel__title">Your team</h2>
-          <p className="panel__subtitle">
-            Teams run {TEAM_RULES.min}&ndash;{TEAM_RULES.max} people, including you.
-            Send a request and they join once they accept.
-          </p>
-        </div>
-        <Badge
-          tone={seatsUsed >= TEAM_RULES.min ? 'success' : 'neutral'}
-          icon={UsersThree}
-        >
-          {seatsUsed} of {TEAM_RULES.max}
-        </Badge>
-      </div>
-
-      {/* ---------- inbox: requests sent TO the user ---------- */}
-      {received.length > 0 && (
-        <section className="inbox" aria-labelledby="inbox-heading">
-          <div className="inbox__head">
-            <Envelope size={18} weight="duotone" aria-hidden="true" />
-            <h3 className="inbox__title" id="inbox-heading">
-              Team requests
-            </h3>
-            <Badge tone="accent">{received.length}</Badge>
-          </div>
-
-          <ul className="inbox__list">
-            <AnimatePresence initial={false}>
-              {received.map((invite) => (
-                <motion.li
-                  key={invite.id}
-                  className="invite"
-                  layout
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -12 }}
-                  transition={{ duration: 0.22 }}
-                >
-                  <Avatar member={invite} />
-                  <div className="invite__meta">
-                    <p className="invite__name wrap-anywhere">
-                      <strong>{invite.name}</strong> wants to team up
-                    </p>
-                    <p className="invite__sub wrap-anywhere">
-                      {invite.year} &middot; {invite.major} &middot;{' '}
-                      {timeAgo(invite.sentAt)}
-                    </p>
-                    {invite.message && (
-                      <p className="invite__message wrap-anywhere">
-                        &ldquo;{invite.message}&rdquo;
-                      </p>
-                    )}
-                  </div>
-                  <div className="invite__actions">
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      icon={Check}
-                      onClick={() => onAccept(invite)}
-                    >
-                      Accept
-                    </Button>
-                    <Button
-                      variant="glass"
-                      size="sm"
-                      onClick={() => declineTeamInvite(invite.id)}
-                    >
-                      Decline
-                    </Button>
-                  </div>
-                </motion.li>
-              ))}
-            </AnimatePresence>
-          </ul>
-        </section>
-      )}
-
-      {/* ---------- team name ---------- */}
-      <div className="team-name">
-        {editingName ? (
-          <div className="team-name__edit">
-            <label className="sr-only" htmlFor="team-name-input">
-              Team name
-            </label>
-            <TextInput
-              id="team-name-input"
-              value={draftName}
-              maxLength={40}
-              placeholder="e.g. Merge Conflict"
-              onChange={(e) => setDraftName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && onSaveName()}
-            />
-            <Button variant="secondary" size="sm" onClick={onSaveName}>
-              Save
-            </Button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            className="team-name__display"
-            onClick={() => {
-              setDraftName(team.name ?? '');
-              setEditingName(true);
-            }}
-          >
-            <span className="team-name__value">{team.name || 'Name your team'}</span>
-            <PencilSimple size={15} weight="bold" aria-hidden="true" />
-          </button>
-        )}
-      </div>
-
-      {/* ---------- current roster ---------- */}
-      <ul className="roster">
-        <li className="teammate teammate--you">
-          <Avatar member={{ name: profile?.application?.fullName || 'You' }} />
-          <div className="teammate__meta">
-            <p className="teammate__name wrap-anywhere">
-              {profile?.application?.fullName || 'You'}
-            </p>
-            <p className="teammate__sub">Team captain</p>
-          </div>
-          <Badge tone="accent">You</Badge>
-        </li>
-
-        <AnimatePresence initial={false}>
-          {roster.map((member) => (
-            <motion.li
-              key={member.id}
-              className="teammate"
-              layout
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, x: -12 }}
-              transition={{ duration: 0.22 }}
-            >
-              <Avatar member={member} />
-              <div className="teammate__meta">
-                <p className="teammate__name wrap-anywhere">{member.name}</p>
-                <p className="teammate__sub wrap-anywhere">
-                  {member.year} &middot; {member.major}
-                </p>
-              </div>
-              <button
-                type="button"
-                className="teammate__remove"
-                onClick={() => removeTeammate(member.id)}
-                aria-label={`Remove ${member.name} from your team`}
-              >
-                <X size={15} weight="bold" aria-hidden="true" />
-              </button>
-            </motion.li>
-          ))}
-
-          {/* Requests waiting on an answer hold a seat, shown as pending. */}
-          {sent.map((invite) => (
-            <motion.li
-              key={invite.id}
-              className="teammate teammate--pending"
-              layout
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, x: -12 }}
-              transition={{ duration: 0.22 }}
-            >
-              <Avatar member={invite} />
-              <div className="teammate__meta">
-                <p className="teammate__name wrap-anywhere">{invite.name}</p>
-                <p className="teammate__sub">
-                  <HourglassMedium size={12} weight="fill" aria-hidden="true" />{' '}
-                  Waiting &middot; sent {timeAgo(invite.sentAt)}
-                </p>
-              </div>
-              <button
-                type="button"
-                className="teammate__remove"
-                onClick={() => cancelTeamRequest(invite.id)}
-                aria-label={`Cancel your request to ${invite.name}`}
-              >
-                <X size={15} weight="bold" aria-hidden="true" />
-              </button>
-            </motion.li>
-          ))}
-        </AnimatePresence>
-
-        {/* Empty seats, so the roster cap reads at a glance. */}
-        {Array.from({
-          length: Math.max(0, TEAM_RULES.max - seatsUsed - sent.length),
-        }).map((_, i) => (
-          <li key={`empty-${i}`} className="teammate teammate--empty" aria-hidden="true">
-            <span className="teammate__avatar teammate__avatar--empty">+</span>
-            <span className="teammate__sub">Open seat</span>
-          </li>
-        ))}
-      </ul>
-
-      {error && (
-        <p className="panel__error" role="alert">
-          <WarningCircle size={16} weight="fill" aria-hidden="true" />
-          <span>{error}</span>
-        </p>
-      )}
-
-      {notice && <StatusMessage tone="success">{notice}</StatusMessage>}
-
-      {/* ---------- directory search ---------- */}
-      <div className="finder">
-        <label className="finder__label" htmlFor="member-search">
-          Find teammates
-        </label>
-        <div className="finder__search">
-          <MagnifyingGlass size={17} weight="bold" aria-hidden="true" />
-          <TextInput
-            id="member-search"
-            type="search"
-            value={query}
-            placeholder="Search by name, major, or interest"
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </div>
-
-        <div className="finder__results" role="list">
-          {searching && available.length === 0 && (
-            <p className="finder__empty">Searching&hellip;</p>
-          )}
-
-          {!searching && available.length === 0 && (
-            <p className="finder__empty">
-              Nobody left to ask here. Try a different name, major, or interest.
-            </p>
-          )}
-
-          {available.map((member) => (
-            <div className="finder__row" role="listitem" key={member.id}>
-              <Avatar member={member} />
-              <div className="teammate__meta">
-                <p className="teammate__name wrap-anywhere">{member.name}</p>
-                <p className="teammate__sub wrap-anywhere">
-                  {member.year} &middot; {member.major} &middot; {member.interest}
-                </p>
-              </div>
-              {member.status === 'on-team' ? (
-                <Badge tone="neutral">On a team</Badge>
-              ) : (
-                <Button
-                  variant="glass"
-                  size="sm"
-                  icon={PaperPlaneTilt}
-                  disabled={isFull}
-                  onClick={() => onRequest(member)}
-                >
-                  Request
-                </Button>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {MEMBERS_ARE_MOCK && (
-          <p className="finder__note">
-            Preview roster. Once Google sign-in is live, this searches real League
-            members and your request lands in their inbox for real.
-          </p>
-        )}
-      </div>
-    </GlassCard>
-  );
-}
-
 export default function Dashboard() {
   const { session, profile, uploadResume, deleteResume } = useAuth();
+  const [removing, setRemoving] = useState(false);
   const location = useLocation();
   const isWelcome = location.state?.welcome;
 
@@ -455,6 +59,7 @@ export default function Dashboard() {
 
   const resume = profile?.resume ?? null;
   const applicationStatus = profile?.applicationStatus ?? 'not-started';
+  const decision = profile?.decision ?? null;
 
   const handleFile = useCallback(
     (file) => {
@@ -469,39 +74,23 @@ export default function Dashboard() {
 
       if (file.size > MAX_BYTES) {
         setUploadError(
-          `That file is ${formatSize(file.size)}. Please upload a PDF under 2 MB.`
+          `That file is ${formatSize(file.size)}. Please upload a PDF under 4 MB.`
         );
         return;
       }
 
       setUploading(true);
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        try {
-          uploadResume({
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            dataUrl: reader.result,
-          });
+      uploadResume(file)
+        .then(() => {
           setJustUploaded(true);
           setTimeout(() => setJustUploaded(false), 4200);
-        } catch {
-          setUploadError(
-            'Could not save your resume. Your browser storage may be full.'
-          );
-        } finally {
+        })
+        .catch((error) => setUploadError(error.message))
+        .finally(() => {
           setUploading(false);
-        }
-      };
-
-      reader.onerror = () => {
-        setUploadError('Could not read that file. Please try again.');
-        setUploading(false);
-      };
-
-      reader.readAsDataURL(file);
+          // Lets the same file be chosen again after a failed upload.
+          if (inputRef.current) inputRef.current.value = '';
+        });
     },
     [uploadResume]
   );
@@ -512,16 +101,24 @@ export default function Dashboard() {
     handleFile(event.dataTransfer.files?.[0]);
   }
 
-  function onRemove() {
-    deleteResume();
+  async function onRemove() {
     setUploadError('');
     setJustUploaded(false);
+    setRemoving(true);
+    try {
+      await deleteResume();
+    } catch (error) {
+      setUploadError(error.message);
+    } finally {
+      setRemoving(false);
+    }
   }
 
   const steps = [
     { done: true, label: 'Account created' },
     { done: Boolean(resume), label: 'Resume uploaded' },
     { done: applicationStatus === 'submitted', label: 'Application sent' },
+    { done: Boolean(profile?.team), label: 'On a team' },
   ];
   const completed = steps.filter((s) => s.done).length;
 
@@ -536,10 +133,10 @@ export default function Dashboard() {
             <span className="dash__greeting">
               {isWelcome ? 'Welcome to the League,' : 'Welcome back,'}
             </span>
-            <h1 className="dash__name wrap-anywhere">{session?.username}</h1>
+            <h1 className="dash__name wrap-anywhere">{displayName(session)}</h1>
           </div>
-          <Badge tone={completed === 3 ? 'success' : 'accent'}>
-            {completed} of 3 steps complete
+          <Badge tone={completed === steps.length ? 'success' : 'accent'}>
+            {completed} of {steps.length} steps complete
           </Badge>
         </Reveal>
 
@@ -568,7 +165,7 @@ export default function Dashboard() {
               <motion.div
                 className="progress__fill"
                 initial={{ width: 0 }}
-                animate={{ width: `${(completed / 3) * 100}%` }}
+                animate={{ width: `${(completed / steps.length) * 100}%` }}
                 transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
               />
             </div>
@@ -583,8 +180,8 @@ export default function Dashboard() {
                 <div>
                   <h2 className="panel__title">Your resume</h2>
                   <p className="panel__subtitle">
-                    Partner recruiters review these when sourcing for internships. Keep
-                    it current.
+                    Every resume goes into the book League partners use when recruiting
+                    for internships. Keep it current, or delete it to take it out.
                   </p>
                 </div>
                 {resume && (
@@ -610,23 +207,33 @@ export default function Dashboard() {
                     <div className="resume-file__meta">
                       <p className="resume-file__name wrap-anywhere">{resume.name}</p>
                       <p className="resume-file__sub">
-                        {formatSize(resume.size)} &middot; Uploaded{' '}
+                        {formatSize(resume.size)} &middot;{' '}
+                        {resume.source === 'colorstack' ? 'Copied from ColorStack' : 'Uploaded'}{' '}
                         {formatDate(resume.uploadedAt)}
                       </p>
                     </div>
                     <div className="resume-file__actions">
-                      <a
-                        href={resume.dataUrl}
-                        download={resume.name}
-                        className="btn btn--glass btn--sm"
-                      >
+                      <a href={RESUME_DOWNLOAD_URL} className="btn btn--glass btn--sm">
                         <DownloadSimple size={17} weight="bold" aria-hidden="true" />
                         <span>Download</span>
                       </a>
-                      <Button variant="danger" size="sm" icon={Trash} onClick={onRemove}>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        icon={Trash}
+                        loading={removing}
+                        onClick={onRemove}
+                      >
                         Remove
                       </Button>
                     </div>
+                    {resume.source === 'colorstack' && (
+                      <p className="resume-file__note">
+                        We copied this from your ColorStack at GSU profile and keep our own
+                        copy. Deleting it in the portal does not delete it here; remove it
+                        here too if you want it gone. Upload a new one to replace it.
+                      </p>
+                    )}
                   </motion.div>
                 ) : (
                   <motion.div
@@ -651,7 +258,7 @@ export default function Dashboard() {
                       <p className="dropzone__title">
                         Drag your resume here, or choose a file
                       </p>
-                      <p className="dropzone__hint">PDF only &middot; up to 2 MB</p>
+                      <p className="dropzone__hint">PDF only &middot; up to 4 MB</p>
 
                       <input
                         ref={inputRef}
@@ -684,7 +291,7 @@ export default function Dashboard() {
 
               {justUploaded && (
                 <StatusMessage tone="success">
-                  Resume saved. Recruiters can see it once your application is in.
+                  Resume saved. It is in the partner resume book now.
                 </StatusMessage>
               )}
             </GlassCard>
@@ -700,7 +307,15 @@ export default function Dashboard() {
                     Tell us who you are and why you want in. Takes about five minutes.
                   </p>
                 </div>
-                {applicationStatus === 'submitted' && (
+                {applicationStatus === 'submitted' && decision === 'accepted' && (
+                  <Badge tone="success" icon={CheckCircle}>
+                    Accepted
+                  </Badge>
+                )}
+                {applicationStatus === 'submitted' && decision === 'denied' && (
+                  <Badge tone="neutral">Decided</Badge>
+                )}
+                {applicationStatus === 'submitted' && !decision && (
                   <Badge tone="accent" icon={Clock}>
                     Under review
                   </Badge>
@@ -708,7 +323,31 @@ export default function Dashboard() {
                 {applicationStatus === 'draft' && <Badge tone="neutral">Draft saved</Badge>}
               </div>
 
-              {applicationStatus === 'submitted' ? (
+              {applicationStatus === 'submitted' && decision === 'accepted' ? (
+                <div className="app-done">
+                  <span className="app-done__icon" aria-hidden="true">
+                    <Confetti size={36} weight="duotone" />
+                  </span>
+                  <p className="app-done__title">You&apos;re in the League</p>
+                  <p className="app-done__body">
+                    Welcome to the season. Next, get on a team of 3 or 4: start one below, or
+                    find a team with room.
+                  </p>
+                  <Link to="/teams">
+                    <Button variant="primary" size="md" icon={UsersThree}>
+                      Browse teams
+                    </Button>
+                  </Link>
+                </div>
+              ) : applicationStatus === 'submitted' && decision === 'denied' ? (
+                <div className="app-done">
+                  <p className="app-done__title">Thank you for applying</p>
+                  <p className="app-done__body">
+                    Spots this season were limited and we could not offer you one this time.
+                    We emailed you the details, and we hope you apply again next season.
+                  </p>
+                </div>
+              ) : applicationStatus === 'submitted' ? (
                 <div className="app-done">
                   <span className="app-done__icon" aria-hidden="true">
                     <Clock size={36} weight="duotone" />

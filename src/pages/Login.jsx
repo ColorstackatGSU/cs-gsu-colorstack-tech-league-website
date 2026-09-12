@@ -1,8 +1,10 @@
 import { useState, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Trophy, Users, ChartLineUp } from '@phosphor-icons/react';
 import { useAuth } from '../lib/AuthContext';
+import { resendVerification } from '../lib/authStore';
+import ColorStackButton from '../components/ColorStackButton';
 import {
   GlassCard,
   Button,
@@ -13,26 +15,40 @@ import {
 } from '../components/ui';
 import './Auth.css';
 
+/** Why the ColorStack login bounced back here, in words. Keyed by ?colorstack=. */
+const COLORSTACK_MESSAGES = {
+  cancelled: 'You cancelled Sign in with ColorStack. You can use your email and password instead.',
+  expired: 'That sign-in took too long or was started in another tab. Try again.',
+  not_student:
+    'Your ColorStack profile does not have a verified @student.gsu.edu address, so we could not sign you in with it. Create an account with your student email instead.',
+  unavailable: 'Sign in with ColorStack is not available right now. Use your email and password instead.',
+  error: 'Something went wrong signing in with ColorStack. Try again, or use your email and password.',
+};
+
 export default function Login() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [unconfirmed, setUnconfirmed] = useState(false);
+  const [resend, setResend] = useState({ loading: false, message: '' });
 
-  const usernameRef = useRef(null);
+  const emailRef = useRef(null);
   const passwordRef = useRef(null);
 
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [params] = useSearchParams();
+  const colorstackMessage = COLORSTACK_MESSAGES[params.get('colorstack')] ?? '';
 
   // Send the user back where they were headed before the login redirect
   const from = location.state?.from ?? '/dashboard';
 
   function validate() {
     const next = {};
-    if (!username.trim()) next.username = 'Enter your username.';
+    if (!email.trim()) next.email = 'Enter your student email.';
     if (!password) next.password = 'Enter your password.';
     return next;
   }
@@ -40,25 +56,41 @@ export default function Login() {
   async function handleSubmit(event) {
     event.preventDefault();
     setFormError('');
+    setUnconfirmed(false);
+    setResend({ loading: false, message: '' });
 
     const found = validate();
     setErrors(found);
     if (Object.keys(found).length > 0) {
       // Move focus to the first field that needs attention
-      if (found.username) usernameRef.current?.focus();
+      if (found.email) emailRef.current?.focus();
       else passwordRef.current?.focus();
       return;
     }
 
     setLoading(true);
     try {
-      await signIn({ username, password });
+      await signIn({ email, password });
       navigate(from, { replace: true });
     } catch (error) {
       setFormError(error.message);
+      setUnconfirmed(error.code === 'email_not_confirmed');
       passwordRef.current?.focus();
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    setResend({ loading: true, message: '' });
+    try {
+      await resendVerification(email);
+      setResend({
+        loading: false,
+        message: `If ${email.trim()} has an unconfirmed account, a new link is on its way.`,
+      });
+    } catch (error) {
+      setResend({ loading: false, message: error.message });
     }
   }
 
@@ -118,36 +150,48 @@ export default function Login() {
             <div className="auth__card-head">
               <h2 className="auth__title">Log in</h2>
               <p className="auth__subtitle">
-                Enter your username and password to continue.
+                Use the student email and password you signed up with.
               </p>
             </div>
 
+            {colorstackMessage && !formError && (
+              <StatusMessage tone="error">{colorstackMessage}</StatusMessage>
+            )}
             {formError && <StatusMessage tone="error">{formError}</StatusMessage>}
+            {unconfirmed && (
+              <div className="auth__resend">
+                <Button variant="glass" size="sm" loading={resend.loading} onClick={handleResend}>
+                  Send a new confirmation link
+                </Button>
+                {resend.message && <StatusMessage tone="success">{resend.message}</StatusMessage>}
+              </div>
+            )}
 
             <form className="auth__form" onSubmit={handleSubmit} noValidate>
               <Field
-                label="Username"
-                htmlFor="username"
+                label="Student email"
+                htmlFor="email"
                 required
-                error={errors.username}
+                error={errors.email}
               >
                 {({ errorId }) => (
                   <TextInput
-                    ref={usernameRef}
-                    id="username"
-                    name="username"
-                    type="text"
-                    autoComplete="username"
+                    ref={emailRef}
+                    id="email"
+                    name="email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
                     autoCapitalize="none"
                     autoCorrect="off"
                     spellCheck="false"
-                    placeholder="your.username"
-                    value={username}
-                    invalid={Boolean(errors.username)}
-                    aria-describedby={errors.username ? errorId : undefined}
+                    placeholder="jrivera1@student.gsu.edu"
+                    value={email}
+                    invalid={Boolean(errors.email)}
+                    aria-describedby={errors.email ? errorId : undefined}
                     onChange={(e) => {
-                      setUsername(e.target.value);
-                      if (errors.username) setErrors((p) => ({ ...p, username: null }));
+                      setEmail(e.target.value);
+                      if (errors.email) setErrors((p) => ({ ...p, email: null }));
                     }}
                   />
                 )}
@@ -187,7 +231,13 @@ export default function Login() {
               >
                 {loading ? 'Signing you in' : 'Log in'}
               </Button>
+
+              <p className="auth__forgot">
+                <Link to="/forgot-password">Forgot your password?</Link>
+              </p>
             </form>
+
+            <ColorStackButton />
 
             <p className="auth__switch">
               New to the League? <Link to="/signup">Create an account</Link>
