@@ -10,7 +10,7 @@ import {
   startAuthorization,
   type ColorStackClaims,
 } from '../_lib/colorstack.js';
-import { resetPasswordEmail, verifyEmail } from '../_lib/emails.js';
+import { resetPasswordEmail, verifyEmail, welcomeEmail } from '../_lib/emails.js';
 import { HttpError, parse, unwrap } from '../_lib/errors.js';
 import { sendMail } from '../_lib/mailer.js';
 import { loadMe } from '../_lib/profile.js';
@@ -75,6 +75,33 @@ async function send(email: string, message: { subject: string; html: string }) {
   } catch (err) {
     console.error('email send failed', err);
     throw new HttpError(502, 'We could not send that email just now. Try again in a minute.');
+  }
+}
+
+/**
+ * Sends the welcome email the first time an account becomes usable, and never again.
+ *
+ * Never throws. The member has just confirmed or signed in, and a welcome that did not
+ * send is not a reason to fail that. The claim is given back on failure so a later
+ * sign-in tries again.
+ */
+async function welcomeOnce(userId: string, email: string) {
+  try {
+    const claimed = unwrap(await service().rpc('claim_welcome', { p_user_id: userId }));
+    if (claimed !== true) return;
+    const profile = unwrap(
+      await service().from('profiles').select('full_name').eq('id', userId).single()
+    ) as { full_name: string | null };
+    const firstName = (profile.full_name ?? '').trim().split(/\s+/)[0] ?? '';
+    const message = welcomeEmail(firstName);
+    try {
+      await sendMail([email], message.subject, message.html);
+    } catch (err) {
+      await service().rpc('release_welcome', { p_user_id: userId });
+      throw err;
+    }
+  } catch (err) {
+    console.error('welcome email failed', err);
   }
 }
 
@@ -154,6 +181,7 @@ auth.post('/verify', async (c) => {
 
   setSession(c, data.session);
   const member = { id: data.user.id, email: data.user.email };
+  await welcomeOnce(member.id, member.email);
   return c.json(await loadMe(asMember(data.session.access_token), member));
 });
 
@@ -340,7 +368,7 @@ async function prefill(userId: string, email: string, claims: ColorStackClaims) 
   const application = unwrap(
     await db
       .from('applications')
-      .select('status, full_name, personal_email, year, major, grad_term')
+      .select('status, full_name, personal_email, race_ethnicity, year, major, grad_term')
       .eq('user_id', userId)
       .maybeSingle()
   ) as ({ status: string } & Record<string, unknown>) | null;
@@ -461,6 +489,8 @@ auth.get('/callback', async (c) => {
       console.error('colorstack resume sync failed', err);
     }
 
+    // After prefill, so the welcome can greet them by the name the portal gave us.
+    await welcomeOnce(userId, email);
     setSession(c, await sessionFor(email));
     return c.redirect(safeNext(saved.next));
   } catch (err) {

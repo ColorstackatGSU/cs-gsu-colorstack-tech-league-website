@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { z } from 'zod';
 import { env } from './env.js';
 import { HttpError } from './errors.js';
+import { RACE_ETHNICITY } from './profile.js';
 
 /**
  * The client half of "Sign in with ColorStack at GSU".
@@ -20,7 +21,7 @@ import { HttpError } from './errors.js';
  * picked up the next time the member signs in with ColorStack.
  */
 
-export const SCOPES = ['openid', 'profile', 'email', 'socials', 'discord', 'resume'];
+export const SCOPES = ['openid', 'profile', 'email', 'socials', 'discord', 'demographics', 'resume'];
 
 function colorstackConfig() {
   const { COLORSTACK_ISSUER, COLORSTACK_CLIENT_ID, COLORSTACK_CLIENT_SECRET, COLORSTACK_REDIRECT_URI } = env();
@@ -104,6 +105,7 @@ const claimsSchema = z.object({
   linkedin_url: optionalText,
   github_url: optionalText,
   discord_username: optionalText,
+  race_ethnicity: z.array(z.string()).nullish(),
   resume_download_url: optionalText,
   resume_filename: optionalText,
   resume_uploaded_at: optionalText,
@@ -171,6 +173,20 @@ const MAJORS = [
   'Engineering',
 ];
 
+/**
+ * The portal's answer, kept only if applications_race_ethnicity_known would accept it:
+ * every value a known category, and "Prefer not to say" only on its own. Anything else is
+ * dropped rather than inserted, because a CHECK violation on the application insert would
+ * fail the whole sign-in, not just this field.
+ */
+function raceEthnicityPrefill(values: string[] | null | undefined) {
+  if (!values || values.length === 0) return undefined;
+  const unique = [...new Set(values)];
+  const known = unique.every((value) => (RACE_ETHNICITY as readonly string[]).includes(value));
+  const declineAlone = !unique.includes('Prefer not to say') || unique.length === 1;
+  return known && declineAlone ? unique : undefined;
+}
+
 export function applicationPrefill(claims: ColorStackClaims) {
   const fullName =
     claims.name ?? ([claims.given_name, claims.family_name].filter(Boolean).join(' ') || undefined);
@@ -178,6 +194,7 @@ export function applicationPrefill(claims: ColorStackClaims) {
   return {
     full_name: fullName,
     personal_email: personal && personal !== claims.email?.toLowerCase() ? personal : undefined,
+    race_ethnicity: raceEthnicityPrefill(claims.race_ethnicity),
     year: claims.class_year && YEARS.includes(claims.class_year) ? claims.class_year : undefined,
     major: claims.major && MAJORS.includes(claims.major) ? claims.major : undefined,
     grad_term:
