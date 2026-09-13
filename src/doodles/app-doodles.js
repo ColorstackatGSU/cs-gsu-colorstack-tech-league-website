@@ -375,7 +375,7 @@ const SCENES = {
   login: { host: '.auth__grid', items: [
     { s: 'keyGo', side: 'r', e: -165, t: 70, w: 150, r: -6, tier: 'mid' },
     { s: 'podium', side: 'r', e: -160, t: 330, w: 115, r: 3, tier: 'mid', label: 'where do you land?' },
-    { s: 'doormat', side: 'r', e: 180, t: 530, w: 200, r: -2, tier: 'mid' },
+    { s: 'doormat', side: 'r', e: 330, t: 530, w: 200, r: -2, tier: 'mid' },
     { s: 'openbook', side: 'l', e: 590, t: 110, w: 110, r: -6, tier: 'near', label: 'where you left off' },
     { s: 'chart', side: 'l', e: 595, t: 330, w: 95, r: 5, tier: 'near', label: 'points go up' },
     { s: 'padlock', side: 'r', e: 560, t: 40, w: 78, r: 8, tier: 'near', label: 'unlocked' },
