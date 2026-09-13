@@ -126,6 +126,60 @@
   gap: var(--sp-2);
 }
 
+/* ---------- reopen: set apart, and confirmed ---------- */
+
+.admin-reopen {
+  padding-top: var(--sp-3);
+  border-top: 2px dashed var(--paper-deep);
+}
+
+.admin-reopen__link {
+  background: none;
+  border: 0;
+  padding: var(--sp-2) 0;
+  min-height: 44px;
+  font: inherit;
+  font-size: var(--fs-sm);
+  color: var(--text-subtle);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.admin-reopen__link:hover {
+  color: var(--danger);
+}
+
+.admin-reopen__confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--danger-soft);
+  border: 2px dashed var(--danger);
+  border-radius: var(--r-md);
+}
+
+.admin-reopen__title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.admin-reopen__effects {
+  margin: 0;
+  padding-left: var(--sp-5);
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.admin-reopen__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
 /* ---------- score grid ---------- */
 
 /* The grid is wider than a phone; it scrolls inside its own box, never the page. */

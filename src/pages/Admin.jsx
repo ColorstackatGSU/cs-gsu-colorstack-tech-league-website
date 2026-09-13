@@ -66,6 +66,7 @@ function ApplicationRow({ application, onChange }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState('');
+  const [confirmReopen, setConfirmReopen] = useState(false);
   const a = application;
   const name = a.fullName || a.email;
 
@@ -212,19 +213,6 @@ function ApplicationRow({ application, onChange }) {
                 Send decision email
               </Button>
             )}
-            {a.status === 'submitted' && (
-              <Button
-                variant="ghost"
-                size="sm"
-                icon={ArrowCounterClockwise}
-                loading={busy === 'reopen'}
-                onClick={() =>
-                  act('reopen', () => reopenApplication(a.userId), () => `Reopened ${name}'s application. It is a draft again.`)
-                }
-              >
-                Reopen for edits
-              </Button>
-            )}
           </div>
 
           {a.decision === 'accepted' && (
@@ -232,11 +220,54 @@ function ApplicationRow({ application, onChange }) {
               Waitlisting or denying an accepted member also takes them off their team.
             </p>
           )}
+
+          {/* Kept apart from the decision buttons, behind a confirmation, because it undoes
+              more than it looks like: it once turned two finished applications back into
+              drafts with one click each, and neither applicant was told. */}
           {a.status === 'submitted' && (
-            <p className="admin-app__muted">
-              Reopening clears the decision and lets them edit and resubmit. It also takes
-              them off their team until they are accepted again.
-            </p>
+            <div className="admin-reopen">
+              {confirmReopen ? (
+                <div className="admin-reopen__confirm" role="group" aria-labelledby={`reopen-${a.userId}`}>
+                  <p className="admin-reopen__title" id={`reopen-${a.userId}`}>
+                    Reopen {name}&apos;s application?
+                  </p>
+                  <ul className="admin-reopen__effects">
+                    <li>It goes back to a draft, and they will need to submit it again.</li>
+                    {a.decision && (
+                      <li>
+                        Their decision (<strong>{a.decision}</strong>) is cleared.
+                      </li>
+                    )}
+                    {a.decision === 'accepted' && <li>They come off their team until accepted again.</li>}
+                    <li>They are not emailed. Tell them yourself if they need to act.</li>
+                  </ul>
+                  <div className="admin-reopen__buttons">
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      icon={ArrowCounterClockwise}
+                      loading={busy === 'reopen'}
+                      onClick={() =>
+                        act(
+                          'reopen',
+                          () => reopenApplication(a.userId),
+                          () => `Reopened ${name}'s application. It is a draft again.`
+                        )
+                      }
+                    >
+                      Yes, reopen it
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setConfirmReopen(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <button type="button" className="admin-reopen__link" onClick={() => setConfirmReopen(true)}>
+                  Reopen this application for edits&hellip;
+                </button>
+              )}
+            </div>
           )}
 
           {error && (
