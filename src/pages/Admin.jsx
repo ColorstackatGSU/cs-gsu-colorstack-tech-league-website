@@ -6,7 +6,8 @@ import {
   X,
   EnvelopeSimple,
   ArrowCounterClockwise,
-  DownloadSimple,
+  Eye,
+  HourglassMedium,
   WarningCircle,
 } from '@phosphor-icons/react';
 import {
@@ -47,6 +48,7 @@ const COMMITMENT_LABELS = { '1-2': '1-2 hours', '3-5': '3-5 hours', '6-8': '6-8 
 const FILTERS = [
   { key: 'review', label: 'To review', match: (a) => a.status === 'submitted' && !a.decision },
   { key: 'accepted', label: 'Accepted', match: (a) => a.decision === 'accepted' },
+  { key: 'waitlisted', label: 'Waitlist', match: (a) => a.decision === 'waitlisted' },
   { key: 'denied', label: 'Denied', match: (a) => a.decision === 'denied' },
   { key: 'drafts', label: 'Drafts', match: (a) => a.status === 'draft' },
   { key: 'all', label: 'All', match: () => true },
@@ -109,6 +111,7 @@ function ApplicationRow({ application, onChange }) {
         <span className="admin-app__badges">
           {a.status === 'draft' && <Badge tone="neutral">Draft</Badge>}
           {a.decision === 'accepted' && <Badge tone="success">Accepted</Badge>}
+          {a.decision === 'waitlisted' && <Badge tone="accent">Waitlisted</Badge>}
           {a.decision === 'denied' && <Badge tone="neutral">Denied</Badge>}
           {a.decision && !a.decisionEmailedAt && <Badge tone="accent">Not emailed</Badge>}
           {a.submittedAt && <span className="admin-app__date">{formatDate(a.submittedAt)}</span>}
@@ -140,9 +143,14 @@ function ApplicationRow({ application, onChange }) {
 
           <div className="admin-app__actions">
             {a.resume ? (
-              <a className="btn btn--glass btn--sm" href={adminResumeUrl(a.userId)}>
-                <DownloadSimple size={17} weight="bold" aria-hidden="true" />
-                <span>Resume</span>
+              <a
+                className="btn btn--glass btn--sm"
+                href={adminResumeUrl(a.userId)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Eye size={17} weight="bold" aria-hidden="true" />
+                <span>View resume</span>
               </a>
             ) : (
               <span className="admin-app__muted">No resume on file</span>
@@ -159,6 +167,23 @@ function ApplicationRow({ application, onChange }) {
                 }
               >
                 Accept
+              </Button>
+            )}
+            {a.status === 'submitted' && a.decision !== 'waitlisted' && (
+              <Button
+                variant="glass"
+                size="sm"
+                icon={HourglassMedium}
+                loading={busy === 'waitlist'}
+                onClick={() =>
+                  act(
+                    'waitlist',
+                    () => decideApplication(a.userId, 'waitlisted'),
+                    () => `Waitlisted ${name} and emailed them.`
+                  )
+                }
+              >
+                Waitlist
               </Button>
             )}
             {a.status === 'submitted' && a.decision !== 'denied' && (
@@ -204,7 +229,7 @@ function ApplicationRow({ application, onChange }) {
 
           {a.decision === 'accepted' && (
             <p className="admin-app__muted">
-              Changing an accepted member to denied also takes them off their team.
+              Waitlisting or denying an accepted member also takes them off their team.
             </p>
           )}
           {a.status === 'submitted' && (

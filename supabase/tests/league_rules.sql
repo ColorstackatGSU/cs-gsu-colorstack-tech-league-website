@@ -411,6 +411,56 @@ begin
   end if;
 
   -- ---------------------------------------------------------------------------
+  -- 16b. Waitlisting is not accepting: it closes teams, and a later accept reopens them.
+  -- ---------------------------------------------------------------------------
+  execute 'reset role';
+  perform set_config('request.jwt.claims', jsonb_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  perform public.decide_application(v_e, 'waitlisted');
+
+  execute 'reset role';
+  if public.team_of(v_e) is not null then
+    raise exception 'check 16b FAILED: a waitlisted member is still on a team';
+  end if;
+  perform set_config('request.jwt.claims', jsonb_build_object('sub', v_e, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  begin
+    perform public.create_team('Waitlisted Team', 3);
+    raise exception 'check 16b FAILED: a waitlisted member created a team';
+  exception when raise_exception then
+    if sqlerrm like 'check %' then raise; end if;
+  end;
+
+  execute 'reset role';
+  perform set_config('request.jwt.claims', jsonb_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  perform public.decide_application(v_e, 'accepted');
+  execute 'reset role';
+  if not public.is_accepted(v_e) then
+    raise exception 'check 16b FAILED: accepting a waitlisted member did not take';
+  end if;
+
+  -- ---------------------------------------------------------------------------
+  -- 16c. The welcome is claimed once, and only by the service role.
+  -- ---------------------------------------------------------------------------
+  execute 'set local role service_role';
+  if not public.claim_welcome(v_a) then
+    raise exception 'check 16c FAILED: the first welcome claim was refused';
+  end if;
+  if public.claim_welcome(v_a) then
+    raise exception 'check 16c FAILED: a second welcome was claimed';
+  end if;
+  execute 'reset role';
+  perform set_config('request.jwt.claims', jsonb_build_object('sub', v_b, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  begin
+    perform public.claim_welcome(v_b);
+    raise exception 'check 16c FAILED: a member claimed their own welcome';
+  exception when insufficient_privilege then null;
+  end;
+  execute 'reset role';
+
+  -- ---------------------------------------------------------------------------
   -- 17. Signed-out callers get nothing.
   -- ---------------------------------------------------------------------------
   perform set_config('request.jwt.claims', jsonb_build_object('role', 'anon')::text, true);

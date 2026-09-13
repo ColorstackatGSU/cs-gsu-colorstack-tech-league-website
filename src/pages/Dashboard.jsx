@@ -6,6 +6,8 @@ import {
   FilePdf,
   Trash,
   DownloadSimple,
+  Eye,
+  HourglassMedium,
   CheckCircle,
   ArrowRight,
   WarningCircle,
@@ -16,7 +18,7 @@ import {
   UsersThree,
 } from '@phosphor-icons/react';
 import { useAuth, displayName } from '../lib/AuthContext';
-import { RESUME_DOWNLOAD_URL } from '../lib/authStore';
+import { RESUME_DOWNLOAD_URL, RESUME_VIEW_URL } from '../lib/authStore';
 import { GlassCard, Button, Badge, StatusMessage } from '../components/ui';
 import { Reveal, Stagger, StaggerItem } from '../components/Motion';
 import TeamPanel from '../components/TeamPanel';
@@ -213,9 +215,21 @@ export default function Dashboard() {
                       </p>
                     </div>
                     <div className="resume-file__actions">
-                      <a href={RESUME_DOWNLOAD_URL} className="btn btn--glass btn--sm">
+                      <a
+                        href={RESUME_VIEW_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn--glass btn--sm"
+                      >
+                        <Eye size={17} weight="bold" aria-hidden="true" />
+                        <span>View</span>
+                      </a>
+                      <a
+                        href={RESUME_DOWNLOAD_URL}
+                        className="btn btn--ghost btn--sm"
+                        aria-label="Download your resume"
+                      >
                         <DownloadSimple size={17} weight="bold" aria-hidden="true" />
-                        <span>Download</span>
                       </a>
                       <Button
                         variant="danger"
@@ -312,6 +326,11 @@ export default function Dashboard() {
                     Accepted
                   </Badge>
                 )}
+                {applicationStatus === 'submitted' && decision === 'waitlisted' && (
+                  <Badge tone="accent" icon={HourglassMedium}>
+                    Waitlisted
+                  </Badge>
+                )}
                 {applicationStatus === 'submitted' && decision === 'denied' && (
                   <Badge tone="neutral">Decided</Badge>
                 )}
@@ -338,6 +357,17 @@ export default function Dashboard() {
                       Browse teams
                     </Button>
                   </Link>
+                </div>
+              ) : applicationStatus === 'submitted' && decision === 'waitlisted' ? (
+                <div className="app-done">
+                  <span className="app-done__icon" aria-hidden="true">
+                    <HourglassMedium size={36} weight="duotone" />
+                  </span>
+                  <p className="app-done__title">You&apos;re on the waitlist</p>
+                  <p className="app-done__body">
+                    Spots this season are full right now. If one opens, we will email you
+                    straight away and you can join a team from here. Nothing to do until then.
+                  </p>
                 </div>
               ) : applicationStatus === 'submitted' && decision === 'denied' ? (
                 <div className="app-done">

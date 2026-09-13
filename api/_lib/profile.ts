@@ -96,7 +96,7 @@ type ApplicationRow = {
   goals: string | null;
   experience: string | null;
   commitment: string | null;
-  decision: 'accepted' | 'denied' | null;
+  decision: 'accepted' | 'waitlisted' | 'denied' | null;
   submitted_at: string | null;
 };
 

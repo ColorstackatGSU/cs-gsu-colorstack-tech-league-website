@@ -183,8 +183,12 @@ export function removeResume() {
   return request('DELETE', '/resume');
 }
 
-/** Same-origin, so the session cookie rides along on a plain link. */
-export const RESUME_DOWNLOAD_URL = '/api/resume';
+/**
+ * Same-origin, so the session cookie rides along on a plain link. The view URL opens in
+ * the browser's PDF viewer; the download URL saves a file.
+ */
+export const RESUME_VIEW_URL = '/api/resume';
+export const RESUME_DOWNLOAD_URL = '/api/resume?download=1';
 
 /** Submits for review. Rejected if already submitted: a submission is final. */
 export function saveApplication(application) {
@@ -338,7 +342,10 @@ export async function fetchAdminApplications() {
   return data.applications;
 }
 
-/** @returns {Promise<{ application, emailed: boolean, emailError?: string }>} */
+/**
+ * @param {'accepted' | 'waitlisted' | 'denied'} decision
+ * @returns {Promise<{ application, emailed: boolean, emailError?: string }>}
+ */
 export function decideApplication(userId, decision) {
   return request('POST', `/admin/applications/${userId}/decision`, { decision });
 }
@@ -351,6 +358,7 @@ export function reopenApplication(userId) {
   return request('POST', `/admin/applications/${userId}/reopen`);
 }
 
+/** Opens in the browser's PDF viewer. */
 export const adminResumeUrl = (userId) => `/api/admin/applications/${userId}/resume`;
 
 /** @returns {Promise<{ events: Array, teams: Array }>} */

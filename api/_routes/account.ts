@@ -228,17 +228,27 @@ account.get('/resume', async (c) => {
     throw new HttpError(404, 'Your resume file could not be found. Try uploading it again.');
   }
 
-  return pdfResponse(data, profile.resume_name);
+  return pdfResponse(data, profile.resume_name, c.req.query('download') === '1');
 });
 
-/** Streams a stored PDF back as a download under its original name. */
-export function pdfResponse(file: Blob, name: string) {
+/**
+ * Streams a stored PDF back under its original name.
+ *
+ * Inline by default, so opening the link shows the resume in the browser's own PDF viewer
+ * and nothing lands in anyone's Downloads folder; ?download=1 asks for a file instead.
+ * The browser viewer still offers its own save button, so viewing loses nothing.
+ *
+ * nosniff because these bytes were uploaded by a member. They were checked to start as a
+ * PDF, and this stops a browser second-guessing that and rendering them as anything else.
+ */
+export function pdfResponse(file: Blob, name: string, download = false) {
   const ascii = name.replace(/[^\x20-\x7e]/g, '_').replace(/"/g, '');
   return new Response(file, {
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(name)}`,
+      'Content-Disposition': `${download ? 'attachment' : 'inline'}; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(name)}`,
       'Cache-Control': 'private, no-store',
+      'X-Content-Type-Options': 'nosniff',
     },
   });
 }

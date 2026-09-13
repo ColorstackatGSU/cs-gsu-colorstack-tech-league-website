@@ -387,7 +387,9 @@ export default function Teams() {
             <h2 className="panel__title">Teams open once you are accepted</h2>
             <p className="panel__subtitle">
               Teams of {TEAM_RULES.min}&ndash;{TEAM_RULES.max} are for accepted League members.
-              {profile?.applicationStatus === 'submitted'
+              {profile?.decision === 'waitlisted'
+                ? ' You are on the waitlist, and we will email you if a spot opens.'
+                : profile?.applicationStatus === 'submitted'
                 ? ' Your application is in, and we will email you a decision.'
                 : ' Apply first, and once you are in you can start a team or join one here.'}
             </p>

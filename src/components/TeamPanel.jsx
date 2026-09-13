@@ -87,7 +87,9 @@ function Locked({ status, decision }) {
   const message =
     decision === 'denied'
       ? 'Teams are for accepted League members, so this season they are closed to you.'
-      : status === 'submitted'
+      : decision === 'waitlisted'
+        ? 'You are on the waitlist. If a spot opens and you are accepted, you can start a team or join one here.'
+        : status === 'submitted'
         ? 'Teams open once your application is accepted. We will email you, and then you can start a team or join one here.'
         : 'Teams open once you apply and are accepted. Finish your application first.';
 

@@ -56,7 +56,31 @@ export function resetPasswordEmail(tokenHash: string) {
   };
 }
 
-export function decisionEmail(decision: 'accepted' | 'denied', firstName: string) {
+/**
+ * Sent once, when an account first becomes usable. Deliberately not "welcome to the
+ * League": nobody is in the League until their application is accepted, and that email
+ * is the one that says so.
+ */
+export function welcomeEmail(firstName: string) {
+  const hello = firstName ? `Hi ${escape(firstName)},` : 'Hi,';
+  return {
+    subject: 'Welcome to the ColorStack Tech League',
+    html: layout(
+      'Your account is ready',
+      [
+        hello,
+        'Thanks for joining the ColorStack Tech League site. Here is what comes next:',
+        '<strong>1. Apply.</strong> The application takes about five minutes, and you can save a draft and finish later.<br>' +
+          '<strong>2. Upload your resume.</strong> It goes into the book League partners use when recruiting for internships.<br>' +
+          '<strong>3. Watch your inbox.</strong> E-board reviews applications on a rolling basis and emails every decision.',
+        'Once you are accepted, you can start a team of 3 or 4 or join one that has room.',
+      ],
+      { label: 'Go to my dashboard', href: `${env().APP_URL}/dashboard` }
+    ),
+  };
+}
+
+export function decisionEmail(decision: 'accepted' | 'waitlisted' | 'denied', firstName: string) {
   const hello = firstName ? `Hi ${escape(firstName)},` : 'Hi,';
   if (decision === 'accepted') {
     return {
@@ -69,6 +93,20 @@ export function decisionEmail(decision: 'accepted' | 'denied', firstName: string
           'Next, get on a team. Teams are 3 or 4 people: start your own and invite people, or ask to join a team that still has room.',
         ],
         { label: 'Find a team', href: `${env().APP_URL}/teams` }
+      ),
+    };
+  }
+  if (decision === 'waitlisted') {
+    return {
+      subject: "You're on the ColorStack Tech League waitlist",
+      html: layout(
+        "You're on the waitlist",
+        [
+          hello,
+          'Thank you for applying to the ColorStack Tech League. Spots this season are full right now, and we have put you on the waitlist.',
+          'If a spot opens, we will email you straight away, and you will be able to join a team from your dashboard. You do not need to do anything in the meantime.',
+        ],
+        { label: 'See my dashboard', href: `${env().APP_URL}/dashboard` }
       ),
     };
   }

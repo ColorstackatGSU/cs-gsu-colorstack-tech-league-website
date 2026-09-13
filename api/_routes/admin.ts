@@ -56,7 +56,7 @@ type ReviewRow = {
   goals: string | null;
   experience: string | null;
   commitment: string | null;
-  decision: 'accepted' | 'denied' | null;
+  decision: 'accepted' | 'waitlisted' | 'denied' | null;
   decided_at: string | null;
   decision_emailed_at: string | null;
   submitted_at: string | null;
@@ -150,7 +150,7 @@ async function emailDecision(c: Context<AuthedEnv>, row: ReviewRow) {
 admin.post('/applications/:id/decision', async (c) => {
   const userId = userIdParam(c);
   const { decision } = parse(
-    z.object({ decision: z.enum(['accepted', 'denied'], 'Choose accept or deny.') }),
+    z.object({ decision: z.enum(['accepted', 'waitlisted', 'denied'], 'Choose accept, waitlist, or deny.') }),
     await body(c)
   );
 
@@ -178,7 +178,7 @@ admin.get('/applications/:id/resume', async (c) => {
   }
   const { data, error } = await c.get('db').storage.from(RESUME_BUCKET).download(resumePath(row.user_id));
   if (error || !data) throw new HttpError(404, 'That resume file could not be found.');
-  return pdfResponse(data, row.profile.resume_name);
+  return pdfResponse(data, row.profile.resume_name, c.req.query('download') === '1');
 });
 
 /* ---------- scores ---------- */
