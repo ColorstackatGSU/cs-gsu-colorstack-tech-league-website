@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   Trophy,
-  Microphone,
   Info,
   CheckCircle,
   Clock,
@@ -11,7 +10,7 @@ import {
 import { useAuth } from '../lib/AuthContext';
 import { GlassCard, Button, Badge, SectionHeading } from '../components/ui';
 import { Reveal, Stagger, StaggerItem } from '../components/Motion';
-import { EVENTS, COMBINE, TOTAL_WEIGHT } from '../lib/season';
+import { EVENTS, TOTAL_WEIGHT } from '../lib/season';
 import './Scoring.css';
 
 /* Content mirrors the Fall 2026 Scoring System guide. Data lives in
@@ -223,27 +222,6 @@ export default function Scoring() {
                   </tfoot>
                 </table>
               </div>
-            </GlassCard>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ---------------- The Combine ---------------- */}
-      <section className="section on-dark" id="combine">
-        <div className="container">
-          <Reveal>
-            <GlassCard className="combine">
-              <div className="combine__head">
-                <Badge tone="neutral" icon={Microphone}>
-                  Parallel track
-                </Badge>
-                <h2 className="combine__title">{COMBINE.name}</h2>
-              </div>
-              <p className="combine__body">{COMBINE.blurb}</p>
-              <p className="combine__note">
-                <Info size={16} weight="fill" aria-hidden="true" />
-                {COMBINE.note}
-              </p>
             </GlassCard>
           </Reveal>
         </div>
