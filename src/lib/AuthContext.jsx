@@ -22,6 +22,8 @@ export function AuthProvider({ children }) {
   const [loadError, setLoadError] = useState('');
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
+  // Why the API last signed this page out, when it said. Login explains it.
+  const [signOutReason, setSignOutReason] = useState(null);
 
   const apply = useCallback((me) => {
     setSession(me?.session ?? null);
@@ -71,7 +73,8 @@ export function AuthProvider({ children }) {
 
   // The API said the session is gone (expired, or signed out elsewhere).
   useEffect(() => {
-    function onSignedOut() {
+    function onSignedOut(event) {
+      setSignOutReason(event.detail?.code ?? null);
       apply(null);
     }
     window.addEventListener(store.SIGNED_OUT_EVENT, onSignedOut);
@@ -102,6 +105,10 @@ export function AuthProvider({ children }) {
   const deleteResume = useCallback(async () => apply(await store.removeResume()), [apply]);
   const submitApplication = useCallback(
     async (application) => apply(await store.saveApplication(application)),
+    [apply]
+  );
+  const sendPersonalEmailLink = useCallback(
+    async (email) => apply(await store.sendPersonalEmailLink(email)),
     [apply]
   );
   const saveDraft = useCallback(
@@ -162,6 +169,7 @@ export function AuthProvider({ children }) {
       deleteResume,
       submitApplication,
       saveDraft,
+      sendPersonalEmailLink,
       createTeam,
       updateTeam,
       renameTeam,
@@ -178,6 +186,7 @@ export function AuthProvider({ children }) {
       loadError,
       session,
       profile,
+      signOutReason,
       refresh,
       signIn,
       signUp,
@@ -189,6 +198,7 @@ export function AuthProvider({ children }) {
       deleteResume,
       submitApplication,
       saveDraft,
+      sendPersonalEmailLink,
       createTeam,
       updateTeam,
       renameTeam,

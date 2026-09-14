@@ -37,7 +37,7 @@ export default function Login() {
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
 
-  const { signIn } = useAuth();
+  const { signIn, signOutReason } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [params] = useSearchParams();
@@ -158,6 +158,11 @@ export default function Login() {
               <StatusMessage tone="error">{colorstackMessage}</StatusMessage>
             )}
             {formError && <StatusMessage tone="error">{formError}</StatusMessage>}
+            {!formError && signOutReason === 'email_not_confirmed' && (
+              <StatusMessage tone="error">
+                Your email has not been confirmed yet. Log in and we can send you a new link.
+              </StatusMessage>
+            )}
             {unconfirmed && (
               <div className="auth__resend">
                 <Button variant="glass" size="sm" loading={resend.loading} onClick={handleResend}>

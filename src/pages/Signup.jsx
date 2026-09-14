@@ -1,13 +1,15 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
   ArrowLeft,
   CheckCircle,
+  Check,
   Sparkle,
   EnvelopeSimple,
   PaperPlaneTilt,
+  ArrowSquareOut,
 } from '@phosphor-icons/react';
 import { useAuth } from '../lib/AuthContext';
 import {
@@ -15,6 +17,8 @@ import {
   validatePassword,
   passwordStrength,
   resendVerification,
+  onEmailConfirmed,
+  STUDENT_INBOX_URL,
 } from '../lib/authStore';
 import {
   GlassCard,
@@ -37,12 +41,26 @@ export default function Signup() {
   // Set once the account exists and the confirmation email is on its way.
   const [sentTo, setSentTo] = useState('');
   const [resendState, setResendState] = useState({ loading: false, message: '', tone: 'success' });
+  const [cooldown, setCooldown] = useState(0);
 
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
   const confirmRef = useRef(null);
 
-  const { signUp } = useAuth();
+  const { signUp, refresh } = useAuth();
+
+  useEffect(() => {
+    if (cooldown <= 0) return undefined;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  // Confirmed in another tab of this browser: that tab set the session cookie, so asking
+  // the server again signs this tab in too, and the route guard takes it to the dashboard.
+  useEffect(() => {
+    if (!sentTo) return undefined;
+    return onEmailConfirmed((kind) => kind === 'account' && refresh());
+  }, [sentTo, refresh]);
 
   const strength = useMemo(() => passwordStrength(password), [password]);
 
@@ -74,6 +92,7 @@ export default function Signup() {
     try {
       const result = await signUp({ email, password });
       setSentTo(result.email);
+      setCooldown(30);
     } catch (error) {
       setFormError(error.message);
       emailRef.current?.focus();
@@ -91,6 +110,7 @@ export default function Signup() {
         message: 'Sent. It can take a minute or two to arrive.',
         tone: 'success',
       });
+      setCooldown(60);
     } catch (error) {
       setResendState({ loading: false, message: error.message, tone: 'error' });
     }
@@ -127,16 +147,20 @@ export default function Signup() {
             </p>
 
             <ol className="auth__steps">
-              {[
-                { n: '1', text: 'Create your account' },
-                { n: '2', text: 'Upload your resume for recruiters' },
-                { n: '3', text: 'Submit your League application' },
-              ].map((step, i) => (
-                <li key={step.n} className={i === 0 ? 'is-current' : ''}>
-                  <span className="auth__step-num">{step.n}</span>
-                  <span>{step.text}</span>
-                </li>
-              ))}
+              {['Create your account', 'Confirm your student email', 'Apply to the League'].map(
+                (text, i) => {
+                  const current = sentTo ? 1 : 0;
+                  const state = i < current ? 'is-done' : i === current ? 'is-current' : '';
+                  return (
+                    <li key={text} className={state} aria-current={i === current ? 'step' : undefined}>
+                      <span className="auth__step-num">
+                        {i < current ? <Check size={15} weight="bold" aria-hidden="true" /> : i + 1}
+                      </span>
+                      <span>{text}</span>
+                    </li>
+                  );
+                }
+              )}
             </ol>
           </div>
         </motion.aside>
@@ -154,26 +178,42 @@ export default function Signup() {
                 <span className="auth__sent-icon" aria-hidden="true">
                   <EnvelopeSimple size={34} weight="duotone" />
                 </span>
+                <span className="auth__progress">Step 2 of 3</span>
                 <h2 className="auth__title">Check your inbox</h2>
                 <p className="auth__subtitle">
                   We sent a confirmation link to{' '}
-                  <strong className="wrap-anywhere">{sentTo}</strong>. Open it to finish
-                  creating your account. The link expires in an hour.
+                  <strong className="wrap-anywhere">{sentTo}</strong>. Open it and you will be
+                  signed in and taken to your dashboard. The link expires in an hour.
                 </p>
-                <p className="auth__subtitle">
-                  Nothing there? Check your junk folder, then send another.
+
+                <p className="auth__waiting" role="status">
+                  <span className="auth__waiting-dot" aria-hidden="true" />
+                  Waiting for you to open the link. If you open it in this browser, this page
+                  moves on by itself.
                 </p>
+
+                <a
+                  href={STUDENT_INBOX_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn--primary btn--md"
+                >
+                  <span>Open Outlook</span>
+                  <ArrowSquareOut size={18} weight="bold" aria-hidden="true" className="btn__icon-right" />
+                </a>
 
                 <StatusMessage tone={resendState.tone}>{resendState.message}</StatusMessage>
 
+                <p className="auth__subtitle">Nothing there after a few minutes? Check your junk folder.</p>
                 <Button
                   variant="glass"
                   size="md"
                   icon={PaperPlaneTilt}
                   loading={resendState.loading}
+                  disabled={cooldown > 0}
                   onClick={handleResend}
                 >
-                  Send the link again
+                  {cooldown > 0 ? `Send again in ${cooldown}s` : 'Send the link again'}
                 </Button>
 
                 <p className="auth__switch">

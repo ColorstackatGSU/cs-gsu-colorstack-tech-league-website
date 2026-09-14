@@ -53,7 +53,7 @@ async function request(method, path, body) {
     error.status = response.status;
     error.code = data?.code;
     if (response.status === 401 && !path.startsWith('/auth/')) {
-      window.dispatchEvent(new Event(SIGNED_OUT_EVENT));
+      window.dispatchEvent(new CustomEvent(SIGNED_OUT_EVENT, { detail: { code: data?.code } }));
     }
     throw error;
   }
@@ -127,6 +127,37 @@ export function verifyEmail({ tokenHash, type }) {
   return request('POST', '/auth/verify', { tokenHash, type });
 }
 
+/**
+ * Tells other tabs of this browser that an email was just confirmed, so a tab still showing
+ * "check your inbox" can move on by itself instead of waiting to be noticed.
+ */
+const CONFIRMED_CHANNEL = 'cstl:email-confirmed';
+
+export function announceEmailConfirmed(kind) {
+  try {
+    const channel = new BroadcastChannel(CONFIRMED_CHANNEL);
+    channel.postMessage({ kind });
+    channel.close();
+  } catch {
+    // Older browsers: the waiting tab still catches up when it is next focused.
+  }
+}
+
+/** Calls back with the kind ('account' | 'personal') each time another tab confirms. Returns an unsubscribe. */
+export function onEmailConfirmed(callback) {
+  let channel;
+  try {
+    channel = new BroadcastChannel(CONFIRMED_CHANNEL);
+    channel.onmessage = (event) => callback(event.data?.kind);
+  } catch {
+    return () => {};
+  }
+  return () => channel.close();
+}
+
+/** The student's webmail. GSU student mail is Microsoft 365. */
+export const STUDENT_INBOX_URL = 'https://outlook.office.com/mail/';
+
 export function resendVerification(email) {
   return request('POST', '/auth/resend', { email: email.trim() });
 }
@@ -193,6 +224,16 @@ export const RESUME_DOWNLOAD_URL = '/api/resume?download=1';
 /** Submits for review. Rejected if already submitted: a submission is final. */
 export function saveApplication(application) {
   return request('POST', '/application', application);
+}
+
+/** Saves the address to the draft if it changed, then emails it a confirmation link. */
+export function sendPersonalEmailLink(email) {
+  return request('POST', '/application/personal-email', { email: email.trim() });
+}
+
+/** From the emailed link. Works signed in or out, on any device. */
+export function confirmPersonalEmail(token) {
+  return request('POST', '/auth/confirm-personal-email', { token });
 }
 
 export function saveApplicationDraft(application) {

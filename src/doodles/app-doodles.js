@@ -444,10 +444,11 @@ function detectScene() {
   if (document.querySelector('.dash')) return 'dashboard';
   const apply = document.querySelector('.apply');
   if (!apply) return null;
-  if (apply.querySelector('.apply__done')) return 'apply-done';
+  if (apply.querySelector('.apply__status')) return 'apply-done';
   const items = [...apply.querySelectorAll('.apply__rail-item')];
   const i = items.findIndex(li => li.classList.contains('is-current'));
-  return i >= 0 ? `apply-${i + 1}` : null;
+  // The review step reuses the last section's scene rather than having one of its own.
+  return i >= 0 ? `apply-${Math.min(i + 1, 4)}` : null;
 }
 
 function art(it) {
@@ -491,7 +492,7 @@ export function startAppDoodles() {
   const sync = () => {
     queued = false;
     const scene = detectScene();
-    const host = scene && document.querySelector(SCENES[scene].host);
+    const host = scene && SCENES[scene] && document.querySelector(SCENES[scene].host);
     const errKey = document.querySelector('.status-msg--error') ? '+err' : '';
     const nextKey = scene ? scene + errKey : '';
     if (nextKey === key && layer && layer.isConnected && layer.parentElement === host) return;

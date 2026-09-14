@@ -1,6 +1,9 @@
 import { Hono, type Context } from 'hono';
 import { z } from 'zod';
+import { personalEmailConfirmation } from '../_lib/emails.js';
+import { personalEmailToken } from '../_lib/emailToken.js';
 import { HttpError, parse, unwrap } from '../_lib/errors.js';
+import { sendMail } from '../_lib/mailer.js';
 import {
   APPLICATION_COLUMNS,
   draftSchema,
@@ -10,7 +13,7 @@ import {
   toRow,
 } from '../_lib/profile.js';
 import type { AuthedEnv } from '../_lib/session.js';
-import { RESUME_BUCKET, resumePath } from '../_lib/supabase.js';
+import { RESUME_BUCKET, resumePath, service } from '../_lib/supabase.js';
 
 /**
  * The signed-in member's own things: their profile, their application, their resume.
@@ -131,7 +134,94 @@ account.post('/application', async (c) => {
   if (submission.personalEmail.toLowerCase() === c.get('member').email) {
     throw new HttpError(400, 'Use a different personal email from your school email.');
   }
+
+  // Said here in words; the database refuses it regardless (applications_personal_email_rules).
+  const current = unwrap(
+    await c
+      .get('db')
+      .from('applications')
+      .select('personal_email, personal_email_verified_at')
+      .eq('user_id', c.get('member').id)
+      .maybeSingle()
+  ) as { personal_email: string | null; personal_email_verified_at: string | null } | null;
+  const confirmed =
+    current?.personal_email_verified_at &&
+    (current.personal_email ?? '').toLowerCase() === submission.personalEmail.toLowerCase();
+  if (!confirmed) {
+    throw new HttpError(
+      400,
+      'Confirm your personal email before submitting. Open the link we sent to it, or send a new one.',
+      'personal_email_unconfirmed'
+    );
+  }
+
   return writeApplication(c, toRow(submission), 'submitted');
+});
+
+/**
+ * Emails a confirmation link to the personal address on the application.
+ *
+ * While the application is a draft, the address is saved first, so the link always refers
+ * to what is on file. Once submitted, the address is frozen and can only be confirmed.
+ */
+account.post('/application/personal-email', async (c) => {
+  const { email } = parse(
+    z.object({ email: z.email('Enter a valid email address.').max(254).transform((v) => v.trim().toLowerCase()) }),
+    await body(c)
+  );
+  const db = c.get('db');
+  const member = c.get('member');
+
+  if (email === member.email.toLowerCase()) {
+    throw new HttpError(400, 'Use a different address from your school email.');
+  }
+
+  const existing = unwrap(
+    await db
+      .from('applications')
+      .select('status, full_name, personal_email, personal_email_verified_at')
+      .eq('user_id', member.id)
+      .maybeSingle()
+  ) as {
+    status: string;
+    full_name: string | null;
+    personal_email: string | null;
+    personal_email_verified_at: string | null;
+  } | null;
+
+  const sameAddress = (existing?.personal_email ?? '').toLowerCase() === email;
+
+  if (existing?.status === 'submitted') {
+    if (!sameAddress) throw new HttpError(409, ALREADY_SUBMITTED, 'already_submitted');
+  } else if (!existing) {
+    unwrap(await db.from('applications').insert({ user_id: member.id, school_email: member.email, personal_email: email }));
+  } else if (!sameAddress) {
+    unwrap(await db.from('applications').update({ personal_email: email }).eq('user_id', member.id).eq('status', 'draft'));
+  }
+
+  if (!(sameAddress && existing?.personal_email_verified_at)) {
+    // Per address and per member, so neither a typo loop nor someone cycling addresses can
+    // turn this into a way to spam inboxes from the chapter mailbox.
+    const slot = async (key: string) =>
+      unwrap(await service().rpc('claim_email_slot', { p_email: key, p_kind: 'personal', p_limit: 5 })) === true;
+    if (!(await slot(email)) || !(await slot(`member:${member.id}`))) {
+      throw new HttpError(
+        429,
+        'We have sent a few links already. Check that inbox and its spam folder, or try again in an hour.'
+      );
+    }
+
+    const firstName = (existing?.full_name ?? '').trim().split(/\s+/)[0] ?? '';
+    const message = personalEmailConfirmation(personalEmailToken(member.id, email), firstName);
+    try {
+      await sendMail([email], message.subject, message.html);
+    } catch (err) {
+      console.error('personal email confirmation failed', err);
+      throw new HttpError(502, 'We could not send that email just now. Try again in a minute.');
+    }
+  }
+
+  return c.json(await loadMe(db, member));
 });
 
 /* ---------- resume ---------- */

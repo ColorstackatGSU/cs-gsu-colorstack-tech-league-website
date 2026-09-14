@@ -17,6 +17,7 @@ import Apply from './pages/Apply';
 import Scoring from './pages/Scoring';
 import Leaderboard from './pages/Leaderboard';
 import Verify from './pages/Verify';
+import ConfirmEmail from './pages/ConfirmEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Teams from './pages/Teams';
@@ -170,6 +171,7 @@ export default function App() {
             />
             {/* Reached from emailed links, so they work signed in or out. */}
             <Route path="/verify" element={<Verify />} />
+            <Route path="/confirm-email" element={<ConfirmEmail />} />
             <Route
               path="/forgot-password"
               element={

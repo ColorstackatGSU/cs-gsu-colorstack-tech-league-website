@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, EnvelopeOpen, WarningCircle } from '@phosphor-icons/react';
 import { useAuth } from '../lib/AuthContext';
+import { announceEmailConfirmed } from '../lib/authStore';
 import { Button, StatusMessage } from '../components/ui';
 import AuthCard from '../components/AuthCard';
 
@@ -28,6 +29,8 @@ export default function Verify() {
     setError('');
     try {
       await verifyEmail({ tokenHash, type });
+      // The signup tab still saying "check your inbox" moves on by itself.
+      announceEmailConfirmed('account');
       navigate('/dashboard', { replace: true, state: { welcome: true } });
     } catch (err) {
       setError(err.message);
@@ -60,10 +63,10 @@ export default function Verify() {
         <span className="auth__sent-icon" aria-hidden="true">
           <EnvelopeOpen size={34} weight="duotone" />
         </span>
-        <h1 className="auth__title">Confirm your email</h1>
+        <h1 className="auth__title">One last click</h1>
         <p className="auth__subtitle">
-          One click and your Tech League account is ready. You will land on your dashboard,
-          signed in.
+          Confirm your email and your Tech League account is ready. You will land on your
+          dashboard, signed in.
         </p>
 
         {error && <StatusMessage tone="error">{error}</StatusMessage>}
@@ -78,6 +81,11 @@ export default function Verify() {
         >
           {loading ? 'Confirming' : 'Confirm my email'}
         </Button>
+
+        <p className="auth__fineprint">
+          Why the extra click? GSU email security opens every link before you do. Waiting for
+          your click keeps this link working until you arrive.
+        </p>
 
         {error && (
           <p className="auth__switch">

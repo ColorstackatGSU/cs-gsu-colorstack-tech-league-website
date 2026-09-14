@@ -41,6 +41,23 @@ export function verifyEmail(tokenHash: string, type: 'signup' | 'magiclink') {
   };
 }
 
+export function personalEmailConfirmation(token: string, firstName: string) {
+  const href = `${env().APP_URL}/confirm-email?token=${encodeURIComponent(token)}`;
+  const hello = firstName ? `Hi ${escape(firstName)},` : 'Hi,';
+  return {
+    subject: 'Confirm where we send your Tech League decision',
+    html: layout(
+      'Confirm your personal email',
+      [
+        hello,
+        'You gave this address on your ColorStack Tech League application. We email your decision here, so we want to be sure it reaches you.',
+        'The link works for 24 hours. If you did not apply, ignore this email and nothing happens.',
+      ],
+      { label: 'Confirm this email', href }
+    ),
+  };
+}
+
 export function resetPasswordEmail(tokenHash: string) {
   const href = `${env().APP_URL}/reset-password?token_hash=${encodeURIComponent(tokenHash)}`;
   return {
@@ -70,9 +87,9 @@ export function welcomeEmail(firstName: string) {
       [
         hello,
         'Thanks for joining the ColorStack Tech League site. Here is what comes next:',
-        '<strong>1. Apply.</strong> The application takes about five minutes, and you can save a draft and finish later.<br>' +
+        '<strong>1. Apply.</strong> The application takes about ten minutes, and your progress saves as you go.<br>' +
           '<strong>2. Upload your resume.</strong> It goes into the book League partners use when recruiting for internships.<br>' +
-          '<strong>3. Watch your inbox.</strong> E-board reviews applications on a rolling basis and emails every decision.',
+          '<strong>3. Hear back.</strong> E-board reviews applications on a rolling basis. Your dashboard always shows where yours stands, and we email the decision too.',
         'Once you are accepted, you can start a team of 3 or 4 or join one that has room.',
       ],
       { label: 'Go to my dashboard', href: `${env().APP_URL}/dashboard` }

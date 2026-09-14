@@ -107,9 +107,27 @@ export const requireMember: MiddlewareHandler<AuthedEnv> = async (c, next) => {
   if (!resolved) {
     throw new HttpError(401, 'Your session has ended. Log in again to continue.', 'signed_out');
   }
+  const db = asMember(resolved.accessToken);
+
+  // Login already refuses an unconfirmed account, but a session issued before that rule
+  // existed would otherwise keep working for up to 30 days.
+  const { data: profile } = await db
+    .from('profiles')
+    .select('email_verified_at')
+    .eq('id', resolved.member.id)
+    .maybeSingle();
+  if (!profile?.email_verified_at) {
+    clearSession(c);
+    throw new HttpError(
+      401,
+      'Confirm your email to continue. Log in and we can send you a new link.',
+      'email_not_confirmed'
+    );
+  }
+
   c.set('member', resolved.member);
   c.set('accessToken', resolved.accessToken);
-  c.set('db', asMember(resolved.accessToken));
+  c.set('db', db);
   await next();
 };
 

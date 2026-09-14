@@ -97,7 +97,9 @@ type ApplicationRow = {
   experience: string | null;
   commitment: string | null;
   decision: 'accepted' | 'waitlisted' | 'denied' | null;
+  decided_at: string | null;
   submitted_at: string | null;
+  personal_email_verified_at: string | null;
 };
 
 export function toRow(input: Draft | Submission) {
@@ -140,7 +142,8 @@ export function fromRow(row: ApplicationRow) {
 
 export const APPLICATION_COLUMNS =
   'status, full_name, school_email, personal_email, race_ethnicity, year, major, grad_term, ' +
-  'interest, team_pref, why_join, goals, experience, commitment, decision, submitted_at';
+  'interest, team_pref, why_join, goals, experience, commitment, decision, decided_at, submitted_at, ' +
+  'personal_email_verified_at';
 
 const PROFILE_COLUMNS =
   'full_name, is_admin, linkedin_url, github_url, discord_username, ' +
@@ -199,6 +202,9 @@ export async function loadMe(db: SupabaseClient, member: Member) {
       applicationStatus: a?.status ?? 'not-started',
       submittedAt: a?.submitted_at ?? null,
       decision: a?.decision ?? null,
+      decidedAt: a?.decided_at ?? null,
+      // Only ever true for the address currently on the application: changing it clears this.
+      personalEmailVerified: Boolean(a?.personal_email && a.personal_email_verified_at),
       teamEligible: t.eligible,
       team: t.team,
       teamInbox: t.inbox,

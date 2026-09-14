@@ -46,6 +46,7 @@ type ReviewRow = {
   full_name: string | null;
   school_email: string | null;
   personal_email: string | null;
+  personal_email_verified_at: string | null;
   race_ethnicity: string[] | null;
   year: string | null;
   major: string | null;
@@ -67,7 +68,7 @@ type ReviewRow = {
 // applications has two foreign keys to profiles (user_id, decided_by), so the embed has
 // to name which one it means or PostgREST refuses the query as ambiguous.
 const REVIEW_COLUMNS =
-  'user_id, status, full_name, school_email, personal_email, race_ethnicity, year, major, ' +
+  'user_id, status, full_name, school_email, personal_email, personal_email_verified_at, race_ethnicity, year, major, ' +
   'grad_term, interest, team_pref, why_join, goals, experience, commitment, decision, ' +
   'decided_at, decision_emailed_at, submitted_at, updated_at, ' +
   'profile:profiles!applications_user_id_fkey(email, resume_name, resume_size, resume_uploaded_at)';
@@ -79,6 +80,7 @@ function toReview(row: ReviewRow) {
     status: row.status,
     fullName: row.full_name,
     personalEmail: row.personal_email,
+    personalEmailVerified: Boolean(row.personal_email_verified_at),
     raceEthnicity: row.race_ethnicity ?? [],
     year: row.year,
     major: row.major,
@@ -131,7 +133,10 @@ async function emailDecision(c: Context<AuthedEnv>, row: ReviewRow) {
 
   // The personal address, as the application page promises: a student address can
   // lapse, and this email is the one they most need to receive.
-  const to = row.personal_email ?? row.profile?.email ?? row.school_email;
+  // Only once confirmed, though: an unconfirmed one may be a typo, and the student address
+  // is known to work.
+  const to =
+    (row.personal_email_verified_at ? row.personal_email : null) ?? row.profile?.email ?? row.school_email;
   if (!to) return { emailed: false, emailError: 'This applicant has no email address on file.' };
 
   const firstName = (row.full_name ?? '').trim().split(/\s+/)[0] ?? '';

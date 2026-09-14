@@ -489,3 +489,71 @@
   width: 100%;
   padding-inline: var(--sp-4);
 }
+
+/* ---------- signup progress and waiting ---------- */
+
+.auth__steps li.is-done {
+  color: var(--text-muted);
+}
+
+.auth__steps li.is-done .auth__step-num {
+  background: var(--success);
+  border-color: var(--success);
+  border-style: solid;
+  color: #fff;
+}
+
+.auth__progress {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--text-subtle);
+  margin-bottom: calc(var(--sp-3) * -1);
+}
+
+.auth__waiting {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.55;
+  color: #6B500C;
+  background: var(--mustard-soft);
+  border: 2px solid var(--mustard);
+  border-radius: var(--r-md);
+}
+
+.auth__waiting-dot {
+  flex-shrink: 0;
+  width: 11px;
+  height: 11px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--mustard);
+  animation: auth-waiting 1.6s var(--ease-in-out) infinite;
+}
+
+@keyframes auth-waiting {
+  0% { box-shadow: 0 0 0 0 var(--mustard); }
+  70% { box-shadow: 0 0 0 8px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth__waiting-dot {
+    animation: none;
+  }
+}
+
+.auth__sent-icon--success {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.auth__fineprint {
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+  color: var(--text-subtle);
+}

@@ -11,6 +11,7 @@ import {
   type ColorStackClaims,
 } from '../_lib/colorstack.js';
 import { resetPasswordEmail, verifyEmail, welcomeEmail } from '../_lib/emails.js';
+import { readPersonalEmailToken } from '../_lib/emailToken.js';
 import { HttpError, parse, unwrap } from '../_lib/errors.js';
 import { sendMail } from '../_lib/mailer.js';
 import { loadMe } from '../_lib/profile.js';
@@ -105,6 +106,34 @@ async function welcomeOnce(userId: string, email: string) {
   }
 }
 
+/**
+ * Records that this member has proved they hold their student email. Ours rather than
+ * Supabase's email_confirmed_at, which the project's settings can set without any proof.
+ */
+async function markEmailVerified(userId: string) {
+  unwrap(
+    await service()
+      .from('profiles')
+      .update({ email_verified_at: new Date().toISOString() })
+      .eq('id', userId)
+      .is('email_verified_at', null)
+  );
+}
+
+async function isEmailVerified(userId: string) {
+  const row = unwrap(
+    await service().from('profiles').select('email_verified_at').eq('id', userId).maybeSingle()
+  ) as { email_verified_at: string | null } | null;
+  return Boolean(row?.email_verified_at);
+}
+
+async function sendFreshLink(email: string) {
+  const link = await service().auth.admin.generateLink({ type: 'magiclink', email });
+  if (link.error) throw link.error;
+  const type = link.data.properties.verification_type === 'signup' ? 'signup' : 'magiclink';
+  await send(email, verifyEmail(link.data.properties.hashed_token, type));
+}
+
 async function profileIdByEmail(email: string) {
   const row = unwrap(
     await service().from('profiles').select('id').eq('email', email).maybeSingle()
@@ -127,6 +156,14 @@ auth.post('/signup', async (c) => {
   const { data, error } = await service().auth.admin.generateLink({ type: 'signup', email, password });
   if (error) {
     if (error.code === 'email_exists' || error.code === 'user_already_exists') {
+      const id = await profileIdByEmail(email);
+      if (id && !(await isEmailVerified(id))) {
+        // They started signing up before and never confirmed. Another link is what they
+        // need, not a dead end. The password they typed now is not applied: whoever opens
+        // the link can set one with "Forgot your password?".
+        await sendFreshLink(email);
+        return c.json({ status: 'verify', email }, 200);
+      }
       throw new HttpError(409, 'An account with that email already exists. Log in instead.');
     }
     if (error.code === 'weak_password') {
@@ -148,14 +185,8 @@ auth.post('/resend', async (c) => {
   const { email } = parse(z.object({ email: anyEmail }), await body(c));
   const id = STUDENT_EMAIL.test(email) ? await profileIdByEmail(email) : null;
 
-  if (id) {
-    const { data } = await service().auth.admin.getUserById(id);
-    if (data.user && !data.user.email_confirmed_at && (await claimEmailSlot(email, 'verify'))) {
-      const link = await service().auth.admin.generateLink({ type: 'magiclink', email });
-      if (link.error) throw link.error;
-      const type = link.data.properties.verification_type === 'signup' ? 'signup' : 'magiclink';
-      await send(email, verifyEmail(link.data.properties.hashed_token, type));
-    }
+  if (id && !(await isEmailVerified(id)) && (await claimEmailSlot(email, 'verify'))) {
+    await sendFreshLink(email);
   }
 
   return c.json({ status: 'sent' });
@@ -181,6 +212,7 @@ auth.post('/verify', async (c) => {
 
   setSession(c, data.session);
   const member = { id: data.user.id, email: data.user.email };
+  await markEmailVerified(member.id);
   await welcomeOnce(member.id, member.email);
   return c.json(await loadMe(asMember(data.session.access_token), member));
 });
@@ -206,6 +238,17 @@ auth.post('/login', async (c) => {
     // One message for an unknown email and a wrong password, so this cannot be used to
     // find out which students have accounts.
     throw new HttpError(401, 'Incorrect email or password.');
+  }
+
+  if (!(await isEmailVerified(data.user.id))) {
+    // The password was right, but nobody has opened the link yet. The session Supabase just
+    // issued is revoked rather than handed over.
+    await service().auth.admin.signOut(data.session.access_token, 'local').catch(() => undefined);
+    throw new HttpError(
+      403,
+      'Confirm your email before logging in. Check your inbox for the link, or send yourself a new one.',
+      'email_not_confirmed'
+    );
   }
 
   setSession(c, data.session);
@@ -254,6 +297,9 @@ auth.post('/password/reset', async (c) => {
     throw new HttpError(422, 'That password was not accepted. Try a longer one.');
   }
 
+  // Opening a reset link proves the address as surely as a confirmation link does.
+  await markEmailVerified(data.user.id);
+
   // Someone resetting a password may be locking out whoever else had it, so every session
   // on the account ends, and this browser signs in afresh with the new password.
   //
@@ -271,6 +317,46 @@ auth.post('/password/reset', async (c) => {
   setSession(c, fresh.data.session);
   const member = { id: data.user.id, email: data.user.email };
   return c.json(await loadMe(asMember(fresh.data.session.access_token), member));
+});
+
+/**
+ * Confirms an application's personal email from the emailed link. Needs no session: the
+ * link is often opened on a phone, signed in nowhere. The signed token says who and which
+ * address, and it only counts while that is still the address on their application.
+ */
+auth.post('/confirm-personal-email', async (c) => {
+  const { token } = parse(z.object({ token: z.string().min(1, 'That link is incomplete.').max(1000) }), await body(c));
+  const claim = readPersonalEmailToken(token);
+  if (!claim) {
+    throw new HttpError(400, 'That link has expired. Send a new one from your application.', 'link_expired');
+  }
+
+  const row = unwrap(
+    await service()
+      .from('applications')
+      .select('personal_email, personal_email_verified_at')
+      .eq('user_id', claim.userId)
+      .maybeSingle()
+  ) as { personal_email: string | null; personal_email_verified_at: string | null } | null;
+
+  if (!row || (row.personal_email ?? '').toLowerCase() !== claim.email) {
+    throw new HttpError(
+      409,
+      'This link is for an address that is no longer on your application. Send a new link from your application.',
+      'email_changed'
+    );
+  }
+
+  if (!row.personal_email_verified_at) {
+    unwrap(
+      await service()
+        .from('applications')
+        .update({ personal_email_verified_at: new Date().toISOString() })
+        .eq('user_id', claim.userId)
+        .eq('personal_email', row.personal_email)
+    );
+  }
+  return c.json({ status: 'confirmed', email: claim.email });
 });
 
 /* ---------- Sign in with ColorStack at GSU ---------- */
@@ -318,7 +404,10 @@ async function accountFor(claims: ColorStackClaims, email: string) {
   const bySub = unwrap(
     await db.from('profiles').select('id').eq('colorstack_sub', claims.sub).maybeSingle()
   ) as { id: string } | null;
-  if (bySub) return bySub.id;
+  if (bySub) {
+    await markEmailVerified(bySub.id);
+    return bySub.id;
+  }
 
   let id = await profileIdByEmail(email);
   if (id) {
@@ -337,6 +426,8 @@ async function accountFor(claims: ColorStackClaims, email: string) {
   }
 
   unwrap(await db.from('profiles').update({ colorstack_sub: claims.sub }).eq('id', id));
+  // The portal verified this student address before it would put it in the claims.
+  await markEmailVerified(id);
   return id;
 }
 

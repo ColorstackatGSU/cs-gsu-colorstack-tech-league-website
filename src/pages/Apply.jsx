@@ -1,15 +1,18 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight,
   ArrowLeft,
-  CheckCircle,
-  FloppyDisk,
+  Check,
   PaperPlaneTilt,
-  Clock,
+  PencilSimple,
+  CloudCheck,
+  CircleNotch,
+  WarningCircle,
 } from '@phosphor-icons/react';
 import { useAuth } from '../lib/AuthContext';
+import { journey, formatDay, SECTIONS } from '../lib/journey';
 import {
   GlassCard,
   Button,
@@ -17,10 +20,11 @@ import {
   TextInput,
   TextArea,
   Select,
-  Badge,
   StatusMessage,
   ErrorSummary,
 } from '../components/ui';
+import { StatusPill, Timeline } from '../components/Journey';
+import PersonalEmailConfirm from '../components/PersonalEmailConfirm';
 import './Apply.css';
 
 const YEARS = [
@@ -59,6 +63,13 @@ const INTERESTS = [
 const TEAM_PREFS = [
   { value: 'team', label: 'Help me find a team of 3-4' },
   { value: 'have-team', label: 'I already have teammates in mind' },
+];
+
+const COMMITMENTS = [
+  { value: '1-2', label: '1-2 hours' },
+  { value: '3-5', label: '3-5 hours' },
+  { value: '6-8', label: '6-8 hours' },
+  { value: '9+', label: '9+ hours' },
 ];
 
 // The same 2024 SPD-15 categories the member portal asks, so the chapter's numbers line up
@@ -117,41 +128,220 @@ const EMPTY = {
   commitment: '',
 };
 
-const STEPS = [
-  { id: 0, title: 'About you', fields: ['fullName', 'personalEmail', 'raceEthnicity'] },
-  { id: 1, title: 'Academics', fields: ['year', 'major', 'gradTerm', 'interest'] },
-  { id: 2, title: 'Short answers', fields: ['whyJoin', 'goals', 'experience'] },
-  { id: 3, title: 'Logistics', fields: ['teamPref', 'commitment'] },
-];
+// The four form sections from journey.js, then a review step before the one thing that
+// cannot be undone.
+const STEPS = [...SECTIONS.map((s) => s.title), 'Review'];
+const REVIEW = STEPS.length - 1;
 
 const MIN_WHY = 40;
+const AUTOSAVE_MS = 1200;
+
+function answersFrom(application) {
+  const answers = application ?? {};
+  return Object.fromEntries(Object.keys(EMPTY).map((key) => [key, answers[key] ?? EMPTY[key]]));
+}
+
+/** Every answer, grouped as the form asks them. Shared by the review step and the submitted view. */
+function AnswerSections({ values, schoolEmail, onEdit }) {
+  const groups = [
+    [
+      ['Full name', values.fullName],
+      ['School email', schoolEmail],
+      ['Personal email', values.personalEmail],
+      ['Race / ethnicity', values.raceEthnicity.join(', ')],
+    ],
+    [
+      ['Year', values.year],
+      ['Major', values.major],
+      ['Expected graduation', values.gradTerm],
+      ['Area of interest', values.interest],
+    ],
+    [
+      ['Why you want to join', values.whyJoin, true],
+      ['What you want out of the semester', values.goals, true],
+      ['Experience so far', values.experience || 'Not answered (optional)', true],
+    ],
+    [
+      ['Teammates', TEAM_PREFS.find((t) => t.value === values.teamPref)?.label],
+      ['Time per week', COMMITMENTS.find((c) => c.value === values.commitment)?.label],
+    ],
+  ];
+
+  return (
+    <div className="answers">
+      {SECTIONS.map((section, i) => {
+        const complete = section.done(values);
+        return (
+          <section key={section.id} className={`answers__section ${complete ? '' : 'is-incomplete'}`} aria-labelledby={`answers-${section.id}`}>
+            <div className="answers__head">
+              <h3 className="answers__title" id={`answers-${section.id}`}>
+                {section.title}
+              </h3>
+              {onEdit && !complete && (
+                <span className="answers__missing">
+                  <WarningCircle size={14} weight="fill" aria-hidden="true" /> Needs answers
+                </span>
+              )}
+              {onEdit && (
+                <button type="button" className="answers__edit" onClick={() => onEdit(i)}>
+                  <PencilSimple size={14} weight="bold" aria-hidden="true" />
+                  Edit<span className="sr-only"> {section.title}</span>
+                </button>
+              )}
+            </div>
+            <dl className="answers__list">
+              {groups[i].map(([label, value, long]) => (
+                <div key={label} className={long ? 'is-long' : ''}>
+                  <dt>{label}</dt>
+                  <dd className="wrap-anywhere">{value || '-'}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+function SaveIndicator({ state, savedAt }) {
+  if (state === 'saving') {
+    return (
+      <span className="save-indicator" role="status">
+        <CircleNotch size={15} weight="bold" className="btn__spinner" aria-hidden="true" /> Saving
+      </span>
+    );
+  }
+  if (state === 'error') {
+    return (
+      <span className="save-indicator is-error" role="status">
+        <WarningCircle size={15} weight="fill" aria-hidden="true" /> Not saved. Check your connection.
+      </span>
+    );
+  }
+  if (savedAt) {
+    return (
+      <span className="save-indicator is-saved" role="status">
+        <CloudCheck size={16} weight="fill" aria-hidden="true" /> Saved{' '}
+        {savedAt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+      </span>
+    );
+  }
+  return <span className="save-indicator">Saves as you go</span>;
+}
 
 export default function Apply() {
   const { session, profile, submitApplication, saveDraft } = useAuth();
   // The account is a verified student address, so it is the school email. Never typed.
   const schoolEmail = session?.email ?? '';
-
-  const [step, setStep] = useState(0);
-  // Only the fields the form edits; the school email above is not one of them.
-  const [values, setValues] = useState(() => {
-    const answers = profile?.application ?? {};
-    return Object.fromEntries(Object.keys(EMPTY).map((key) => [key, answers[key] ?? EMPTY[key]]));
-  });
-  const [errors, setErrors] = useState({});
-  const [saved, setSaved] = useState('');
-  const [saving, setSaving] = useState(null); // 'draft' | 'submit' | null
-  const [actionError, setActionError] = useState('');
-  // Straight from the server: a submitted application is final, so there is no local
-  // "edit my answers" state that could pretend otherwise.
+  // Straight from the server: a submitted application is final.
   const submitted = profile?.applicationStatus === 'submitted';
+
+  if (submitted) {
+    return <Submitted profile={profile} schoolEmail={schoolEmail} />;
+  }
+  return (
+    <ApplicationForm
+      profile={profile}
+      schoolEmail={schoolEmail}
+      submitApplication={submitApplication}
+      saveDraft={saveDraft}
+    />
+  );
+}
+
+/* ---------------- submitted: read-only, status first ---------------- */
+
+function Submitted({ profile, schoolEmail }) {
+  const values = answersFrom(profile?.application);
+  const j = journey(profile);
+
+  return (
+    <div className="apply on-dark" id="main">
+      <div className="container apply__narrow">
+        <div className="apply__header">
+          <Link to="/dashboard" className="apply__back">
+            <ArrowLeft size={16} weight="bold" aria-hidden="true" />
+            Dashboard
+          </Link>
+        </div>
+
+        <h1 className="apply__title">Your application</h1>
+
+        <GlassCard className={`apply__status tone--${j.tone}`}>
+          <div className="apply__status-head">
+            <StatusPill tone={j.tone}>{j.label}</StatusPill>
+            <span className="apply__status-date">Submitted {formatDay(profile?.submittedAt)}</span>
+          </div>
+          <Timeline stages={j.stages} tone={j.tone} />
+          {values.personalEmail && !profile?.personalEmailVerified && j.key !== 'denied' && (
+            <PersonalEmailConfirm email={values.personalEmail} editable={false} compact />
+          )}
+        </GlassCard>
+
+        <GlassCard className="apply__card">
+          <AnswerSections values={values} schoolEmail={schoolEmail} />
+          <p className="apply__fineprint">
+            Submitted applications cannot be changed. If something needs fixing, email{' '}
+            <a href="mailto:official@colorstackatgsu.com">official@colorstackatgsu.com</a>.
+          </p>
+        </GlassCard>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- the form ---------------- */
+
+function ApplicationForm({ profile, schoolEmail, submitApplication, saveDraft }) {
+  const [step, setStep] = useState(0);
+  const [furthest, setFurthest] = useState(0);
+  // Only the fields the form edits; the school email above is not one of them.
+  const [values, setValues] = useState(() => answersFrom(profile?.application));
+  const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [actionError, setActionError] = useState('');
+
+  const [saveState, setSaveState] = useState('idle'); // 'idle' | 'saving' | 'error'
+  const [savedAt, setSavedAt] = useState(null);
+  const lastSaved = useRef(JSON.stringify(answersFrom(profile?.application)));
 
   const summaryRef = useRef(null);
   const topRef = useRef(null);
+  const firstRender = useRef(true);
 
   // Bring the new step into view without yanking the whole window
   useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
     topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [step]);
+
+  const save = useCallback(
+    async (next) => {
+      const serialized = JSON.stringify(next);
+      if (serialized === lastSaved.current) return;
+      setSaveState('saving');
+      try {
+        await saveDraft(next);
+        lastSaved.current = serialized;
+        setSavedAt(new Date());
+        setSaveState('idle');
+      } catch {
+        setSaveState('error');
+      }
+    },
+    [saveDraft]
+  );
+
+  // Autosave: a moment after typing stops, and never while submitting.
+  useEffect(() => {
+    if (submitting) return undefined;
+    const timer = setTimeout(() => save(values), AUTOSAVE_MS);
+    return () => clearTimeout(timer);
+  }, [values, save, submitting]);
 
   function set(field, value) {
     setValues((prev) => ({ ...prev, [field]: value }));
@@ -217,7 +407,14 @@ export default function Apply() {
     return found;
   }
 
-  async function goNext() {
+  function goTo(index) {
+    setErrors({});
+    setActionError('');
+    setStep(index);
+    setFurthest((f) => Math.max(f, index));
+  }
+
+  function goNext() {
     const found = validateStep(step);
     setErrors(found);
 
@@ -226,42 +423,26 @@ export default function Apply() {
       requestAnimationFrame(() => summaryRef.current?.focus());
       return;
     }
+    save(values);
+    goTo(step + 1);
+  }
 
-    if (step < STEPS.length - 1) {
-      setStep((s) => s + 1);
-      setSaved('');
-      return;
-    }
+  const emailConfirmed =
+    Boolean(profile?.personalEmailVerified) &&
+    (profile?.application?.personalEmail ?? '').toLowerCase() === values.personalEmail.trim().toLowerCase();
+  const incomplete = SECTIONS.filter((s) => !s.done(values));
+  const canSubmit = incomplete.length === 0 && emailConfirmed;
 
-    setSaving('submit');
+  async function onSubmit() {
+    setSubmitting(true);
     setActionError('');
     try {
       await submitApplication(values);
+      window.scrollTo({ top: 0 });
     } catch (error) {
       setActionError(error.message);
     } finally {
-      setSaving(null);
-    }
-  }
-
-  function goBack() {
-    setErrors({});
-    setSaved('');
-    setActionError('');
-    if (step > 0) setStep((s) => s - 1);
-  }
-
-  async function onSaveDraft() {
-    setSaving('draft');
-    setActionError('');
-    try {
-      await saveDraft(values);
-      setSaved('Draft saved. You can come back and finish later, on any device.');
-      setTimeout(() => setSaved(''), 4200);
-    } catch (error) {
-      setActionError(error.message);
-    } finally {
-      setSaving(null);
+      setSubmitting(false);
     }
   }
 
@@ -271,88 +452,7 @@ export default function Apply() {
     el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
-  /* ---------------- submitted state ---------------- */
-
-  if (submitted) {
-    return (
-      <div className="apply on-dark" id="main">
-        <div className="container apply__narrow">
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <GlassCard className="apply__done">
-              <span className="apply__done-icon" aria-hidden="true">
-                <Clock size={44} weight="duotone" />
-              </span>
-              <h1 className="apply__done-title">Application received</h1>
-              <p className="apply__done-body">
-                Thanks, {values.fullName.split(' ')[0] || 'for applying'}. E-board reviews
-                applications on a rolling basis and will email a decision to{' '}
-                <strong className="wrap-anywhere">
-                  {values.personalEmail || schoolEmail}
-                </strong>
-                . Spots are limited, so not every applicant is accepted each cycle.
-              </p>
-              <p className="apply__done-body">
-                Submitted applications can no longer be edited. If something needs fixing,
-                email official@colorstackatgsu.com.
-              </p>
-
-              <div className="apply__recap">
-                <h2 className="apply__recap-title">What you told us</h2>
-                <dl className="apply__recap-list">
-                  {[
-                    ['Name', values.fullName],
-                    ['School email', schoolEmail],
-                    ['Personal email', values.personalEmail],
-                    [
-                      'Race / ethnicity',
-                      values.raceEthnicity.join(', '),
-                    ],
-                    ['Year', values.year],
-                    ['Major', values.major],
-                    ['Graduating', values.gradTerm],
-                    ['Interest', values.interest],
-                    [
-                      'Teammates',
-                      TEAM_PREFS.find((t) => t.value === values.teamPref)?.label ?? '-',
-                    ],
-                  ].map(([label, value]) => (
-                    <div key={label}>
-                      <dt>{label}</dt>
-                      <dd className="wrap-anywhere">{value || '-'}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-
-              {!profile?.resume && (
-                <StatusMessage tone="error">
-                  You have not uploaded a resume yet. Recruiters use it to reach out about
-                  internships. Add it from your dashboard.
-                </StatusMessage>
-              )}
-
-              <div className="apply__done-actions">
-                <Link to="/dashboard">
-                  <Button variant="primary" size="md" iconRight={ArrowRight}>
-                    Back to dashboard
-                  </Button>
-                </Link>
-              </div>
-            </GlassCard>
-          </motion.div>
-        </div>
-      </div>
-    );
-  }
-
-  /* ---------------- form ---------------- */
-
-  const current = STEPS[step];
-  const progress = ((step + 1) / STEPS.length) * 100;
+  const progress = (step / REVIEW) * 100;
 
   return (
     <div className="apply on-dark" id="main">
@@ -362,35 +462,42 @@ export default function Apply() {
             <ArrowLeft size={16} weight="bold" aria-hidden="true" />
             Dashboard
           </Link>
-          <Badge tone="neutral">
-            Step {step + 1} of {STEPS.length}
-          </Badge>
+          <SaveIndicator state={saveState} savedAt={savedAt} />
         </div>
 
         <h1 className="apply__title">Apply to the ColorStack Tech League</h1>
         <p className="apply__subtitle">
-          A few questions so e-board knows who you are and what you want out of the
-          semester. Spots are limited and applications are reviewed on a rolling
-          basis.
+          About 10 minutes. Your answers save as you go, and you will see everything once more
+          before you submit.
         </p>
 
-        {/* step rail */}
-        <div className="apply__rail">
+        {/* step rail: completed steps are links back */}
+        <nav className="apply__rail" aria-label="Application steps">
           <ol className="apply__rail-list">
-            {STEPS.map((s, i) => (
-              <li
-                key={s.id}
-                className={`apply__rail-item ${i === step ? 'is-current' : ''} ${
-                  i < step ? 'is-done' : ''
-                }`}
-                aria-current={i === step ? 'step' : undefined}
-              >
-                <span className="apply__rail-dot" aria-hidden="true">
-                  {i < step ? <CheckCircle size={15} weight="fill" /> : i + 1}
-                </span>
-                <span className="apply__rail-label">{s.title}</span>
-              </li>
-            ))}
+            {STEPS.map((title, i) => {
+              const done = i < REVIEW ? SECTIONS[i].done(values) && i !== step : false;
+              const reachable = i <= furthest || done;
+              return (
+                <li
+                  key={title}
+                  className={`apply__rail-item ${i === step ? 'is-current' : ''} ${done ? 'is-done' : ''}`}
+                >
+                  <button
+                    type="button"
+                    className="apply__rail-button"
+                    onClick={() => goTo(i)}
+                    disabled={!reachable || i === step}
+                    aria-current={i === step ? 'step' : undefined}
+                  >
+                    <span className="apply__rail-dot" aria-hidden="true">
+                      {done ? <Check size={15} weight="bold" /> : i + 1}
+                    </span>
+                    <span className="apply__rail-label">{title}</span>
+                    {done && <span className="sr-only"> (complete)</span>}
+                  </button>
+                </li>
+              );
+            })}
           </ol>
           <div className="apply__rail-track" aria-hidden="true">
             <motion.div
@@ -399,7 +506,7 @@ export default function Apply() {
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             />
           </div>
-        </div>
+        </nav>
 
         <GlassCard className="apply__card">
           <ErrorSummary errors={errors} onJump={jumpToField} headingRef={summaryRef} />
@@ -413,9 +520,14 @@ export default function Apply() {
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               className="apply__step"
             >
-              <h2 className="apply__step-title">{current.title}</h2>
+              <h2 className="apply__step-title">
+                <span className="apply__step-count">
+                  Step {step + 1} of {STEPS.length}
+                </span>
+                {step === REVIEW ? 'Review and submit' : STEPS[step]}
+              </h2>
 
-              {/* ---------- Step 0 ---------- */}
+              {/* ---------- About you ---------- */}
               {step === 0 && (
                 <>
                   <Field label="Full name" htmlFor="fullName" required error={errors.fullName}>
@@ -436,7 +548,7 @@ export default function Apply() {
                   <Field
                     label="School email"
                     htmlFor="schoolEmail"
-                    helper="From your account, which is already verified as a GSU student address."
+                    helper="From your account, already confirmed."
                   >
                     {({ helperId }) => (
                       <TextInput
@@ -451,30 +563,35 @@ export default function Apply() {
                     )}
                   </Field>
 
-                  <Field
-                    label="Personal email"
-                    htmlFor="personalEmail"
-                    required
-                    error={errors.personalEmail}
-                    helper="Where we'll send decisions and program updates. Your .edu address stops working after you graduate."
-                  >
-                    {({ errorId, helperId }) => (
-                      <TextInput
-                        id="personalEmail"
-                        name="personalEmail"
-                        type="email"
-                        inputMode="email"
-                        autoComplete="home email"
-                        autoCapitalize="none"
-                        spellCheck="false"
-                        placeholder="jordan.rivera@gmail.com"
-                        value={values.personalEmail}
-                        invalid={Boolean(errors.personalEmail)}
-                        aria-describedby={errors.personalEmail ? errorId : helperId}
-                        onChange={(e) => set('personalEmail', e.target.value)}
-                      />
+                  <div className="apply__email-group">
+                    <Field
+                      label="Personal email"
+                      htmlFor="personalEmail"
+                      required
+                      error={errors.personalEmail}
+                      helper="Where we send your decision. Your .edu address stops working after you graduate."
+                    >
+                      {({ errorId, helperId }) => (
+                        <TextInput
+                          id="personalEmail"
+                          name="personalEmail"
+                          type="email"
+                          inputMode="email"
+                          autoComplete="home email"
+                          autoCapitalize="none"
+                          spellCheck="false"
+                          placeholder="jordan.rivera@gmail.com"
+                          value={values.personalEmail}
+                          invalid={Boolean(errors.personalEmail)}
+                          aria-describedby={errors.personalEmail ? errorId : helperId}
+                          onChange={(e) => set('personalEmail', e.target.value)}
+                        />
+                      )}
+                    </Field>
+                    {values.personalEmail.trim().toLowerCase() !== schoolEmail.toLowerCase() && (
+                      <PersonalEmailConfirm email={values.personalEmail} />
                     )}
-                  </Field>
+                  </div>
 
                   <fieldset className="apply__fieldset" id="raceEthnicity">
                     <legend className="field__label">
@@ -517,7 +634,7 @@ export default function Apply() {
                 </>
               )}
 
-              {/* ---------- Step 1 ---------- */}
+              {/* ---------- Academics ---------- */}
               {step === 1 && (
                 <>
                   <div className="apply__row">
@@ -614,7 +731,7 @@ export default function Apply() {
                 </>
               )}
 
-              {/* ---------- Step 2 ---------- */}
+              {/* ---------- Short answers ---------- */}
               {step === 2 && (
                 <>
                   <Field
@@ -622,7 +739,11 @@ export default function Apply() {
                     htmlFor="whyJoin"
                     required
                     error={errors.whyJoin}
-                    helper={`${values.whyJoin.trim().length} characters. Aim for a few honest sentences.`}
+                    helper={
+                      values.whyJoin.trim().length < MIN_WHY
+                        ? `${values.whyJoin.trim().length} of at least ${MIN_WHY} characters. A few honest sentences is perfect.`
+                        : `${values.whyJoin.trim().length} characters. Looks good.`
+                    }
                   >
                     {({ errorId, helperId }) => (
                       <TextArea
@@ -679,7 +800,7 @@ export default function Apply() {
                 </>
               )}
 
-              {/* ---------- Step 3 ---------- */}
+              {/* ---------- Logistics ---------- */}
               {step === 3 && (
                 <>
                   <fieldset className="apply__fieldset">
@@ -689,6 +810,10 @@ export default function Apply() {
                         *
                       </span>
                     </legend>
+                    <p className="field__helper">
+                      Every League member competes on a team of 3 or 4. You pick or form one
+                      after you are accepted.
+                    </p>
                     <div className="apply__options" id="teamPref">
                       {TEAM_PREFS.map((pref) => (
                         <label
@@ -732,13 +857,51 @@ export default function Apply() {
                         onChange={(e) => set('commitment', e.target.value)}
                       >
                         <option value="">Select an option</option>
-                        <option value="1-2">1-2 hours</option>
-                        <option value="3-5">3-5 hours</option>
-                        <option value="6-8">6-8 hours</option>
-                        <option value="9+">9+ hours</option>
+                        {COMMITMENTS.map((c) => (
+                          <option key={c.value} value={c.value}>
+                            {c.label}
+                          </option>
+                        ))}
                       </Select>
                     )}
                   </Field>
+                </>
+              )}
+
+              {/* ---------- Review ---------- */}
+              {step === REVIEW && (
+                <>
+                  <p className="apply__review-lead">
+                    Take one last look. Once you submit, your answers are locked while e-board
+                    reviews them.
+                  </p>
+
+                  <AnswerSections values={values} schoolEmail={schoolEmail} onEdit={goTo} />
+
+                  <div className="checklist" aria-labelledby="checklist-title">
+                    <h3 className="checklist__title" id="checklist-title">
+                      Before you submit
+                    </h3>
+                    <ul className="checklist__list">
+                      <li className={incomplete.length === 0 ? 'is-done' : ''}>
+                        <span className="checklist__mark" aria-hidden="true">
+                          {incomplete.length === 0 ? <Check size={13} weight="bold" /> : null}
+                        </span>
+                        {incomplete.length === 0
+                          ? 'Every required question is answered'
+                          : `Finish ${incomplete.map((s) => s.title).join(', ')}`}
+                      </li>
+                      <li className={emailConfirmed ? 'is-done' : ''}>
+                        <span className="checklist__mark" aria-hidden="true">
+                          {emailConfirmed ? <Check size={13} weight="bold" /> : null}
+                        </span>
+                        Personal email confirmed
+                      </li>
+                    </ul>
+                    {!emailConfirmed && values.personalEmail && (
+                      <PersonalEmailConfirm email={values.personalEmail} />
+                    )}
+                  </div>
 
                   <p className="apply__notice">
                     <strong>Your resume is shared with League partners.</strong> Any resume
@@ -751,41 +914,42 @@ export default function Apply() {
             </motion.div>
           </AnimatePresence>
 
-          {saved && <StatusMessage tone="success">{saved}</StatusMessage>}
           {actionError && <StatusMessage tone="error">{actionError}</StatusMessage>}
 
           <div className="apply__actions">
             <div className="apply__actions-left">
               {step > 0 && (
-                <Button variant="ghost" size="md" icon={ArrowLeft} onClick={goBack}>
+                <Button variant="ghost" size="md" icon={ArrowLeft} onClick={() => goTo(step - 1)}>
                   Back
                 </Button>
               )}
             </div>
             <div className="apply__actions-right">
-              <Button
-                variant="glass"
-                size="md"
-                icon={FloppyDisk}
-                loading={saving === 'draft'}
-                disabled={saving === 'submit'}
-                onClick={onSaveDraft}
-              >
-                Save draft
-              </Button>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={goNext}
-                loading={saving === 'submit'}
-                disabled={saving === 'draft'}
-                iconRight={step === STEPS.length - 1 ? undefined : ArrowRight}
-                icon={step === STEPS.length - 1 ? PaperPlaneTilt : undefined}
-              >
-                {step === STEPS.length - 1 ? 'Submit application' : 'Continue'}
-              </Button>
+              {step === REVIEW ? (
+                <Button
+                  variant="primary"
+                  size="md"
+                  icon={PaperPlaneTilt}
+                  loading={submitting}
+                  disabled={!canSubmit}
+                  onClick={onSubmit}
+                >
+                  Submit application
+                </Button>
+              ) : (
+                <Button variant="primary" size="md" iconRight={ArrowRight} onClick={goNext}>
+                  {step === REVIEW - 1 ? 'Review answers' : 'Continue'}
+                </Button>
+              )}
             </div>
           </div>
+          {step === REVIEW && !canSubmit && (
+            <p className="apply__blocked" role="status">
+              {incomplete.length > 0
+                ? 'Finish the sections marked above to submit.'
+                : 'Confirm your personal email to submit. Open the link we sent you.'}
+            </p>
+          )}
         </GlassCard>
       </div>
     </div>

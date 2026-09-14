@@ -42,11 +42,12 @@ begin
   update public.profiles set is_admin = true where id = v_admin;
 
   insert into public.applications (user_id, status, full_name, school_email, personal_email,
-    race_ethnicity, year, major, grad_term, interest, team_pref, why_join, goals, commitment)
+    race_ethnicity, year, major, grad_term, interest, team_pref, why_join, goals, commitment,
+    personal_email_verified_at)
   select id, 'submitted', name, lower(name) || '@student.gsu.edu', lower(name) || '@example.com',
          array['Black or African American'], 'Junior', 'Computer Science', 'Spring 2028',
          'Software Engineering', 'team', repeat('I want structured practice. ', 3),
-         'An internship.', '3-5'
+         'An internship.', '3-5', now()
     from (values (v_a, 'Test_A'), (v_b, 'Test_B'), (v_c, 'Test_C'), (v_d, 'Test_D'),
                  (v_e, 'Test_E'), (v_f, 'Test_F')) as m(id, name);
 
@@ -140,8 +141,36 @@ begin
          race_ethnicity = array['Hispanic or Latino', 'White'], year = 'Senior',
          major = 'Mathematics', grad_term = 'Fall 2026', interest = 'Cybersecurity',
          team_pref = 'have-team', why_join = repeat('Because it is a good program. ', 2),
-         goals = 'Interview reps.', commitment = '6-8', status = 'submitted'
+         goals = 'Interview reps.', commitment = '6-8'
    where user_id = v_g;
+
+  -- 4b. A complete application still cannot be submitted until its personal email is
+  -- confirmed, a member cannot confirm it themselves, and changing it unconfirms it.
+  begin
+    update public.applications set status = 'submitted' where user_id = v_g;
+    raise exception 'check 4b FAILED: submitted with an unconfirmed personal email';
+  exception when raise_exception then
+    if sqlerrm not like 'Confirm your personal email%' then raise; end if;
+  end;
+
+  begin
+    update public.applications set personal_email_verified_at = now() where user_id = v_g;
+    raise exception 'check 4b FAILED: a member confirmed their own personal email';
+  exception when insufficient_privilege then null;
+  end;
+
+  execute 'reset role';
+  update public.applications set personal_email_verified_at = now() where user_id = v_g;
+  update public.applications set personal_email = 'g.new@example.com' where user_id = v_g;
+  if (select personal_email_verified_at from public.applications where user_id = v_g) is not null then
+    raise exception 'check 4b FAILED: changing the personal email kept it confirmed';
+  end if;
+  update public.applications set personal_email = 'g@example.com' where user_id = v_g;
+  update public.applications set personal_email_verified_at = now() where user_id = v_g;
+
+  perform set_config('request.jwt.claims', jsonb_build_object('sub', v_g, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  update public.applications set status = 'submitted' where user_id = v_g;
 
   select submitted_at::text into v_text from public.applications where user_id = v_g;
   if v_text is null then
@@ -473,6 +502,18 @@ begin
   begin
     perform count(*) from public.applications;
     raise exception 'check 17 FAILED: anon read applications';
+  exception when insufficient_privilege then null;
+  end;
+  execute 'reset role';
+
+  -- ---------------------------------------------------------------------------
+  -- 18. Only the API marks an account's email as verified.
+  -- ---------------------------------------------------------------------------
+  perform set_config('request.jwt.claims', jsonb_build_object('sub', v_g, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  begin
+    update public.profiles set email_verified_at = now() where id = v_g;
+    raise exception 'check 18 FAILED: a member marked their own email verified';
   exception when insufficient_privilege then null;
   end;
   execute 'reset role';

@@ -54,85 +54,6 @@
   margin-top: var(--sp-1);
 }
 
-/* ---------- progress ---------- */
-
-.progress .window__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-4);
-  /* the track is a rounded bar; keep it clear of the card's own edge */
-  padding-block: var(--sp-5);
-}
-
-.progress__list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-3);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-@media (min-width: 700px) {
-  .progress__list {
-    flex-direction: row;
-    justify-content: space-between;
-    gap: var(--sp-4);
-  }
-}
-
-.progress__step {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  color: var(--text-subtle);
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  flex: 1;
-}
-
-.progress__step.is-done {
-  color: var(--ink);
-}
-
-.progress__icon {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  flex-shrink: 0;
-  background: var(--paper-warm);
-  color: var(--text-subtle);
-  border: 2px dashed var(--ink-light);
-  border-radius: 50%;
-}
-
-.progress__step.is-done .progress__icon {
-  background: var(--success-soft);
-  border-color: var(--success);
-  border-style: solid;
-  color: var(--success);
-}
-
-.progress__num {
-  font-family: var(--font-hand);
-  font-size: 1.15rem;
-  font-weight: 700;
-}
-
-.progress__track {
-  height: 12px;
-  background: var(--paper-deep);
-  border-radius: var(--r-full);
-  overflow: hidden;
-}
-
-.progress__fill {
-  height: 100%;
-  background: var(--teal);
-  border-radius: var(--r-full);
-}
-
 /* ---------- layout ---------- */
 
 .dash__grid {
@@ -298,50 +219,79 @@
   flex-wrap: wrap;
 }
 
-/* ---------- application panel ---------- */
+/* ---------- status hero ---------- */
 
-.app-start,
-.app-done {
+.dash__anchor {
+  scroll-margin-top: calc(var(--nav-h) + var(--sp-4));
+}
+
+.status-hero .window__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  padding-block: var(--sp-6);
+  border-top: 8px solid var(--tone);
+}
+
+.status-hero__top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-5);
+}
+
+.status-hero__icon {
+  display: none;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  flex-shrink: 0;
+  color: var(--tone-ink);
+  background: var(--tone-soft);
+  border: 2px solid var(--tone);
+  border-radius: 52% 48% 45% 55%;
+}
+
+@media (min-width: 640px) {
+  .status-hero__icon {
+    display: grid;
+  }
+}
+
+.status-hero__copy {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--sp-4);
-  flex-grow: 1;
+  gap: var(--sp-3);
+  min-width: 0;
+  flex: 1;
 }
 
-.app-start__icon,
-.app-done__icon {
-  display: grid;
-  place-items: center;
-  width: 58px;
-  height: 58px;
-  background: var(--mustard-soft);
-  color: #A97F16;
-  border: 2px solid var(--mustard);
-  border-radius: 50% 45% 55% 48%;
-}
-
-.app-done__icon {
-  background: var(--teal-soft);
-  border-color: var(--teal);
-  color: var(--teal-deep);
-}
-
-.app-start__body,
-.app-done__body {
-  color: var(--text-muted);
-  line-height: 1.75;
-  font-size: var(--fs-sm);
-}
-
-.app-done__title {
+.status-hero__title {
   font-family: var(--font-hand);
-  font-size: var(--fs-hand-sm);
-  line-height: 1.15;
+  font-size: var(--fs-hand-lg);
+  line-height: 1.05;
   color: var(--ink);
 }
 
-.app-start__list {
+.status-hero__body {
+  max-width: 62ch;
+  font-size: var(--fs-base);
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.status-hero__body strong {
+  color: var(--ink);
+}
+
+.status-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-3);
+  margin-top: var(--sp-2);
+}
+
+.status-hero__sections {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
@@ -350,80 +300,128 @@
   list-style: none;
 }
 
-.app-start__list li {
+.status-hero__sections li {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  color: var(--text-muted);
+  gap: 6px;
   padding: 4px 12px;
-  background: var(--paper-warm);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--text-subtle);
+  background: var(--card);
   border: 2px dashed var(--ink-light);
   border-radius: var(--r-full);
 }
 
-.app-start__list svg {
-  color: var(--clay);
+.status-hero__sections li.is-done {
+  color: #2C7050;
+  background: var(--success-soft);
+  border: 2px solid var(--success);
 }
 
-/* ---------- challenges strip ---------- */
-
-.dash__section-title {
-  font-family: var(--font-hand);
-  font-size: var(--fs-hand-md);
-  line-height: 1.15;
-  color: var(--ink);
-  margin-top: var(--sp-4);
+.status-hero__sections-dot {
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--ink-light);
+  border-radius: 50%;
 }
 
-.dash__challenges {
-  display: grid;
-  gap: var(--sp-3);
-  grid-template-columns: repeat(2, 1fr);
-}
-
-@media (min-width: 700px) {
-  .dash__challenges {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (min-width: 1000px) {
-  .dash__challenges {
-    grid-template-columns: repeat(5, 1fr);
-  }
-}
-
-.mini-card {
-  padding: var(--sp-4);
+.status-hero__notice {
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
-  height: 100%;
+  width: 100%;
+  max-width: 62ch;
+  margin-top: var(--sp-2);
 }
 
-.mini-card__name {
+.status-hero__notice-lead {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.status-hero__timeline {
+  padding-top: var(--sp-5);
+  border-top: 2px dashed var(--paper-deep);
+}
+
+/* ---------- season ---------- */
+
+.dash__text-link {
   font-size: var(--fs-sm);
   font-weight: 700;
-  line-height: 1.35;
-  color: var(--ink);
-  flex-grow: 1;
+  color: var(--teal-deep);
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-underline-offset: 4px;
+  white-space: nowrap;
 }
 
-.mini-card__weight {
+.dash__text-link:hover {
+  color: var(--ink);
+}
+
+.season-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.season-list__item {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr auto;
+  align-items: baseline;
+  gap: var(--sp-3);
+  padding: var(--sp-3) 0;
+  border-bottom: 2px dashed var(--paper-deep);
+}
+
+.season-list__item:last-child {
+  border-bottom: 0;
+}
+
+.season-list__date {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--text-subtle);
+}
+
+.season-list__name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.season-list__item.is-complete .season-list__name {
+  color: var(--text-subtle);
+}
+
+.season-list__badge {
+  padding: 1px 8px;
+}
+
+.season-list__weight {
   font-family: var(--font-hand);
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--teal-deep);
   font-variant-numeric: tabular-nums;
 }
 
-.dash__footnote {
-  font-size: var(--fs-xs);
-  color: var(--text-subtle);
-  line-height: 1.7;
-  max-width: 68ch;
+@media (max-width: 460px) {
+  .season-list__item {
+    grid-template-columns: 1fr auto;
+  }
+
+  .season-list__date {
+    grid-column: 1 / -1;
+  }
 }
 
 /* ============================================================

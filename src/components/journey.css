@@ -1,0 +1,294 @@
+/* ============================================================
+   Status language shared by the dashboard and the application.
+   One colour per meaning (see src/lib/journey.js), never reused
+   for anything else, so a colour alone already says something.
+   ============================================================ */
+
+.tone--brand {
+  --tone: var(--teal);
+  --tone-soft: var(--teal-soft);
+  --tone-ink: var(--teal-deep);
+}
+
+.tone--review {
+  --tone: var(--mustard);
+  --tone-soft: var(--mustard-soft);
+  --tone-ink: #7A5C0E;
+}
+
+.tone--success {
+  --tone: var(--success);
+  --tone-soft: var(--success-soft);
+  --tone-ink: #2C7050;
+}
+
+.tone--waitlist {
+  --tone: var(--clay);
+  --tone-soft: var(--clay-soft);
+  --tone-ink: #9A4A24;
+}
+
+.tone--neutral {
+  --tone: var(--ink-light);
+  --tone-soft: var(--paper-warm);
+  --tone-ink: var(--ink-soft);
+}
+
+/* ---------- pill ---------- */
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 14px 5px 11px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--tone-ink);
+  background: var(--tone-soft);
+  border: 2px solid var(--tone);
+  border-radius: var(--r-full);
+}
+
+.status-pill__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--tone);
+}
+
+.tone--review .status-pill__dot,
+.tone--brand .status-pill__dot {
+  animation: journey-pulse 1.8s var(--ease-in-out) infinite;
+}
+
+@keyframes journey-pulse {
+  0% { box-shadow: 0 0 0 0 var(--tone); }
+  70% { box-shadow: 0 0 0 7px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* ---------- timeline ---------- */
+
+.journey {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.journey__stage {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding-bottom: var(--sp-4);
+}
+
+/* connector: vertical on phones, horizontal from tablet up */
+.journey__stage:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  top: 36px;
+  bottom: 2px;
+  border-left: 2px dashed var(--ink-light);
+}
+
+.journey__stage.is-done:not(:last-child)::after {
+  border-left: 2px solid var(--success);
+}
+
+.journey__marker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  font-family: var(--font-hand);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-subtle);
+  background: var(--card);
+  border: 2px dashed var(--ink-light);
+  border-radius: 50%;
+}
+
+.journey__stage.is-done .journey__marker {
+  color: #fff;
+  background: var(--success);
+  border: 2px solid var(--success);
+}
+
+.journey__stage.is-current .journey__marker {
+  color: var(--tone-ink);
+  background: var(--tone-soft);
+  border: 3px solid var(--tone);
+  animation: journey-pulse 2s var(--ease-in-out) infinite;
+}
+
+.journey__stage.is-locked .journey__marker {
+  color: var(--ink-light);
+  background: var(--paper-deep);
+  border-style: solid;
+  border-color: var(--paper-deep);
+}
+
+.journey__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-top: 5px;
+  min-width: 0;
+}
+
+.journey__title {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.journey__stage.is-upcoming .journey__title,
+.journey__stage.is-locked .journey__title {
+  color: var(--text-subtle);
+}
+
+.journey__note {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.journey__stage.is-current .journey__note {
+  color: var(--tone-ink);
+  font-weight: 700;
+}
+
+@media (min-width: 640px) {
+  .journey {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--sp-3);
+  }
+
+  .journey__stage {
+    flex-direction: column;
+    gap: var(--sp-2);
+    padding-bottom: 0;
+  }
+
+  .journey__stage:not(:last-child)::after {
+    left: 44px;
+    right: calc(var(--sp-3) * -1 + 6px);
+    top: 16px;
+    bottom: auto;
+    border-left: 0;
+    border-top: 2px dashed var(--ink-light);
+  }
+
+  .journey__stage.is-done:not(:last-child)::after {
+    border-left: 0;
+    border-top: 2px solid var(--success);
+  }
+
+  .journey__text {
+    padding-top: 0;
+  }
+}
+
+/* ---------- personal email confirmation ---------- */
+
+.email-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-md);
+  border: 2px solid;
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+
+.email-confirm.is-pending {
+  background: var(--clay-soft);
+  border-color: var(--clay);
+  color: #7F3E1E;
+}
+
+.email-confirm.is-waiting {
+  background: var(--mustard-soft);
+  border-color: var(--mustard);
+  color: #6B500C;
+}
+
+.email-confirm.is-confirmed {
+  flex-direction: row;
+  align-items: flex-start;
+  background: var(--success-soft);
+  border-color: var(--success);
+  color: #2C7050;
+}
+
+.email-confirm.is-confirmed svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.email-confirm__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+}
+
+.email-confirm__row svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.email-confirm__text {
+  margin: 0;
+}
+
+.email-confirm__text strong {
+  color: inherit;
+}
+
+.email-confirm__pulse {
+  --tone: var(--mustard);
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  margin: 6px 4px 0;
+  border-radius: 50%;
+  background: var(--mustard);
+  animation: journey-pulse 1.6s var(--ease-in-out) infinite;
+}
+
+.email-confirm__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-3);
+}
+
+.email-confirm__hint {
+  font-size: var(--fs-xs);
+  opacity: 0.9;
+}
+
+.email-confirm__error {
+  margin: 0;
+  font-weight: 700;
+  color: #A8442F;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-pill__dot,
+  .journey__stage.is-current .journey__marker,
+  .email-confirm__pulse {
+    animation: none;
+  }
+}
