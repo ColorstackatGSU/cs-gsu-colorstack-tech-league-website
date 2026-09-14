@@ -35,7 +35,7 @@ export const EVENTS = [
     date: 'Sept 30',
     weight: 15,
     max: 100,
-    status: 'complete',
+    status: 'upcoming',
     partner: 'US Soccer',
     blurb:
       'A mini hackathon tied into the Tech League scoring system, featuring US Soccer. All teams participate.',
@@ -54,7 +54,7 @@ export const EVENTS = [
     date: 'October 14',
     weight: 15,
     max: 100,
-    status: 'complete',
+    status: 'upcoming',
     blurb:
       'Ship a working mini-project against a design/build prompt over a set window. Submit a demo plus your repo.',
     rubric: [
