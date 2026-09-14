@@ -26,7 +26,6 @@ const PARTNERS = [
   { name: 'ColorStack @ GSU', logo: '/partners/colorstack.png', bleed: true },
   { name: 'CS Club', logo: '/partners/csclub.png' },
   { name: 'ProGSU', logo: '/partners/progsu.png', bleed: true },
-  { name: 'NSBE', logo: '/partners/nsbe.png' },
 ];
 
 export default function PartnerCarousel({ partners = PARTNERS }) {

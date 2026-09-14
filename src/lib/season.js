@@ -30,7 +30,7 @@
 export const EVENTS = [
   {
     id: 'kickoff',
-    name: 'Build Night & Mock Interviews',
+    name: 'Kickoff Cup',
     phase: 'Kickoff',
     date: 'Sept 30',
     weight: 15,
@@ -38,7 +38,7 @@ export const EVENTS = [
     status: 'complete',
     partner: 'US Soccer',
     blurb:
-      'A mini hackathon tied into the Tech League scoring system, run in partnership with US Soccer. All teams participate.',
+      'A mini hackathon tied into the Tech League scoring system, featuring US Soccer. All teams participate.',
     rubric: [
       { label: 'Functionality', points: 40 },
       { label: 'Technical difficulty', points: 20 },
@@ -49,7 +49,7 @@ export const EVENTS = [
   },
   {
     id: 'internal-1',
-    name: 'Internal Challenge 1',
+    name: 'Design Derby',
     phase: 'Phase 2',
     date: 'October 14',
     weight: 15,
@@ -67,7 +67,7 @@ export const EVENTS = [
   },
   {
     id: 'challenge-night',
-    name: 'Challenge Night',
+    name: 'Crew Clash',
     phase: 'Phase 3',
     date: 'October 23',
     weight: 15,
@@ -86,7 +86,7 @@ export const EVENTS = [
   },
   {
     id: 'internal-2',
-    name: 'Internal Challenge 2',
+    name: 'Hack in the Box',
     phase: 'Phase 4',
     date: 'November 6',
     weight: 15,
@@ -103,7 +103,7 @@ export const EVENTS = [
   },
   {
     id: 'finale',
-    name: 'Mini Hackathon',
+    name: 'Championship Round',
     phase: 'Finale',
     date: 'Dec 4 · 12-6pm',
     weight: 40,
@@ -118,14 +118,6 @@ export const EVENTS = [
       'Final scoring breakdown, exact date, and sponsors still being finalized.',
   },
 ];
-
-/** The Combine is a parallel track, not a graded event. Kept out of EVENTS on purpose. */
-export const COMBINE = {
-  name: 'The Combine',
-  blurb:
-    'A mock technical interview experience open to 15 students who apply directly. Students in The Combine do not participate in the Tech League itself; it is a standalone opportunity for students outside the league.',
-  note: 'Not scored and does not factor into the leaderboard.',
-};
 
 export const TOTAL_WEIGHT = EVENTS.reduce((sum, e) => sum + e.weight, 0);
 

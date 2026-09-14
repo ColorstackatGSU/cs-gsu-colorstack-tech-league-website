@@ -31,7 +31,7 @@ const SVGS = {
     <rect x="47" y="66" width="11" height="11" rx="2" stroke-width="2"/>${txt(64, 78, 19, 'grind leetcode', C.soft, 'start')}
     <rect x="47" y="88" width="11" height="11" rx="2" stroke-width="2"/>${txt(64, 100, 19, 'fix my resume', C.soft, 'start')}
     <path d="M45 91 l6 7 l12 -16" stroke="${C.tealDeep}" stroke-width="3"/>
-    <rect x="47" y="110" width="11" height="11" rx="2" stroke-width="2"/>${txt(64, 122, 19, 'mock interview', C.soft, 'start')}
+    <rect x="47" y="110" width="11" height="11" rx="2" stroke-width="2"/>${txt(64, 122, 19, 'ship a project', C.soft, 'start')}
     <path d="M45 113 l6 7 l12 -16" stroke="${C.tealDeep}" stroke-width="3"/>
     <rect x="47" y="132" width="11" height="11" rx="2" stroke-width="2"/>${txt(64, 144, 21, 'get hired', INK, 'start')}
     <path d="M62 150 C 80 146, 110 147, 128 150" stroke="${C.mustard}" stroke-width="3"/>

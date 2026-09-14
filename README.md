@@ -164,5 +164,5 @@ The marquee repeats short lists automatically to fill the strip, and it has a
 pause button (and stops for `prefers-reduced-motion`).
 
 The partners section is framed as a co-organized effort, the League is run by
-ColorStack, ProGSU, CS Club, and NSBE together, not by
+ColorStack, ProGSU, and CS Club together, not by
 ColorStack alone with outside sponsors.

@@ -25,11 +25,11 @@ comment on table public.events is
   'Mirrors EVENTS in src/lib/season.js. Ids must match it exactly.';
 
 insert into public.events (id, name, weight, max_points, position) values
-  ('kickoff',         'Build Night & Mock Interviews', 15, 100, 1),
-  ('internal-1',      'Internal Challenge 1',          15, 100, 2),
-  ('challenge-night', 'Challenge Night',               15, 100, 3),
-  ('internal-2',      'Internal Challenge 2',          15, 100, 4),
-  ('finale',          'Mini Hackathon',                40, 100, 5);
+  ('kickoff',         'Kickoff Cup',          15, 100, 1),
+  ('internal-1',      'Design Derby',         15, 100, 2),
+  ('challenge-night', 'Crew Clash',           15, 100, 3),
+  ('internal-2',      'Hack in the Box',      15, 100, 4),
+  ('finale',          'Championship Round',   40, 100, 5);
 
 create table public.scores (
   team_id uuid not null references public.teams (id) on delete cascade,

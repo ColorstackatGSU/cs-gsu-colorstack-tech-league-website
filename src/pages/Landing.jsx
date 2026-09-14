@@ -6,7 +6,6 @@ import {
   Code,
   Rocket,
   FileText,
-  Microphone,
   Trophy,
 } from '@phosphor-icons/react';
 import { GlassCard, Button, Badge, SectionHeading } from '../components/ui';
@@ -27,20 +26,26 @@ import '../doodles/doodles.css';
 const CHALLENGES = [
   {
     icon: Code,
-    name: 'Technical Skills',
-    weight: '20%',
-    points: '100 pts',
-    blurb:
-      'A timed set of 3-5 LeetCode-style problems tied to data structures, algorithms, and SQL. Solo work rolls up into your team total.',
-    scoring: ['Correctness: 60', 'Efficiency: 20', 'Code quality: 20'],
-  },
-  {
-    icon: Rocket,
-    name: 'Build / Project',
+    name: 'Kickoff Cup',
     weight: '15%',
     points: '100 pts',
     blurb:
-      'Ship a working mini-project against a prompt over a 1-2 week window. Submit a demo plus your repo.',
+      'A mini hackathon tied into the Tech League scoring system, featuring US Soccer. All teams participate.',
+    scoring: [
+      'Functionality: 40',
+      'Technical difficulty: 20',
+      'Design/UX: 15',
+      'Presentation: 15',
+      'Creativity: 10',
+    ],
+  },
+  {
+    icon: Rocket,
+    name: 'Design Derby',
+    weight: '15%',
+    points: '100 pts',
+    blurb:
+      'Ship a working mini-project against a design/build prompt over a set window. Submit a demo plus your repo.',
     scoring: [
       'Functionality: 40',
       'Technical difficulty: 20',
@@ -51,46 +56,41 @@ const CHALLENGES = [
   },
   {
     icon: FileText,
-    name: 'Resume',
-    weight: '10%',
-    points: '100 pts',
-    blurb:
-      'Structured review against a standardized rubric by e-board or visiting partner reps. Resubmit to earn improvement points.',
-    scoring: [
-      'Impact statements: 30',
-      'Relevance: 25',
-      'Technical depth: 25',
-      'Formatting: 20',
-    ],
-  },
-  {
-    icon: Microphone,
-    name: 'Mock Interview',
+    name: 'Crew Clash',
     weight: '15%',
     points: '100 pts',
     blurb:
-      '20-30 minute technical or behavioral interviews run by partner volunteers and trained upperclassmen.',
+      "A workshop-to-challenge event built around AWS's Kiro and Kiro Crew platform. Teams learn the tool, then apply it to a live multi-step build task, judged by AWS.",
     scoring: [
-      'Problem-solving / STAR: 35',
-      'Communication: 25',
-      'Answer quality: 25',
-      'Composure: 15',
+      'Functionality: 40',
+      'Technical execution: 25',
+      'Presentation: 15',
+      'Creativity: 10',
+      'Teamwork: 10',
     ],
   },
   {
     icon: Trophy,
-    name: 'Capstone Hackathon',
-    weight: '40%',
-    points: '150 pts',
+    name: 'Hack in the Box',
+    weight: '15%',
+    points: '100 pts',
     blurb:
-      'The centerpiece. Every partner org in one room on Dec 4: a themed prompt, a six-hour build window, then live demos to partner reps and e-board.',
+      'A beginner-friendly Capture The Flag challenge. Teams solve a series of security puzzles (cryptography, basic exploits, password cracking, etc.) to find hidden flags within a set time window.',
     scoring: [
-      'Functionality: 50',
-      'Technical execution: 30',
-      'Presentation: 30',
-      'Creativity: 20',
-      'Teamwork: 20',
+      'Flags solved / correctness: 50',
+      'Speed (time bonus): 20',
+      'Write-up / documentation quality: 20',
+      'Teamwork/collaboration: 10',
     ],
+  },
+  {
+    icon: Trophy,
+    name: 'Championship Round',
+    weight: '40%',
+    points: '100 pts',
+    blurb:
+      'The centerpiece. Every partner org in one room: a themed prompt, a build window, then live demos to partner reps and e-board.',
+    scoring: [],
     featured: true,
   },
 ];
@@ -99,31 +99,31 @@ const PHASES = [
   {
     phase: 'Kickoff',
     week: 'Sept 30',
-    title: 'Build Night & Mock Interviews',
-    body: 'A mini build night paired with mock interviews. Compete in a team of 3-4, meet the other orgs, and get your scorecard. Teams lock after kickoff so scoring stays consistent.',
+    title: 'Kickoff Cup',
+    body: 'A mini hackathon featuring US Soccer. Compete in a team of 3-4, meet the other orgs, and get your scorecard. Teams lock after kickoff so scoring stays consistent.',
   },
   {
     phase: 'Phase 2',
     week: 'October 14',
-    title: 'Internal Challenge 1',
+    title: 'Design Derby',
     body: 'The first scored challenge, run with a partner organization. Submit proof, get scored on the rubric, and watch your points post to the leaderboard.',
   },
   {
     phase: 'Phase 3',
     week: 'October 23',
-    title: 'Challenge Night',
+    title: 'Crew Clash',
     body: "A live head-to-head night with AWS. Everyone competes in the same room on the same prompt, learning and building with AWS's Kiro and Kiro Crew platform, with points on the board that evening.",
   },
   {
     phase: 'Phase 4',
     week: 'November 6',
-    title: 'Internal Challenge 2',
-    body: 'The second scored challenge, run with a different partner organization, so you get reps in front of a new set of mentors and judges.',
+    title: 'Hack in the Box',
+    body: 'The second scored challenge: a beginner-friendly Capture The Flag competition, so you get reps in front of a new set of mentors and judges.',
   },
   {
     phase: 'Finale',
     week: 'Dec 4 · 12-6pm',
-    title: 'Mini Hackathon',
+    title: 'Championship Round',
     body: 'The centerpiece. Every partner org together in one room with its own sponsors: a themed prompt at noon, six hours to build, then live demos and Q&A with the judging panel. Final standings and prizes follow.',
   },
 ];
@@ -277,14 +277,22 @@ export default function Landing() {
                   <p className="challenge__blurb">{challenge.blurb}</p>
 
                   <div className="challenge__scoring">
-                    <p className="challenge__scoring-label">
-                      Scored on <span>{challenge.points}</span>
-                    </p>
-                    <ul className="challenge__list">
-                      {challenge.scoring.map((line) => (
-                        <li key={line}>{line}</li>
-                      ))}
-                    </ul>
+                    {challenge.scoring.length > 0 ? (
+                      <>
+                        <p className="challenge__scoring-label">
+                          Scored on <span>{challenge.points}</span>
+                        </p>
+                        <ul className="challenge__list">
+                          {challenge.scoring.map((line) => (
+                            <li key={line}>{line}</li>
+                          ))}
+                        </ul>
+                      </>
+                    ) : (
+                      <p className="challenge__scoring-label">
+                        Scoring breakdown still being finalized.
+                      </p>
+                    )}
                   </div>
                 </GlassCard>
               </StaggerItem>
@@ -330,7 +338,7 @@ export default function Landing() {
           <SectionHeading
             eyebrow="Built together"
             title="This isn't just a ColorStack thing"
-            subtitle="The Tech League runs on a partnership between ColorStack, CS Club, progsu, and NSBE. Each org brings its own members, mentors, and judges, which is why the League reaches further than any one club could on its own."
+            subtitle="The Tech League runs on a partnership between ColorStack, CS Club, and progsu. Each org brings its own members, mentors, and judges, which is why the League reaches further than any one club could on its own."
           />
           <Reveal>
             <PartnerCarousel />
