@@ -52,6 +52,20 @@ export function startAuthorization() {
   return { url: url.toString(), state, verifier };
 }
 
+/**
+ * What ColorStack said when it refused, for the log. Error responses from the portal carry
+ * an OAuth error code and description, never a token, so the body is safe to log; it is
+ * still cut short so an unexpected HTML page cannot flood the function log.
+ */
+async function describeFailure(response: Response) {
+  const text = await response.text().catch(() => '');
+  const challenge = response.headers.get('www-authenticate');
+  const body = text.length > 500 ? `${text.slice(0, 500)}...` : text;
+  return [response.status, challenge && `www-authenticate: ${challenge}`, body && `body: ${body}`]
+    .filter(Boolean)
+    .join(' ');
+}
+
 export async function exchangeCode(code: string, verifier: string) {
   const { COLORSTACK_ISSUER, COLORSTACK_CLIENT_ID, COLORSTACK_CLIENT_SECRET, COLORSTACK_REDIRECT_URI } = colorstackConfig();
   const basic = Buffer.from(
@@ -72,7 +86,7 @@ export async function exchangeCode(code: string, verifier: string) {
     }),
   });
   if (!response.ok) {
-    throw new Error(`ColorStack token exchange failed: ${response.status} ${await response.text()}`);
+    throw new Error(`ColorStack token exchange failed: ${await describeFailure(response)}`);
   }
   const body = z.object({ access_token: z.string() }).parse(await response.json());
   return body.access_token;
@@ -118,7 +132,7 @@ export async function fetchClaims(accessToken: string): Promise<ColorStackClaims
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!response.ok) {
-    throw new Error(`ColorStack userinfo failed: ${response.status}`);
+    throw new Error(`ColorStack userinfo failed: ${await describeFailure(response)}`);
   }
   return claimsSchema.parse(await response.json());
 }
@@ -140,7 +154,7 @@ export async function downloadResume(claims: ColorStackClaims, accessToken: stri
   }
 
   const response = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
-  if (!response.ok) throw new Error(`ColorStack resume download failed: ${response.status}`);
+  if (!response.ok) throw new Error(`ColorStack resume download failed: ${await describeFailure(response)}`);
 
   const bytes = Buffer.from(await response.arrayBuffer());
   if (bytes.length === 0 || bytes.length > MAX_RESUME_BYTES) {
