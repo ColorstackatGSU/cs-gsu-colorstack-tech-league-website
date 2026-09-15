@@ -741,37 +741,29 @@ function Pool({ items }) {
 
 /* ---------- scores ---------- */
 
-function ScoreCell({ team, event, initial }) {
-  const [value, setValue] = useState(initial === undefined ? '' : String(initial));
-  const [saved, setSaved] = useState(initial === undefined ? '' : String(initial));
-  const [status, setStatus] = useState('idle'); // idle | saving | saved | error
-  const [error, setError] = useState('');
+const scoreKey = (teamId, eventId) => `${teamId}:${eventId}`;
+const asText = (points) => (points === undefined || points === null ? '' : String(points));
 
-  async function commit() {
-    const trimmed = value.trim();
-    if (trimmed === saved) return;
-    const points = trimmed === '' ? null : Number(trimmed);
-    if (points !== null && (!Number.isFinite(points) || points < 0 || points > event.max)) {
-      setStatus('error');
-      setError(`Enter 0 to ${event.max}, or leave it empty.`);
-      return;
-    }
-    setStatus('saving');
-    setError('');
-    try {
-      await saveScore({ teamId: team.id, eventId: event.id, points });
-      setSaved(trimmed);
-      setStatus('saved');
-    } catch (err) {
-      setStatus('error');
-      setError(err.message);
-    }
-  }
+/** Why a typed value cannot be saved, or '' when it can. Empty is valid: it clears the score. */
+function scoreProblem(text, event) {
+  const trimmed = text.trim();
+  if (trimmed === '') return '';
+  const points = Number(trimmed);
+  if (!Number.isFinite(points) || points < 0 || points > event.max) return `Enter 0 to ${event.max}, or leave it empty.`;
+  return '';
+}
+
+function ScoreCell({ team, event, value, saved, error, onChange }) {
+  const pending = value.trim() !== saved;
+  const problem = pending ? scoreProblem(value, event) : '';
+  const shown = problem || error;
+  const status = shown ? 'error' : pending ? 'pending' : 'idle';
 
   return (
     <td className={`admin-score admin-score--${status}`}>
       <label className="sr-only" htmlFor={`score-${team.id}-${event.id}`}>
         {team.name}, {event.name}, out of {event.max}
+        {pending ? ', not saved yet' : ''}
       </label>
       <span className="admin-score__box">
         <input
@@ -784,28 +776,42 @@ function ScoreCell({ team, event, initial }) {
           step="0.5"
           placeholder="-"
           value={value}
-          onChange={(e) => {
-            setValue(e.target.value);
-            setStatus('idle');
-          }}
-          onBlur={commit}
+          onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
           aria-invalid={status === 'error' || undefined}
-          title={error || undefined}
+          title={shown || undefined}
         />
-        {status === 'saved' && <CheckCircle size={16} weight="fill" className="admin-score__ok" aria-label="Saved" />}
+        {pending && !shown && (
+          <span className="admin-score__was" aria-hidden="true">
+            was {saved === '' ? '-' : saved}
+          </span>
+        )}
       </span>
-      {status === 'error' && (
+      {shown && (
         <span className="admin-score__error" role="alert">
-          {error}
+          {shown}
         </span>
       )}
     </td>
   );
 }
 
+/**
+ * Score entry. Typing only stages a change; nothing reaches the leaderboard until the admin
+ * reviews the list of changes and confirms it. Scores go live for every open leaderboard
+ * within seconds of saving, so a stray keystroke in the wrong row should not be one blur
+ * away from public.
+ */
 function Scores() {
   const [state, setState] = useState({ status: 'loading', data: null, error: '' });
+  // Typed values, keyed by team:event. A draft equal to the saved value is not a change.
+  const [drafts, setDrafts] = useState({});
+  // Server errors from the last save, keyed the same way.
+  const [errors, setErrors] = useState({});
+  const [reviewing, setReviewing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState(null);
+  const confirmRef = useRef(null);
 
   useEffect(() => {
     let alive = true;
@@ -816,6 +822,99 @@ function Scores() {
       alive = false;
     };
   }, []);
+
+  const changes = useMemo(() => {
+    if (!state.data) return [];
+    const list = [];
+    for (const team of state.data.teams) {
+      for (const event of state.data.events) {
+        const key = scoreKey(team.id, event.id);
+        if (!(key in drafts)) continue;
+        const before = asText(team.scores[event.id]);
+        const after = drafts[key].trim();
+        if (after === before) continue;
+        list.push({ key, team, event, before, after, problem: scoreProblem(after, event) });
+      }
+    }
+    return list;
+  }, [state.data, drafts]);
+
+  const invalid = changes.filter((c) => c.problem).length;
+  const showReview = reviewing && changes.length > 0 && invalid === 0;
+
+  // Leaving the page drops staged scores, so the browser asks first.
+  useEffect(() => {
+    if (changes.length === 0) return undefined;
+    const warn = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [changes.length]);
+
+  useEffect(() => {
+    if (showReview) confirmRef.current?.focus();
+  }, [showReview]);
+
+  function edit(key, value) {
+    setResult(null);
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    setDrafts((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function discard() {
+    setDrafts({});
+    setErrors({});
+    setReviewing(false);
+  }
+
+  async function saveAll() {
+    setSaving(true);
+    const failed = {};
+    const landed = new Map();
+    // One at a time, so a failure is attributable to its cell and the rest still land.
+    for (const change of changes) {
+      const points = change.after === '' ? null : Number(change.after);
+      try {
+        await saveScore({ teamId: change.team.id, eventId: change.event.id, points });
+        landed.set(change.key, points);
+      } catch (err) {
+        failed[change.key] = err.message;
+      }
+    }
+
+    setState((prev) => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        teams: prev.data.teams.map((team) => {
+          const scores = { ...team.scores };
+          for (const event of prev.data.events) {
+            const key = scoreKey(team.id, event.id);
+            if (!landed.has(key)) continue;
+            const points = landed.get(key);
+            if (points === null) delete scores[event.id];
+            else scores[event.id] = points;
+          }
+          return { ...team, scores };
+        }),
+      },
+    }));
+    setDrafts((prev) => {
+      const next = { ...prev };
+      for (const key of landed.keys()) delete next[key];
+      return next;
+    });
+    setErrors(failed);
+    setReviewing(false);
+    setSaving(false);
+    setResult({ saved: landed.size, failed: Object.keys(failed).length });
+  }
 
   if (state.status === 'loading') return <p className="admin-muted">Loading teams&hellip;</p>;
   if (state.status === 'error') return <StatusMessage tone="error">{state.error}</StatusMessage>;
@@ -833,9 +932,79 @@ function Scores() {
   return (
     <>
       <p className="admin-muted">
-        Raw points against each event&apos;s rubric. Saves when you leave a box; empty it to clear a score. Teams under{' '}
-        {TEAM_RULES.min} members stay off the leaderboard until they are scored.
+        Raw points against each event&apos;s rubric. Type as many as you like, then review and save them together;
+        empty a box to clear a score. Teams under {TEAM_RULES.min} members stay off the leaderboard until they are
+        scored.
       </p>
+
+      {result && (
+        <StatusMessage tone={result.failed ? 'error' : 'success'}>
+          {result.saved > 0 &&
+            `Saved ${result.saved} ${result.saved === 1 ? 'score' : 'scores'}. The leaderboard has ${result.saved === 1 ? 'it' : 'them'} now.`}
+          {result.failed > 0 &&
+            ` ${result.failed} ${result.failed === 1 ? 'change' : 'changes'} did not save and ${result.failed === 1 ? 'is' : 'are'} still marked below.`}
+        </StatusMessage>
+      )}
+
+      {changes.length > 0 && (
+        <section className="admin-decide tone--review admin-scores-review" aria-label="Unsaved score changes">
+          {showReview ? (
+            <div className="admin-decide__confirm" role="group" aria-labelledby="scores-confirm-title">
+              <p className="admin-decide__title" id="scores-confirm-title">
+                Save {changes.length} score {changes.length === 1 ? 'change' : 'changes'}?
+              </p>
+              <ul className="admin-scores-review__list">
+                {changes.map((c) => (
+                  <li key={c.key}>
+                    <strong className="wrap-anywhere">{c.team.name}</strong>
+                    <span className="admin-muted"> · {c.event.name}: </span>
+                    {c.before === '' ? (
+                      <span>
+                        new score of <strong>{c.after}</strong>
+                      </span>
+                    ) : c.after === '' ? (
+                      <span>
+                        <strong>{c.before}</strong> cleared
+                      </span>
+                    ) : (
+                      <span>
+                        {c.before} &rarr; <strong>{c.after}</strong>
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <p className="admin-decide__text">Every open leaderboard picks these up within a few seconds.</p>
+              <div className="admin-decide__buttons">
+                <Button ref={confirmRef} variant="primary" size="md" icon={Check} loading={saving} onClick={saveAll}>
+                  {changes.length === 1 ? 'Save it' : `Save all ${changes.length}`}
+                </Button>
+                <Button variant="ghost" size="md" disabled={saving} onClick={() => setReviewing(false)}>
+                  Keep editing
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="admin-scores-review__bar">
+              <p className="admin-decide__text">
+                <strong>
+                  {changes.length} score {changes.length === 1 ? 'change' : 'changes'} not saved yet.
+                </strong>
+                {invalid > 0 && ` Fix the ${invalid === 1 ? 'one' : invalid} marked in red first.`}
+              </p>
+              <div className="admin-decide__buttons">
+                <Button variant="primary" size="md" disabled={invalid > 0} onClick={() => setReviewing(true)}>
+                  Review and save
+                </Button>
+                <Button variant="ghost" size="md" icon={ArrowCounterClockwise} onClick={discard}>
+                  Discard
+                </Button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
       <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
@@ -858,9 +1027,21 @@ function Scores() {
                     {team.members} of {team.capacity} members
                   </span>
                 </th>
-                {events.map((event) => (
-                  <ScoreCell key={event.id} team={team} event={event} initial={team.scores[event.id]} />
-                ))}
+                {events.map((event) => {
+                  const key = scoreKey(team.id, event.id);
+                  const saved = asText(team.scores[event.id]);
+                  return (
+                    <ScoreCell
+                      key={event.id}
+                      team={team}
+                      event={event}
+                      value={key in drafts ? drafts[key] : saved}
+                      saved={saved}
+                      error={errors[key]}
+                      onChange={(value) => edit(key, value)}
+                    />
+                  );
+                })}
               </tr>
             ))}
           </tbody>
@@ -883,6 +1064,11 @@ export default function Admin() {
   const tab = TABS.find((t) => t.key === params.get('tab')) ?? TABS[0];
   const [state, setState] = useState({ status: 'loading', items: [], error: '' });
   const [filter, setFilter] = useState('review');
+  // Scores stays mounted once opened, so changes staged there survive a look at another tab.
+  const [scoresOpened, setScoresOpened] = useState(tab.key === 'scores');
+  useEffect(() => {
+    if (tab.key === 'scores') setScoresOpened(true);
+  }, [tab.key]);
 
   useEffect(() => {
     let alive = true;
@@ -942,7 +1128,11 @@ export default function Admin() {
             ))}
           </div>
           <div role="tabpanel">
-            {tab.key === 'scores' && <Scores />}
+            {scoresOpened && (
+              <div hidden={tab.key !== 'scores'}>
+                <Scores />
+              </div>
+            )}
             {tab.key === 'pool' && state.status === 'ready' && <Pool items={state.items} />}
             {tab.key === 'applications' && state.status === 'ready' && (
               <Applications items={state.items} setItems={setItems} filter={filter} setFilter={setFilter} />

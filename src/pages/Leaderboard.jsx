@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -14,6 +14,136 @@ import { EVENTS, getEvent, rankTeams, formatScore, TOTAL_WEIGHT } from '../lib/s
 import './Leaderboard.css';
 
 const MEDALS = { 1: 'gold', 2: 'silver', 3: 'bronze' };
+
+/**
+ * How often an open leaderboard asks for fresh standings.
+ *
+ * Polling rather than a push channel, deliberately. The browser in this app never talks to
+ * Supabase, only to /api, and a socket would mean handing it a key and a second auth path
+ * to secure. Standings are a few kilobytes and change a handful of times a night, so asking
+ * every few seconds is live enough to watch scores land during an event, and a hidden tab
+ * does not ask at all.
+ */
+const REFRESH_MS = 5000;
+
+/** How long a team whose score just changed stays highlighted. */
+const FLASH_MS = 2400;
+
+/**
+ * Standings that keep themselves current while the page is visible.
+ *
+ * A failed refresh keeps the last good standings on screen and marks them stale rather than
+ * swapping the board for an error: a blip on event-night wifi should not blank the room's
+ * screen. Only the very first load can end in the error state.
+ */
+function useLiveStandings() {
+  const [state, setState] = useState({ status: 'loading', teams: [], stale: false, checkedAt: null });
+  const lastBody = useRef('');
+
+  useEffect(() => {
+    let alive = true;
+    let timer = null;
+    let inFlight = false;
+
+    async function refresh() {
+      if (inFlight) return;
+      inFlight = true;
+      try {
+        const data = await fetchStandings();
+        if (!alive) return;
+        // Same standings as last time: only the freshness changes, so rows do not re-render.
+        const body = JSON.stringify(data.teams);
+        const changed = body !== lastBody.current;
+        lastBody.current = body;
+        setState((prev) => ({
+          status: 'ready',
+          teams: changed ? data.teams : prev.teams,
+          stale: false,
+          checkedAt: Date.now(),
+        }));
+      } catch {
+        if (!alive) return;
+        setState((prev) =>
+          prev.status === 'ready' ? { ...prev, stale: true } : { ...prev, status: 'error' }
+        );
+      } finally {
+        inFlight = false;
+      }
+    }
+
+    function schedule() {
+      clearInterval(timer);
+      timer = document.hidden ? null : setInterval(refresh, REFRESH_MS);
+    }
+
+    // Coming back to the tab refreshes at once, instead of showing standings from whenever
+    // it was hidden until the next tick.
+    function onVisibility() {
+      if (!document.hidden) refresh();
+      schedule();
+    }
+
+    refresh();
+    schedule();
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, []);
+
+  return state;
+}
+
+/** Ids of teams whose composite moved since the last standings, cleared after a moment. */
+function useChangedTeams(ranked) {
+  const previous = useRef(null);
+  const timer = useRef(null);
+  const [changed, setChanged] = useState(() => new Set());
+
+  useEffect(() => {
+    const before = previous.current;
+    previous.current = new Map(ranked.map((t) => [t.id, t.composite.toFixed(2)]));
+    // The first standings are not a change, they are the page loading.
+    if (!before) return;
+
+    const moved = new Set(
+      ranked.filter((t) => before.has(t.id) && before.get(t.id) !== t.composite.toFixed(2)).map((t) => t.id)
+    );
+    if (moved.size === 0) return;
+    setChanged(moved);
+    // A ref, not an effect cleanup: a second change inside the window must restart the
+    // clock, and a re-render with nothing moved must not cancel it and leave rows lit.
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setChanged(new Set()), FLASH_MS);
+  }, [ranked]);
+
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  return changed;
+}
+
+/** "Live", with how fresh the numbers are, ticking so the room can trust the screen. */
+function LiveIndicator({ checkedAt, stale }) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  if (!checkedAt) return null;
+  const seconds = Math.max(0, Math.round((now - checkedAt) / 1000));
+  const age = seconds < 3 ? 'just now' : seconds < 60 ? `${seconds}s ago` : `${Math.round(seconds / 60)}m ago`;
+
+  return (
+    <p className={`lb-live ${stale ? 'lb-live--stale' : ''}`}>
+      <span className="lb-live__dot" aria-hidden="true" />
+      {stale ? `Reconnecting… last updated ${age}` : `Live · updated ${age}`}
+    </p>
+  );
+}
 
 function RankCell({ rank }) {
   const medal = MEDALS[rank];
@@ -75,11 +205,15 @@ function TeamBreakdown({ team }) {
   );
 }
 
-function TeamRow({ team, expanded, onToggle, maxComposite }) {
+function TeamRow({ team, expanded, onToggle, maxComposite, flash }) {
   const panelId = `lb-detail-${team.id}`;
 
   return (
-    <li className={`lb-row ${expanded ? 'lb-row--open' : ''}`}>
+    <motion.li
+      layout="position"
+      transition={{ layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }}
+      className={`lb-row ${expanded ? 'lb-row--open' : ''} ${flash ? 'lb-row--flash' : ''}`}
+    >
       <button
         type="button"
         className="lb-row__main"
@@ -133,31 +267,16 @@ function TeamRow({ team, expanded, onToggle, maxComposite }) {
           </motion.div>
         )}
       </AnimatePresence>
-    </li>
+    </motion.li>
   );
 }
 
 export default function Leaderboard() {
-  const [state, setState] = useState({ status: 'loading', teams: [] });
+  const state = useLiveStandings();
   const [openId, setOpenId] = useState(null);
 
-  useEffect(() => {
-    let alive = true;
-    fetchStandings()
-      .then((data) => {
-        if (!alive) return;
-        setState({ status: 'ready', teams: data.teams });
-      })
-      .catch(() => {
-        if (!alive) return;
-        setState({ status: 'error', teams: [] });
-      });
-    return () => {
-      alive = false;
-    };
-  }, []);
-
   const ranked = useMemo(() => rankTeams(state.teams), [state.teams]);
+  const changed = useChangedTeams(ranked);
   const maxComposite = ranked.length > 0 ? ranked[0].composite : 0;
 
   // Events count as scored once the server holds a score for them, not when
@@ -202,6 +321,8 @@ export default function Leaderboard() {
                 <span className="lb-stat__label">teams competing</span>
               </div>
             </div>
+
+            <LiveIndicator checkedAt={state.checkedAt} stale={state.stale} />
           </Reveal>
         </div>
       </section>
@@ -225,7 +346,7 @@ export default function Leaderboard() {
             <GlassCard className="lb-card">
               <p className="lb-empty">
                 <WarningCircle size={22} weight="fill" aria-hidden="true" />
-                Standings could not be loaded. Refresh to try again.
+                Standings could not be loaded. We will keep trying.
               </p>
             </GlassCard>
           )}
@@ -250,6 +371,9 @@ export default function Leaderboard() {
                   <span>Team</span>
                   <span className="lb-head__score">Composite</span>
                 </div>
+                <p className="sr-only" aria-live="polite">
+                  {changed.size > 0 ? 'Standings updated.' : ''}
+                </p>
                 <ul className="lb-list">
                   {ranked.map((team) => (
                     <TeamRow
@@ -260,6 +384,7 @@ export default function Leaderboard() {
                         setOpenId((cur) => (cur === team.id ? null : team.id))
                       }
                       maxComposite={maxComposite}
+                      flash={changed.has(team.id)}
                     />
                   ))}
                 </ul>

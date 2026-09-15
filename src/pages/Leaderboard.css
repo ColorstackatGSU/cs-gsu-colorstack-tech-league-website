@@ -118,6 +118,70 @@
   border-bottom: none;
 }
 
+/* A score just landed for this team. Fades out on its own; the row's move to its new rank
+   is animated separately, so this only has to say which one changed. */
+.lb-row--flash {
+  animation: lb-flash 2.4s ease-out;
+}
+
+@keyframes lb-flash {
+  0%,
+  35% {
+    background: color-mix(in srgb, var(--success) 22%, transparent);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+/* ---------------- Live indicator ---------------- */
+
+.lb-live {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: var(--sp-4) 0 0;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.lb-live__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 60%, transparent);
+  animation: lb-pulse 2s ease-out infinite;
+}
+
+.lb-live--stale .lb-live__dot {
+  background: var(--danger);
+  animation: none;
+}
+
+@keyframes lb-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 60%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lb-row--flash,
+  .lb-live__dot {
+    animation: none;
+  }
+
+  .lb-row--flash {
+    background: color-mix(in srgb, var(--success) 14%, transparent);
+  }
+}
+
 .lb-row__main {
   width: 100%;
   display: grid;
