@@ -293,7 +293,7 @@ const LAYOUT = [
     { s: 'bubbles', side: 'r', e: 420, t: 118, w: 140, r: 4, tier: 'near' },
     { s: 'sparkle', side: 'l', e: 570, t: 420, w: 26, tier: 'near', a: 'twinkle', color: C.teal },
     { s: 'sparkle', side: 'r', e: 575, t: 500, w: 22, tier: 'near', a: 'twinkle' },
-    { text: '4 orgs, 1 league', side: 'l', e: 640, t: 430, r: -5, tier: 'far' },
+    { text: '3 orgs, 1 league', side: 'l', e: 640, t: 430, r: -5, tier: 'far' },
     { s: 'mug', side: 'r', e: 680, t: 330, w: 76, r: -6, tier: 'far' },
   ]},
   { sel: 'section.section:last-of-type', items: [
