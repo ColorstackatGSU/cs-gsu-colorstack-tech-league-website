@@ -51,6 +51,7 @@ export const draftSchema = z.object({
     .optional(),
   year: text(60).optional(),
   major: text(80).optional(),
+  secondMajor: text(80).optional(),
   gradTerm: text(20).optional(),
   interest: text(80).optional(),
   teamPref: optionalChoice(['team', 'have-team']),
@@ -69,6 +70,8 @@ export const submissionSchema = z.object({
     .transform((values) => [...new Set(values)]),
   year: text(60).min(1, 'Select your year.'),
   major: text(80).min(1, 'Select your major.'),
+  // Optional: most applicants have one major.
+  secondMajor: text(80).default(''),
   gradTerm: text(20).min(1, 'Select your expected graduation term.'),
   interest: text(80).min(1, 'Pick the area you are most interested in.'),
   teamPref: z.enum(['team', 'have-team'], 'Let us know how you want to find a team.'),
@@ -89,6 +92,7 @@ type ApplicationRow = {
   race_ethnicity: string[] | null;
   year: string | null;
   major: string | null;
+  second_major: string | null;
   grad_term: string | null;
   interest: string | null;
   team_pref: string | null;
@@ -112,6 +116,7 @@ export function toRow(input: Draft | Submission) {
     race_ethnicity: input.raceEthnicity,
     year: blankToNull(input.year),
     major: blankToNull(input.major),
+    second_major: blankToNull(input.secondMajor),
     grad_term: blankToNull(input.gradTerm),
     interest: blankToNull(input.interest),
     team_pref: input.teamPref,
@@ -130,6 +135,7 @@ export function fromRow(row: ApplicationRow) {
     raceEthnicity: row.race_ethnicity ?? [],
     year: row.year ?? '',
     major: row.major ?? '',
+    secondMajor: row.second_major ?? '',
     gradTerm: row.grad_term ?? '',
     interest: row.interest ?? '',
     teamPref: row.team_pref ?? '',
@@ -141,7 +147,7 @@ export function fromRow(row: ApplicationRow) {
 }
 
 export const APPLICATION_COLUMNS =
-  'status, full_name, school_email, personal_email, race_ethnicity, year, major, grad_term, ' +
+  'status, full_name, school_email, personal_email, race_ethnicity, year, major, second_major, grad_term, ' +
   'interest, team_pref, why_join, goals, experience, commitment, decision, decided_at, submitted_at, ' +
   'personal_email_verified_at';
 

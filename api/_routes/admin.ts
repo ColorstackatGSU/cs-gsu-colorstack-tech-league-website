@@ -50,6 +50,7 @@ type ReviewRow = {
   race_ethnicity: string[] | null;
   year: string | null;
   major: string | null;
+  second_major: string | null;
   grad_term: string | null;
   interest: string | null;
   team_pref: string | null;
@@ -68,7 +69,7 @@ type ReviewRow = {
 // applications has two foreign keys to profiles (user_id, decided_by), so the embed has
 // to name which one it means or PostgREST refuses the query as ambiguous.
 const REVIEW_COLUMNS =
-  'user_id, status, full_name, school_email, personal_email, personal_email_verified_at, race_ethnicity, year, major, ' +
+  'user_id, status, full_name, school_email, personal_email, personal_email_verified_at, race_ethnicity, year, major, second_major, ' +
   'grad_term, interest, team_pref, why_join, goals, experience, commitment, decision, ' +
   'decided_at, decision_emailed_at, submitted_at, updated_at, ' +
   'profile:profiles!applications_user_id_fkey(email, resume_name, resume_size, resume_uploaded_at)';
@@ -84,6 +85,7 @@ function toReview(row: ReviewRow) {
     raceEthnicity: row.race_ethnicity ?? [],
     year: row.year,
     major: row.major,
+    secondMajor: row.second_major,
     gradTerm: row.grad_term,
     interest: row.interest,
     teamPref: row.team_pref,

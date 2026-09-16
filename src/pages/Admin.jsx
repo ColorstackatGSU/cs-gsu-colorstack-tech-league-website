@@ -103,6 +103,7 @@ function exportCsv(items, label) {
     ['Personal email confirmed', (a) => (a.personalEmailVerified ? 'yes' : 'no')],
     ['Year', (a) => a.year],
     ['Major', (a) => a.major],
+    ['Second major', (a) => a.secondMajor],
     ['Graduating', (a) => a.gradTerm],
     ['Interest', (a) => a.interest],
     ['Teammates', (a) => TEAM_PREF_LABELS[a.teamPref]],
@@ -247,6 +248,7 @@ function Detail({ application: a, position, onPrev, onNext, onBack, onChange }) 
   const facts = [
     ['Year', a.year],
     ['Major', a.major],
+    ...(a.secondMajor ? [['Second major', a.secondMajor]] : []),
     ['Graduating', a.gradTerm],
     ['Interest', a.interest],
     ['Teammates', TEAM_PREF_LABELS[a.teamPref]],
@@ -507,7 +509,7 @@ function Applications({ items, setItems, filter, setFilter }) {
     const q = query.trim().toLowerCase();
     return items
       .filter(active.match)
-      .filter((a) => !q || [a.fullName, a.email, a.personalEmail, a.major, a.interest].some((v) => v?.toLowerCase().includes(q)))
+      .filter((a) => !q || [a.fullName, a.email, a.personalEmail, a.major, a.secondMajor, a.interest].some((v) => v?.toLowerCase().includes(q)))
       .sort(SORTS[sort].fn);
   }, [items, active, query, sort]);
 

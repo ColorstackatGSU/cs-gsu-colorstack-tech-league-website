@@ -47,14 +47,33 @@ const MAJORS = [
   'Other',
 ];
 
+// Wide on purpose. The first list leaned toward the big-company job titles, which left
+// out the people who came to the League to build games, trade, or do research.
 const INTERESTS = [
   'Software Engineering',
-  'Data Science / ML',
-  'Cybersecurity',
-  'Product Management',
-  'DevOps / Infrastructure',
+  'Web Development',
   'Mobile Development',
+  'Game Development',
+  'Data Science / ML',
+  'AI / Machine Learning Research',
+  'Quantitative Development / Fintech',
+  'Cybersecurity',
+  'DevOps / Infrastructure',
+  'Cloud Engineering',
+  'Embedded Systems / Hardware',
+  'Robotics',
+  'Data Engineering',
+  'Database / Backend Systems',
+  'Systems Programming',
+  'Computer Graphics / XR',
+  'Product Management',
   'UI/UX Design',
+  'Business Analytics / Consulting',
+  'IT / Systems Administration',
+  'QA / Test Engineering',
+  'Technical Writing / Developer Relations',
+  'Research / Academia',
+  'Entrepreneurship / Startups',
   'Still figuring it out',
 ];
 
@@ -119,6 +138,7 @@ const EMPTY = {
   raceEthnicity: [],
   year: '',
   major: '',
+  secondMajor: '',
   gradTerm: '',
   interest: '',
   teamPref: '',
@@ -153,6 +173,7 @@ function AnswerSections({ values, schoolEmail, onEdit }) {
     [
       ['Year', values.year],
       ['Major', values.major],
+      ['Second major', values.secondMajor || 'Not answered (optional)'],
       ['Expected graduation', values.gradTerm],
       ['Area of interest', values.interest],
     ],
@@ -386,6 +407,10 @@ function ApplicationForm({ profile, schoolEmail, submitApplication, saveDraft })
     if (index === 1) {
       if (!v.year) found.year = 'Select your year.';
       if (!v.major) found.major = 'Select your major.';
+      // Optional, but picking the same thing twice is a slip, not a double major.
+      if (v.secondMajor && v.secondMajor === v.major) {
+        found.secondMajor = 'Pick a different major from your first one.';
+      }
       if (!v.gradTerm) found.gradTerm = 'Select your expected graduation term.';
       if (!v.interest) found.interest = 'Pick the area you are most interested in.';
     }
@@ -666,7 +691,13 @@ function ApplicationForm({ profile, schoolEmail, submitApplication, saveDraft })
                           value={values.major}
                           invalid={Boolean(errors.major)}
                           aria-describedby={errors.major ? errorId : undefined}
-                          onChange={(e) => set('major', e.target.value)}
+                          onChange={(e) => {
+                            set('major', e.target.value);
+                            // The second list hides whatever the first one holds, so a
+                            // second major that just became the primary would vanish from
+                            // the options while still sitting in state.
+                            if (values.secondMajor === e.target.value) set('secondMajor', '');
+                          }}
                         >
                           <option value="">Select your major</option>
                           {MAJORS.map((m) => (
@@ -679,30 +710,57 @@ function ApplicationForm({ profile, schoolEmail, submitApplication, saveDraft })
                     </Field>
                   </div>
 
-                  <Field
-                    label="Expected graduation"
-                    htmlFor="gradTerm"
-                    required
-                    error={errors.gradTerm}
-                  >
-                    {({ errorId }) => (
-                      <Select
-                        id="gradTerm"
-                        name="gradTerm"
-                        value={values.gradTerm}
-                        invalid={Boolean(errors.gradTerm)}
-                        aria-describedby={errors.gradTerm ? errorId : undefined}
-                        onChange={(e) => set('gradTerm', e.target.value)}
-                      >
-                        <option value="">Select your graduation term</option>
-                        {GRAD_TERMS.map((term) => (
-                          <option key={term} value={term}>
-                            {term}
-                          </option>
-                        ))}
-                      </Select>
-                    )}
-                  </Field>
+                  <div className="apply__row">
+                    <Field
+                      label="Second major"
+                      htmlFor="secondMajor"
+                      helper="Only if you are double majoring."
+                      error={errors.secondMajor}
+                    >
+                      {({ helperId, errorId }) => (
+                        <Select
+                          id="secondMajor"
+                          name="secondMajor"
+                          value={values.secondMajor}
+                          invalid={Boolean(errors.secondMajor)}
+                          aria-describedby={errors.secondMajor ? errorId : helperId}
+                          onChange={(e) => set('secondMajor', e.target.value)}
+                        >
+                          <option value="">None</option>
+                          {MAJORS.filter((m) => m !== values.major).map((m) => (
+                            <option key={m} value={m}>
+                              {m}
+                            </option>
+                          ))}
+                        </Select>
+                      )}
+                    </Field>
+
+                    <Field
+                      label="Expected graduation"
+                      htmlFor="gradTerm"
+                      required
+                      error={errors.gradTerm}
+                    >
+                      {({ errorId }) => (
+                        <Select
+                          id="gradTerm"
+                          name="gradTerm"
+                          value={values.gradTerm}
+                          invalid={Boolean(errors.gradTerm)}
+                          aria-describedby={errors.gradTerm ? errorId : undefined}
+                          onChange={(e) => set('gradTerm', e.target.value)}
+                        >
+                          <option value="">Select your graduation term</option>
+                          {GRAD_TERMS.map((term) => (
+                            <option key={term} value={term}>
+                              {term}
+                            </option>
+                          ))}
+                        </Select>
+                      )}
+                    </Field>
+                  </div>
 
                   <Field
                     label="What area interests you most?"
