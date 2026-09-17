@@ -188,7 +188,7 @@ export default function Landing() {
 
           <RevealText
             className="hero__title"
-            text="ColorStack Tech League."
+            text="ColorStack Tech League"
             delay={0.16}
           />
 
@@ -198,10 +198,10 @@ export default function Landing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.5 }}
           >
-            The ColorStack Tech League is a semester-long, points-based program at
-            Georgia State. Five challenge types, one live leaderboard, and a capstone
-            hackathon judged by partner engineers, built so the skills that get people
-            hired stop being a thing you cram for.
+            The Tech League is a semester-long competition at Georgia State
+            where you earn points through five types of challenges. Track your rank
+            on a live leaderboard and wrap up with a mini hackathon.
+            It's built to help you gain job-ready skills naturally, no last-minute cramming needed.
           </motion.p>
 
           <motion.div
@@ -338,7 +338,7 @@ export default function Landing() {
           <SectionHeading
             eyebrow="Built together"
             title="This isn't just a ColorStack thing"
-            subtitle="The Tech League runs on a partnership between ColorStack, CS Club, and progsu. Each org brings its own members, mentors, and judges, which is why the League reaches further than any one club could on its own."
+            subtitle="The Tech League is a team effort between ColorStack, CS Club, and progsu! Every org brings in its own members, mentors, and experiences allowing the League to reach way more people than any single club could on its own."
           />
           <Reveal>
             <PartnerCarousel />
