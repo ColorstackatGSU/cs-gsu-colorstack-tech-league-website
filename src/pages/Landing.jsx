@@ -188,7 +188,7 @@ export default function Landing() {
 
           <RevealText
             className="hero__title"
-            text="Get the reps that get you hired."
+            text="ColorStack Tech League."
             delay={0.16}
           />
 
