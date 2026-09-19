@@ -19,9 +19,10 @@
   left: -6%;
   width: 300px;
   height: 300px;
-  border: 3px dashed var(--teal-line);
-  border-radius: 58% 42% 50% 50%;
-  opacity: 0.5;
+  background: radial-gradient(circle, var(--green-glow), transparent 68%);
+  filter: blur(26px);
+  border-radius: 50%;
+  opacity: 0.8;
   animation: float-a 18s var(--ease-in-out) infinite;
 }
 
@@ -30,9 +31,10 @@
   right: -7%;
   width: 340px;
   height: 340px;
-  border: 3px dashed var(--clay);
-  border-radius: 45% 55% 60% 40%;
-  opacity: 0.28;
+  background: radial-gradient(circle, var(--purple-glow), transparent 68%);
+  filter: blur(30px);
+  border-radius: 50%;
+  opacity: 0.7;
   animation: float-b 22s var(--ease-in-out) infinite;
 }
 
@@ -103,7 +105,7 @@
   font-weight: 600;
   color: var(--ink-soft);
   background: transparent;
-  border: 2px dashed var(--ink-light);
+  border: 1px solid var(--line-bright);
   border-radius: var(--r-full);
   transition:
     background var(--dur-fast) var(--ease-out),
@@ -134,16 +136,16 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #8A6A12;
+  color: var(--mustard);
   padding: 5px 14px;
   background: var(--mustard-soft);
-  border: 2px solid var(--mustard);
+  border: 1px solid var(--mustard);
   border-radius: var(--r-full);
 }
 
 .auth__aside-title {
   position: relative;
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-xl);
   line-height: 1.08;
   color: var(--ink);
@@ -187,8 +189,8 @@
   flex-shrink: 0;
   background: var(--teal-soft);
   color: var(--teal-deep);
-  border: 2px solid var(--teal-line);
-  border-radius: 52% 48% 45% 55%;
+  border: 1px solid var(--line-color);
+  border-radius: var(--r-md);
 }
 
 .auth__steps {
@@ -219,20 +221,23 @@
   width: 32px;
   height: 32px;
   flex-shrink: 0;
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: 1.15rem;
   font-weight: 700;
-  background: var(--paper-warm);
+  background: var(--surface-sunken);
   color: var(--ink-soft);
-  border: 2px dashed var(--ink-light);
+  border: 1px solid var(--line-bright);
   border-radius: 50%;
 }
 
 .auth__steps li.is-current .auth__step-num {
-  background: var(--teal);
-  border-color: var(--ink);
+  background: var(--green);
+  /* The active step carries its own colour to the edge and a soft glow,
+     so it reads as lit rather than just filled. */
+  border-color: var(--green);
   border-style: solid;
-  color: var(--on-teal);
+  color: var(--on-green);
+  box-shadow: var(--glow-green);
 }
 
 @media (max-width: 979px) {
@@ -275,11 +280,11 @@
   flex-direction: column;
   gap: var(--sp-2);
   padding-bottom: var(--sp-3);
-  border-bottom: 2px dashed var(--paper-deep);
+  border-bottom: 1px solid var(--paper-deep);
 }
 
 .auth__title {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-md);
   line-height: 1.15;
   color: var(--ink);
@@ -317,7 +322,7 @@
   font-size: var(--fs-sm);
   color: var(--text-muted);
   padding-top: var(--sp-4);
-  border-top: 2px dashed var(--paper-deep);
+  border-top: 1px solid var(--paper-deep);
 }
 
 .auth__switch a {
@@ -350,7 +355,7 @@
 .strength__bar {
   height: 7px;
   flex: 1;
-  background: var(--paper-deep);
+  background: var(--surface-raised);
   border-radius: var(--r-full);
   transition: background var(--dur-mid) var(--ease-out);
 }
@@ -441,7 +446,7 @@
 .auth__divider::after {
   content: '';
   flex: 1;
-  border-top: 2px dashed var(--paper-deep);
+  border-top: 1px solid var(--paper-deep);
 }
 
 .auth__colorstack {
@@ -519,9 +524,9 @@
   font-size: var(--fs-sm);
   font-weight: 600;
   line-height: 1.55;
-  color: #6B500C;
+  color: var(--mustard);
   background: var(--mustard-soft);
-  border: 2px solid var(--mustard);
+  border: 1px solid var(--mustard);
   border-radius: var(--r-md);
 }
 

@@ -30,39 +30,63 @@
 /* ============================================================
    Panel, the core material.
 
-   A sheet of paper with a drawn outline and a pencil-like hard
-   offset shadow. Corner radii are deliberately uneven so the
-   shape reads as sketched rather than generated.
+   A broadcast graphics plate: a dark surface cut square, a
+   hairline edge, and a lit rule across the top that brightens
+   on hover. Replaces the sketch build's paper-and-pencil card.
    ============================================================ */
 
 .panel-raised {
   position: relative;
-  background: var(--card);
+  background: linear-gradient(
+    180deg,
+    var(--surface-raised) 0%,
+    var(--surface) 100%
+  );
   border: var(--line);
-  border-radius: var(--r-wobble);
-  box-shadow: var(--shadow-pencil);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
 }
 
-/* Every other card flips the wobble so a grid doesn't look uniform */
-.panel-raised:nth-child(even) {
-  border-radius: var(--r-wobble-alt);
+/* The lit top rule. A pseudo-element rather than a border-top so
+   it can glow and change color without shifting the box. */
+.panel-raised::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--green) 22%,
+    var(--blue) 62%,
+    transparent
+  );
+  opacity: 0.5;
+  transition: opacity var(--dur-mid) var(--ease-out);
 }
 
 .panel-sunken {
-  background: var(--paper-warm);
-  border: var(--line-dash);
-  border-radius: var(--r-wobble-alt);
+  background: var(--surface-sunken);
+  border: var(--line);
+  border-radius: var(--r-md);
 }
 
 .panel--interactive {
   transition:
     transform var(--dur-mid) var(--ease-out),
+    border-color var(--dur-mid) var(--ease-out),
     box-shadow var(--dur-mid) var(--ease-out);
 }
 
 .panel--interactive:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: var(--shadow-pencil-lg);
+  transform: translateY(-3px);
+  border-color: var(--line-bright);
+  box-shadow: var(--shadow-lg), var(--glow-green);
+}
+
+.panel--interactive:hover::before {
+  opacity: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -87,43 +111,49 @@
 }
 
 .window__title {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-sm);
   font-weight: 700;
-  line-height: 1.2;
-  color: var(--ink);
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* Three little dots, a friendly nod to the old window buttons */
+/* Was three fake window buttons. Now a scoreboard tally: three
+   ticks that read as a status light on the plate. Decorative
+   only, and the markup already marks it aria-hidden. */
 .window__controls {
   display: flex;
-  gap: 5px;
+  gap: 4px;
   flex-shrink: 0;
+  align-items: center;
 }
 
 .window__dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 1.5px solid var(--ink-light);
+  width: 3px;
+  height: 12px;
+  border-radius: 1px;
+  background: var(--line-bright);
   font-size: 0;
   line-height: 0;
   color: transparent;
 }
 
 .window__dot:nth-child(1) {
-  background: var(--clay-soft);
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green-glow);
 }
 
 .window__dot:nth-child(2) {
-  background: var(--mustard-soft);
+  background: var(--blue);
 }
 
 .window__dot:nth-child(3) {
-  background: var(--teal-soft);
+  background: var(--purple);
 }
 
 .window__body {
@@ -138,7 +168,11 @@
 }
 
 /* ============================================================
-   Button, rounded pills with a pencil shadow that presses in
+   Button, squared team-kit blocks.
+
+   Condensed uppercase labels, hard corners, a lift on hover.
+   The primary fill is neon green under near-black type, which
+   measures 11.3:1 — the reverse (white on green) would not pass.
    ============================================================ */
 
 .btn {
@@ -146,18 +180,21 @@
   align-items: center;
   justify-content: center;
   gap: var(--sp-2);
-  font-family: var(--font-body);
+  font-family: var(--font-display);
   font-weight: 700;
-  letter-spacing: 0.01em;
+  font-size: var(--fs-base);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   white-space: nowrap;
-  background: var(--card);
-  color: var(--ink);
-  border: var(--line);
-  border-radius: var(--r-full);
-  box-shadow: var(--shadow-pencil-sm);
+  background: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--line-bright);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-sm);
   transition:
     transform var(--dur-fast) var(--ease-out),
     box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
     background var(--dur-fast) var(--ease-out);
 }
 
@@ -170,73 +207,79 @@
 .btn--md {
   min-height: 48px;
   padding: 0 var(--sp-5);
-  font-size: var(--fs-base);
 }
 
 .btn--lg {
   min-height: 56px;
   padding: 0 var(--sp-6);
-  font-size: var(--fs-lg);
+  font-size: var(--fs-xl);
 }
 
 .btn:hover:not(:disabled) {
-  transform: translate(-1px, -1px);
-  box-shadow: var(--shadow-pencil);
+  transform: translateY(-2px);
+  border-color: var(--green);
+  box-shadow: var(--shadow-md);
 }
 
-/* Pressed: the button sinks onto its own shadow */
 .btn:active:not(:disabled) {
-  transform: translate(2px, 2px);
-  box-shadow: none;
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
   box-shadow: none;
 }
 
 .btn--primary {
-  background: var(--teal);
-  color: var(--on-teal);
+  background: var(--green);
+  color: var(--on-green);
+  border-color: var(--green);
 }
 
 .btn--primary:hover:not(:disabled) {
-  background: var(--teal-deep);
+  background: var(--green-bright);
+  border-color: var(--green-bright);
+  box-shadow: var(--shadow-md), var(--glow-green);
 }
 
 .btn--secondary {
-  background: var(--mustard);
-  color: var(--ink);
+  background: var(--purple-fill);
+  color: #ffffff;
+  border-color: var(--purple-fill);
 }
 
 .btn--secondary:hover:not(:disabled) {
-  background: #D9A62E;
+  background: var(--purple-fill-hover);
+  border-color: var(--purple-fill-hover);
+  box-shadow: var(--shadow-md), var(--glow-purple);
 }
 
-/* Dashed outline button, straight from the reference */
+/* Outline button. Kept under the name --glass so the call sites
+   in Landing, Auth and Dashboard keep working. */
 .btn--glass {
-  background: transparent;
-  border: 2px dashed var(--ink);
-  box-shadow: none;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line-bright);
+  color: var(--text);
 }
 
 .btn--glass:hover:not(:disabled) {
-  background: var(--teal-soft);
-  border-style: solid;
-  box-shadow: var(--shadow-pencil-sm);
+  background: var(--green-soft);
+  border-color: var(--green);
+  color: var(--green);
 }
 
 .btn--ghost {
   background: transparent;
   border-color: transparent;
   box-shadow: none;
-  color: var(--ink-soft);
+  color: var(--text-muted);
 }
 
 .btn--ghost:hover:not(:disabled) {
-  background: var(--paper-deep);
-  color: var(--ink);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
   transform: none;
   box-shadow: none;
 }
@@ -245,12 +288,12 @@
   background: transparent;
   border-color: var(--danger);
   color: var(--danger);
-  box-shadow: 2px 2px 0 var(--danger);
 }
 
 .btn--danger:hover:not(:disabled) {
   background: var(--danger-soft);
-  box-shadow: 3px 3px 0 var(--danger);
+  border-color: var(--danger);
+  box-shadow: var(--shadow-md);
 }
 
 .btn__spinner {
@@ -284,8 +327,8 @@
 .field__label {
   font-family: var(--font-body);
   font-size: var(--fs-sm);
-  font-weight: 700;
-  color: var(--ink);
+  font-weight: 600;
+  color: var(--text);
 }
 
 .field__required {
@@ -314,7 +357,9 @@
   margin-top: 3px;
 }
 
-/* Inputs: dashed until focused, then a solid teal line */
+/* Inputs: sunken slots on the dark that light green on focus.
+   `font-size: max(…, 16px)` stays — anything smaller makes iOS
+   Safari zoom the viewport on focus. */
 .input {
   width: 100%;
   font-family: var(--font-body);
@@ -322,10 +367,10 @@
   font-size: max(var(--fs-base), 16px);
   min-height: 50px;
   padding: var(--sp-3) var(--sp-4);
-  color: var(--ink);
-  background: var(--card);
-  border: 2px dashed var(--ink-light);
-  border-radius: var(--r-md);
+  color: var(--text);
+  background: var(--surface-sunken);
+  border: 1px solid var(--line-bright);
+  border-radius: var(--r-sm);
   transition:
     border-color var(--dur-fast) var(--ease-out),
     background var(--dur-fast) var(--ease-out),
@@ -333,20 +378,19 @@
 }
 
 .input::placeholder {
-  color: var(--ink-light);
-  font-weight: 500;
+  color: var(--text-subtle);
+  font-weight: 400;
 }
 
 .input:hover:not(:disabled) {
-  border-color: var(--ink-soft);
+  border-color: var(--text-subtle);
 }
 
 .input:focus {
   outline: none;
-  background: #fff;
-  border-style: solid;
-  border-color: var(--teal);
-  box-shadow: 0 0 0 4px var(--teal-soft);
+  background: var(--bg-deep);
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px var(--green-soft);
 }
 
 .input--invalid {
@@ -388,14 +432,14 @@
   place-items: center;
   width: 42px;
   height: 42px;
-  border-radius: var(--r-full);
-  color: var(--ink-soft);
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
   transition: background var(--dur-fast), color var(--dur-fast);
 }
 
 .password-wrap__toggle:hover {
-  background: var(--teal-soft);
-  color: var(--teal-deep);
+  background: var(--green-soft);
+  color: var(--green);
 }
 
 .input--select {
@@ -412,49 +456,56 @@
   transform: translateY(-50%);
   display: grid;
   place-items: center;
-  color: var(--ink-soft);
+  color: var(--text-muted);
   pointer-events: none;
 }
 
 /* ============================================================
-   Badge, a little hand-drawn tag
+   Badge, a squared stat tag.
+
+   Each tone is a tinted wash under its own full-strength text
+   color. The sketch build used dark text on pale fills; on the
+   dark those literals would have gone near-invisible, so every
+   tone now takes its light neon as the foreground.
    ============================================================ */
 
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 14px;
-  font-family: var(--font-body);
-  font-size: var(--fs-xs);
-  font-weight: 700;
+  padding: 4px 10px;
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   white-space: nowrap;
-  border-radius: var(--r-full);
-  border: 2px solid;
+  border-radius: var(--r-sm);
+  border: 1px solid;
 }
 
 .badge--brand {
-  background: var(--teal-soft);
-  border-color: var(--teal);
-  color: var(--teal-deep);
+  background: var(--green-soft);
+  border-color: rgba(61, 240, 127, 0.4);
+  color: var(--green);
 }
 
 .badge--accent {
   background: var(--mustard-soft);
-  border-color: var(--mustard);
-  color: #8A6A12;
+  border-color: rgba(255, 194, 77, 0.4);
+  color: var(--mustard);
 }
 
 .badge--success {
   background: var(--success-soft);
-  border-color: var(--success);
-  color: #2C7050;
+  border-color: rgba(61, 240, 127, 0.4);
+  color: var(--success);
 }
 
 .badge--neutral {
-  background: var(--paper-warm);
-  border-color: var(--ink-light);
-  color: var(--ink-soft);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--line-bright);
+  color: var(--text-muted);
 }
 
 /* ============================================================
@@ -475,26 +526,48 @@
   margin-inline: auto;
 }
 
+/* Centered headings put the rule above the label rather than
+   beside it, so the eyebrow stays optically centered. */
+.section-heading--center .section-heading__eyebrow {
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
 .section-heading--left {
   align-items: flex-start;
   text-align: left;
 }
 
+/* The eyebrow carries the neon rule that sits above every
+   section title, the flyer's recurring divider. */
 .section-heading__eyebrow {
-  font-family: var(--font-body);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--teal-deep);
+  color: var(--green);
+}
+
+.section-heading__eyebrow::before {
+  content: '';
+  width: 28px;
+  height: 2px;
+  background: var(--green);
+  box-shadow: var(--glow-green);
 }
 
 .section-heading__title {
   position: relative;
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-lg);
-  line-height: 1.12;
-  color: var(--ink);
+  line-height: 0.98;
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
+  color: var(--text);
 }
 
 .section-heading__subtitle {
@@ -504,8 +577,8 @@
   max-width: 62ch;
 }
 
-/* `on-dark` is a legacy hook from the previous design. The sketch
-   theme is light throughout, so it only softens the subtitle. */
+/* `on-dark` is a legacy hook kept because pages still set it. The
+   whole app is dark now, so it no longer needs to change anything. */
 .on-dark .section-heading__subtitle {
   color: var(--text-muted);
 }
@@ -521,28 +594,28 @@
   font-size: var(--fs-sm);
   font-weight: 600;
   padding: var(--sp-3) var(--sp-4);
-  border-radius: var(--r-md);
-  border: 2px solid;
+  border-radius: var(--r-sm);
+  border: 1px solid;
 }
 
 .status-msg--success {
   background: var(--success-soft);
-  border-color: var(--success);
-  color: #2C7050;
+  border-color: rgba(61, 240, 127, 0.4);
+  color: var(--success);
 }
 
 .status-msg--error {
   background: var(--danger-soft);
-  border-color: var(--danger);
-  color: #A8442F;
+  border-color: rgba(255, 107, 94, 0.45);
+  color: var(--danger);
 }
 
 .error-summary {
   padding: var(--sp-4);
   background: var(--danger-soft);
-  border: 2px solid var(--danger);
-  border-radius: var(--r-md);
-  box-shadow: var(--shadow-pencil-sm);
+  border: 1px solid var(--danger);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-sm);
 }
 
 .error-summary__title {
@@ -551,7 +624,7 @@
   gap: var(--sp-2);
   font-size: var(--fs-sm);
   font-weight: 700;
-  color: #A8442F;
+  color: var(--danger);
   margin-bottom: var(--sp-2);
 }
 
@@ -567,12 +640,12 @@
   font-family: var(--font-body);
   font-size: var(--fs-sm);
   font-weight: 600;
-  color: #A8442F;
+  color: var(--danger);
   text-decoration: underline;
   text-underline-offset: 3px;
   text-align: left;
 }
 
 .error-summary__list button:hover {
-  color: var(--ink);
+  color: var(--text);
 }

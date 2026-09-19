@@ -4,7 +4,7 @@
 
 .leaderboard {
   position: relative;
-  background: var(--paper);
+  background: var(--bg);
   min-height: 100vh;
 }
 
@@ -28,7 +28,7 @@
 }
 
 .leaderboard__title {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-xl);
   line-height: 1.06;
   color: var(--ink);
@@ -55,7 +55,7 @@
 .lb-stat {
   min-width: 140px;
   padding: var(--sp-4);
-  background: var(--card);
+  background: var(--surface);
   border: var(--line);
   border-radius: var(--r-wobble);
   box-shadow: var(--shadow-pencil);
@@ -63,7 +63,7 @@
 
 .lb-stat__value {
   display: block;
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-md);
   font-weight: 700;
   line-height: 1;
@@ -200,11 +200,11 @@
 }
 
 .lb-row__main:hover {
-  background: var(--paper-warm);
+  background: var(--surface-sunken);
 }
 
 .lb-row__main:focus-visible {
-  outline: 3px solid var(--teal-deep);
+  outline: 2px solid var(--green);
   outline-offset: -3px;
 }
 
@@ -228,27 +228,33 @@
   padding: var(--sp-1) var(--sp-2);
   border-radius: var(--r-full);
   border: var(--line);
-  background: var(--card);
-  font-family: var(--font-body);
-  font-size: var(--fs-sm);
+  background: var(--surface);
+  font-family: var(--font-display);
+  font-size: var(--fs-base);
   font-weight: 700;
-  color: var(--ink);
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
+/* Podium ranks. Each is a solid medal fill, so the numeral switches to the
+   near-black ink — light text on these brights would not clear 4.5:1. */
 .lb-rank--gold {
   background: var(--mustard);
-  box-shadow: var(--shadow-pencil-sm);
+  border-color: var(--mustard);
+  color: #2b1f02;
+  box-shadow: 0 0 18px rgba(255, 194, 77, 0.3);
 }
 
 .lb-rank--silver {
-  background: var(--paper-deep);
-  box-shadow: var(--shadow-pencil-sm);
+  background: #c8d2e4;
+  border-color: #c8d2e4;
+  color: #121722;
 }
 
 .lb-rank--bronze {
-  background: var(--clay-soft);
-  box-shadow: var(--shadow-pencil-sm);
+  background: var(--clay);
+  border-color: var(--clay);
+  color: #2b1105;
 }
 
 .lb-row__team {
@@ -257,7 +263,7 @@
 
 .lb-row__name {
   display: block;
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-sm);
   line-height: 1.15;
   color: var(--ink);
@@ -273,8 +279,8 @@
 .lb-row__track {
   height: 10px;
   border-radius: var(--r-full);
-  background: var(--paper-deep);
-  border: 1.5px solid var(--ink);
+  background: var(--surface-raised);
+  border: 1px solid var(--line-color);
   overflow: hidden;
 }
 
@@ -291,7 +297,7 @@
 }
 
 .lb-row__composite {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-sm);
   font-weight: 700;
   color: var(--clay);
@@ -332,7 +338,7 @@
   padding: var(--sp-4);
   display: grid;
   gap: var(--sp-3);
-  background: var(--paper-warm);
+  background: var(--surface-sunken);
   border: var(--line-dash);
   border-radius: var(--r-md);
 }
@@ -374,14 +380,14 @@
 .lb-detail__bar {
   height: 9px;
   border-radius: var(--r-full);
-  background: var(--card);
-  border: 1.5px solid var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line-color);
   overflow: hidden;
 }
 
 .lb-detail__bar--empty {
   border-style: dashed;
-  border-color: var(--ink-light);
+  border-color: var(--line-color);
 }
 
 .lb-detail__fill {
@@ -498,7 +504,7 @@
 
 .lb-weight {
   padding: var(--sp-4);
-  background: var(--card);
+  background: var(--surface);
   border: var(--line);
   border-radius: var(--r-wobble);
   box-shadow: var(--shadow-pencil-sm);
@@ -506,7 +512,7 @@
 
 .lb-weight__pct {
   display: block;
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-sm);
   font-weight: 700;
   line-height: 1;

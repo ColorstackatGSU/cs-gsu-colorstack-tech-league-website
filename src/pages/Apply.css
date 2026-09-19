@@ -27,7 +27,7 @@
   font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--ink-soft);
-  border: 2px dashed var(--ink-light);
+  border: 1px solid var(--line-bright);
   border-radius: var(--r-full);
   transition:
     background var(--dur-fast) var(--ease-out),
@@ -43,7 +43,7 @@
 }
 
 .apply__title {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-lg);
   line-height: 1.08;
   color: var(--ink);
@@ -104,7 +104,7 @@
 }
 
 .apply__rail-button:not(:disabled):hover {
-  background: var(--paper-warm);
+  background: var(--surface-sunken);
   color: var(--ink);
 }
 
@@ -123,20 +123,23 @@
   width: 30px;
   height: 30px;
   flex-shrink: 0;
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 700;
-  background: var(--paper-warm);
+  background: var(--surface-sunken);
   color: var(--ink-soft);
-  border: 2px dashed var(--ink-light);
+  border: 1px solid var(--line-bright);
   border-radius: 50%;
 }
 
 .apply__rail-item.is-current .apply__rail-dot {
-  background: var(--teal);
-  border-color: var(--ink);
+  background: var(--green);
+  /* The active step carries its own colour to the edge and a soft glow,
+     so it reads as lit rather than just filled. */
+  border-color: var(--green);
   border-style: solid;
-  color: var(--on-teal);
+  color: var(--on-green);
+  box-shadow: var(--glow-green);
 }
 
 .apply__rail-item.is-done .apply__rail-dot {
@@ -148,7 +151,7 @@
 
 .apply__rail-track {
   height: 10px;
-  background: var(--paper-deep);
+  background: var(--surface-raised);
   border-radius: var(--r-full);
   overflow: hidden;
 }
@@ -184,12 +187,12 @@
 }
 
 .apply__step-title {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-sm);
   line-height: 1.15;
   color: var(--ink);
   padding-bottom: var(--sp-3);
-  border-bottom: 2px dashed var(--paper-deep);
+  border-bottom: 1px solid var(--paper-deep);
 }
 
 .apply__row {
@@ -233,8 +236,8 @@
   gap: var(--sp-3);
   min-height: 54px;
   padding: var(--sp-3) var(--sp-4);
-  background: var(--card);
-  border: 2px dashed var(--ink-light);
+  background: var(--surface);
+  border: 1px solid var(--line-bright);
   border-radius: var(--r-md);
   font-size: var(--fs-sm);
   font-weight: 500;
@@ -246,7 +249,7 @@
 
 .apply__option:hover {
   border-color: var(--ink-soft);
-  background: var(--paper-warm);
+  background: var(--surface-sunken);
 }
 
 .apply__option.is-selected {
@@ -268,8 +271,8 @@
 
 .apply__notice {
   padding: var(--sp-4);
-  background: var(--paper-warm);
-  border: 2px dashed var(--ink-light);
+  background: var(--surface-sunken);
+  border: 1px solid var(--line-bright);
   border-radius: var(--r-md);
   font-size: var(--fs-sm);
   color: var(--text-muted);
@@ -292,7 +295,7 @@
   gap: var(--sp-3);
   flex-wrap: wrap;
   padding-top: var(--sp-4);
-  border-top: 2px dashed var(--paper-deep);
+  border-top: 1px solid var(--paper-deep);
 }
 
 .apply__actions-left {
@@ -318,11 +321,11 @@
 }
 
 .save-indicator.is-saved {
-  color: #2C7050;
+  color: var(--success);
 }
 
 .save-indicator.is-error {
-  color: #A8442F;
+  color: var(--danger);
 }
 
 .apply__step-count {
@@ -356,14 +359,14 @@
 
 .answers__section {
   padding: var(--sp-4) var(--sp-5);
-  background: var(--paper-warm);
-  border: 2px solid var(--paper-deep);
+  background: var(--surface-sunken);
+  border: 1px solid var(--line-color);
   border-radius: var(--r-md);
 }
 
 .answers__section.is-incomplete {
   background: var(--clay-soft);
-  border: 2px dashed var(--clay);
+  border: 1px solid var(--clay);
 }
 
 .answers__head {
@@ -375,7 +378,7 @@
 }
 
 .answers__title {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: 1.45rem;
   line-height: 1.1;
   color: var(--ink);
@@ -388,7 +391,7 @@
   gap: 4px;
   font-size: var(--fs-xs);
   font-weight: 700;
-  color: #9A4A24;
+  color: var(--clay);
 }
 
 .answers__edit {
@@ -401,8 +404,8 @@
   font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--teal-deep);
-  background: var(--card);
-  border: 2px solid var(--teal-line);
+  background: var(--surface);
+  border: 1px solid var(--line-color);
   border-radius: var(--r-full);
   cursor: pointer;
 }
@@ -452,14 +455,14 @@
   flex-direction: column;
   gap: var(--sp-3);
   padding: var(--sp-4) var(--sp-5);
-  background: var(--card);
+  background: var(--surface);
   border: var(--line);
   border-radius: var(--r-md);
   box-shadow: var(--shadow-pencil-sm);
 }
 
 .checklist__title {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: 1.45rem;
   line-height: 1.1;
   color: var(--ink);
@@ -495,13 +498,13 @@
   height: 22px;
   flex-shrink: 0;
   color: #fff;
-  border: 2px dashed var(--ink-light);
+  border: 1px solid var(--line-bright);
   border-radius: 6px;
 }
 
 .checklist__list li.is-done .checklist__mark {
   background: var(--success);
-  border: 2px solid var(--success);
+  border: 1px solid var(--success);
 }
 
 .apply__blocked {

@@ -181,16 +181,40 @@ export default function Landing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <p className="hero__status">
-              Fall semester &middot; Applications open
-            </p>
+            <p className="hero__status">ColorStack @ GSU presents</p>
           </motion.div>
 
-          <RevealText
-            className="hero__title"
-            text="ColorStack Tech League"
-            delay={0.16}
-          />
+          <RevealText className="hero__title" text="Tech League" delay={0.16} />
+
+          {/* The flyer's credit line: CS Club as its mark, progsu as its
+              wordmark, matching how each brand appears on the flyer itself. */}
+          <motion.p
+            className="hero__partners"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.44 }}
+          >
+            <span className="hero__partners-lead">In partnership with</span>
+            <span className="hero__partner">
+              <img
+                src="/partners/csclub.png"
+                alt=""
+                width="34"
+                height="34"
+                loading="lazy"
+                decoding="async"
+              />
+              <strong>CS Club</strong>
+            </span>
+            <span className="hero__partners-amp" aria-hidden="true">
+              &amp;
+            </span>
+            {/* progsu is set as its own wordmark on the flyer — lowercase bold
+                italic — rather than shown as a logo, so it is type here too. */}
+            <span className="hero__partner">
+              <strong className="hero__wordmark-progsu">progsu</strong>
+            </span>
+          </motion.p>
 
           <motion.p
             className="hero__subtitle"
@@ -198,10 +222,10 @@ export default function Landing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.5 }}
           >
-            The Tech League is a semester-long competition at Georgia State
-            where you earn points through five types of challenges. Track your rank
-            on a live leaderboard and wrap up with a mini hackathon.
-            It's built to help you gain job-ready skills naturally, no last-minute cramming needed.
+            A semester-long, team-based competition at Georgia State. Teams of
+            3-4 tackle five milestones, rack up points on a live leaderboard,
+            and finish with a Capstone Hackathon. Built so you gain job-ready
+            skills as you go, with no last-minute cramming.
           </motion.p>
 
           <motion.div
