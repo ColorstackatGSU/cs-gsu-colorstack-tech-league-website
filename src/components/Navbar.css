@@ -43,8 +43,10 @@
 .nav__logo {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
+  /* The logo sets the height of the whole brand link, and at 42px that link
+     was the one tap target on every page that missed 44px. */
+  width: 44px;
+  height: 44px;
   padding: 3px;
   background: var(--surface-raised);
   border: 1px solid var(--line-bright);
@@ -82,18 +84,25 @@
 
 .nav__brand-text strong {
   font-family: var(--font-display);
-  font-size: 1.45rem;
+  /* Trimmed when the display face went from condensed to expanded: at 1.45rem
+     the brand lockup pushed the nav links into the actions and "Log in" broke
+     onto two lines. */
+  font-size: 1.15rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: var(--text);
 }
 
 .nav__brand-text span {
   font-family: var(--font-display);
-  font-size: 0.7rem;
+  /* Was 0.62rem, which renders at 9.92px. That is below the point where
+     letterspaced uppercase stays readable, and it was only that small to fit
+     under the old condensed lockup. The wider "COLORSTACK" line above still
+     sets the brand's width, so this costs nothing. */
+  font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--green);
 }
@@ -109,14 +118,18 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  min-height: 40px;
+  /* 40px was under the 44px touch target the README commits to. This only
+     changes height, so it does not affect whether the row fits. */
+  min-height: 44px;
   font-family: var(--font-display);
-  font-size: var(--fs-base);
+  /* Expanded type sets wide, so the link row needs a smaller size, tighter
+     tracking and less padding to fit the same seven links on one line. */
+  font-size: var(--fs-sm);
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-muted);
-  padding: 0 var(--sp-4);
+  padding: 0 var(--sp-3);
   border-radius: var(--r-sm);
   transition:
     color var(--dur-fast) var(--ease-out),
@@ -166,13 +179,19 @@
   display: inline-flex;
   align-items: center;
   gap: var(--sp-2);
-  min-height: 40px;
+  /* Matches the 44px the buttons beside it now use, and the comment above
+     about sharing their height. */
+  min-height: 44px;
   font-family: var(--font-body);
   font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--text);
   padding: 0 var(--sp-4);
+  /* The signed-in row carries five links plus this chip plus Sign out. The
+     chip is the one piece with slack in it, so it gives ground first rather
+     than pushing the row past the container. */
   max-width: 190px;
+  min-width: 0;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--line-bright);
   border-radius: var(--r-sm);
@@ -223,7 +242,13 @@
   color: var(--green);
 }
 
-@media (min-width: 940px) {
+/* The desktop row used to open at 940px. Under the expanded display face the
+   public set (brand 217px, four links 505px, actions 234px, plus gaps) needs
+   about 990px of container, so between 940px and 1052px the actions ran past
+   the container: at 1024px "Apply now" sat 8px off the right edge of the
+   page. Opening the row at 1080px means it only appears once it genuinely
+   fits, and the burger covers everything below that. */
+@media (min-width: 1080px) {
   .nav__links,
   .nav__actions {
     display: flex;

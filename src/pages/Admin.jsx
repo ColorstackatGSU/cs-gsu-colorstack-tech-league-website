@@ -1089,7 +1089,7 @@ export default function Admin() {
   }
 
   return (
-    <div className="dash admin on-dark" id="main">
+    <div className="dash admin on-dark">
       <div className="container dash__inner">
         <Reveal className="dash__header">
           <div>

@@ -72,8 +72,48 @@
 /* Pausing on hover and on keyboard focus gives a pointer or keyboard user a
    way to stop the motion and read a logo, without adding chrome. */
 .partners__viewport:hover .partners__track,
-.partners__viewport:focus-within .partners__track {
+.partners__viewport:focus-within .partners__track,
+.partners.is-paused .partners__track {
   animation-play-state: paused;
+}
+
+/* The pause control. Sits centred under the strip (`.partners` is already a
+   centred column), quiet until it is wanted — but always present and always
+   reachable, since it is the only mechanism a touch user has to stop the
+   motion. */
+.partners__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+  /* 44px of tap target, of which only the text and icon are painted. */
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--line-color);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.partners__toggle:hover {
+  color: var(--text);
+  border-color: var(--line-bright);
+}
+
+/* Nothing is moving under reduced motion, so a control that stops the motion
+   has nothing to stop. */
+@media (prefers-reduced-motion: reduce) {
+  .partners__toggle {
+    display: none;
+  }
 }
 
 @keyframes marquee {

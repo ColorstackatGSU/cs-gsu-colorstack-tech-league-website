@@ -33,7 +33,7 @@ import './doodles/app-doodles.css';
 function SessionPending() {
   const { status, loadError, refresh } = useAuth();
   return (
-    <div className="session-pending on-dark" id="main" aria-live="polite">
+    <div className="session-pending on-dark" aria-live="polite">
       {status === 'loading' ? (
         <p>Loading your account&hellip;</p>
       ) : (
@@ -109,7 +109,15 @@ export default function App() {
       <AuthProvider>
         <SmoothScroll>
           <ScrollManager />
+          <a className="skip-link" href="#main">
+            Skip to content
+          </a>
           <Navbar />
+          {/* The app's one <main> landmark, and the skip link's target. Pages
+              render their own content inside it and no longer carry an
+              `id="main"` of their own, which used to mean either no landmark
+              at all or two elements answering to the same id. */}
+          <main id="main">
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/scoring" element={<Scoring />} />
@@ -183,6 +191,7 @@ export default function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </main>
         </SmoothScroll>
       </AuthProvider>
     </BrowserRouter>

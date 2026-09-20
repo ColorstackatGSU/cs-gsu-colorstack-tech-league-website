@@ -14,6 +14,31 @@
   border: 0;
 }
 
+/* Skip link. Off-screen until focused, then it drops into the top-left
+   corner as the first thing a keyboard user reaches on any page. It sits
+   above the sticky nav's z-index so the nav cannot cover it. */
+.skip-link {
+  position: fixed;
+  top: var(--sp-3);
+  left: var(--sp-3);
+  z-index: calc(var(--z-toast) + 1);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--green);
+  color: var(--on-green);
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-md);
+  transform: translateY(calc(-100% - var(--sp-5)));
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
 .container {
   width: 100%;
   max-width: var(--container);
@@ -156,6 +181,31 @@
   background: var(--purple);
 }
 
+/* These titles are filenames, and the expanded face pushed the longest one,
+   "how_scoring_works.txt", to 343px. Against the 209px the bar has at 320px
+   the ellipsis was eating more than half the name, so the plate read as
+   "how_scor...". Below the tablet breakpoint the title wraps instead: two
+   lines of filename costs a little bar height and loses nothing. The bar's
+   side padding comes in too, since the dots only need a few pixels. */
+@media (max-width: 599px) {
+  .window__bar {
+    align-items: flex-start;
+    padding-inline: var(--sp-4);
+  }
+
+  .window__title {
+    white-space: normal;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    font-size: var(--fs-base);
+  }
+
+  .window__controls {
+    /* Keeps the tally on the first line of a now-wrapping title. */
+    margin-top: 5px;
+  }
+}
+
 .window__body {
   padding: var(--sp-4) var(--sp-5) var(--sp-5);
   flex-grow: 1;
@@ -186,6 +236,9 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
+  /* A button may never be wider than what contains it. Without this, `nowrap`
+     lets a long label win the argument and take the page sideways with it. */
+  max-width: 100%;
   background: var(--surface-raised);
   color: var(--text);
   border: 1px solid var(--line-bright);
@@ -199,7 +252,10 @@
 }
 
 .btn--sm {
-  min-height: 40px;
+  /* 40px was under the 44px touch target the README commits to, and this is
+     the size the nav's "Apply now" uses, which is the primary action on a
+     phone-width header. */
+  min-height: 44px;
   padding: 0 var(--sp-4);
   font-size: var(--fs-sm);
 }
@@ -209,10 +265,33 @@
   padding: 0 var(--sp-5);
 }
 
+/* The large button carries the longest labels on the site ("Apply to the
+   League", "Continue with ColorStack at GSU"). In the expanded display face
+   those ran wider than a 360px phone, and `.btn` is `nowrap`, so instead of
+   wrapping they pushed the whole document sideways. Scaling the label and the
+   side padding with the viewport keeps them inside a small screen without
+   making the control look smaller on a desktop, where both clamps sit at their
+   maximum. */
 .btn--lg {
   min-height: 56px;
-  padding: 0 var(--sp-6);
-  font-size: var(--fs-xl);
+  padding: 0 clamp(var(--sp-3), 3vw, var(--sp-6));
+  font-size: clamp(var(--fs-base), 3.4vw, var(--fs-xl));
+}
+
+/* The expanded display face made "Start your application" 328px wide, which
+   is wider than the CTA panel's content box on a 320px phone, so `.btn`'s
+   nowrap hung the button off both edges of the card. Long labels are exactly
+   what gets --lg, so below the tablet breakpoint let just this size wrap.
+   Height is released and vertical padding restored so the tap target
+   survives, the same treatment .auth__colorstack already needed. */
+@media (max-width: 599px) {
+  .btn--lg {
+    white-space: normal;
+    text-wrap: balance;
+    height: auto;
+    line-height: 1.25;
+    padding-block: var(--sp-3);
+  }
 }
 
 .btn:hover:not(:disabled) {
@@ -430,8 +509,10 @@
   transform: translateY(-50%);
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
+  /* 42px missed the 44px touch target, and this control sits inside the
+     input so it is easy to mis-tap onto the field behind it. */
+  width: 44px;
+  height: 44px;
   border-radius: var(--r-sm);
   color: var(--text-muted);
   transition: background var(--dur-fast), color var(--dur-fast);

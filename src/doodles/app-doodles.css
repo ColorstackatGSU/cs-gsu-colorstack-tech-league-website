@@ -16,12 +16,38 @@
   opacity: 0.55;
 }
 
+/* Same correction as the landing layer: --e is measured from the centre
+   line, but a gutter piece has to clear the container's edge. Pieces
+   authored with an --e below --container/2 were sitting on the cards.
+
+   The max-width is the other half of that, also mirrored from the landing
+   layer. The offset fixes a piece's inner edge, but nothing stopped it
+   running outward past the screen, which is how "[ Welcome back ]" ended up
+   147px off the right edge at 1280. */
 .tla-d.l {
-  right: calc(50% + var(--e));
+  right: max(
+    calc(50% + var(--e)),
+    calc(50% + var(--container) / 2 + var(--sp-4))
+  );
+  max-width: calc(
+    100% - max(
+        calc(50% + var(--e)),
+        calc(50% + var(--container) / 2 + var(--sp-4))
+      ) - var(--sp-2)
+  );
 }
 
 .tla-d.r {
-  left: calc(50% + var(--e));
+  left: max(
+    calc(50% + var(--e)),
+    calc(50% + var(--container) / 2 + var(--sp-4))
+  );
+  max-width: calc(
+    100% - max(
+        calc(50% + var(--e)),
+        calc(50% + var(--container) / 2 + var(--sp-4))
+      ) - var(--sp-2)
+  );
 }
 
 /* Each tier waits for enough gutter to sit in. */
@@ -50,17 +76,24 @@
   overflow: visible;
 }
 
+/* Sized down to match .tl-chip on the landing layer, which got this
+   treatment when the display face became expanded. This one was missed: at
+   0.82rem with 0.18em tracking "[ Welcome back ]" measured 191px against a
+   gutter that is only 124px at 1440, so the chip ran off the right edge of
+   the screen. */
 .tla-chip {
   font-family: var(--font-display);
-  font-size: 0.82rem;
+  font-size: 0.66rem;
   font-weight: 600;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  white-space: nowrap;
   color: var(--c);
   display: flex;
   align-items: center;
   gap: 5px;
+  /* Was nowrap. With the gutter cap above, a chip too wide for its gutter
+     wraps onto a second line rather than running off the screen. */
+  flex-wrap: wrap;
 }
 
 .tla-chip-b {

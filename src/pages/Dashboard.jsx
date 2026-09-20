@@ -262,7 +262,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="dash on-dark" id="main">
+    <div className="dash on-dark">
       <div className="dash__orb" aria-hidden="true" />
 
       <div className="container dash__inner">

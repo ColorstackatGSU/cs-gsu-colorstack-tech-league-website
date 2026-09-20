@@ -328,8 +328,14 @@
   margin-top: var(--sp-6);
 }
 
+/* The table below carries a 460px min-width so its columns stay readable, and
+   this wrapper is what lets it scroll instead of stretching the page. That only
+   works with min-width: 0. As a flex/grid child its default min-width is auto,
+   which refuses to shrink below the table, so on a narrow phone the wrapper
+   grew to 460px and took the whole document sideways with it. */
 .weights__scroll {
   overflow-x: auto;
+  min-width: 0;
 }
 
 .weights__table {
@@ -441,4 +447,8 @@
   gap: var(--sp-3);
   justify-content: center;
   flex-wrap: wrap;
+  /* Same reason as .cta__actions: the row shrink-wraps, so .btn's
+     max-width: 100% had nothing finite to resolve against and
+     "Apply to the League" pushed it 25px past the panel at 320px. */
+  max-width: 100%;
 }

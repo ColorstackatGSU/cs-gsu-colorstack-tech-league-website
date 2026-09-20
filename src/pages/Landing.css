@@ -218,12 +218,14 @@
     drop-shadow(0 0 3px rgba(120, 165, 255, 0.55));
 }
 
-/* progsu's own wordmark: lowercase, bold, italic, set in the rounded
-   geometric body face rather than the condensed display one, which is how
-   it reads on the flyer. `text-transform: none` overrides the uppercase
-   the surrounding credit line applies. */
+/* progsu's own wordmark: lowercase, bold, italic, set in Helvetica Neue,
+   which is the face the org uses for it. `text-transform: none` overrides
+   the uppercase the surrounding credit line applies.
+
+   Helvetica sets on a smaller x-height than the condensed display face
+   around it, so 1.15em holds the two at the same optical size. */
 .hero__wordmark-progsu {
-  font-family: var(--font-body);
+  font-family: var(--font-progsu);
   font-style: italic;
   font-weight: 700;
   font-size: 1.15em;
@@ -254,57 +256,156 @@
   margin-top: var(--sp-3);
 }
 
+/* ---------- the flyer's starbursts ----------
+
+   Three bursts, in the flyer's order and colours. On the flyer these are
+   filled shapes with dark type on them; here they sit on the pitch, so the
+   burst is a tinted plate with a lit edge and the type stays light.
+
+   The star is a clip-path on a decorative layer *behind* the text, never on
+   the text's own box: clipping the content box would crop a descender or a
+   digit at some viewport width, and the numbers are the whole point.
+
+   Both layers are pseudo-elements rather than a spare span, because a <dl>
+   group may only contain <dt> and <dd> — a decorative span inside one is
+   invalid markup that some screen readers do report. */
+/* Three across at every width, as on the flyer. Stacking them on a phone
+   made the hero three viewports tall before the first section. */
 .hero__stats {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--sp-3);
-  margin-top: var(--sp-6);
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
+  margin-top: var(--sp-5);
   width: 100%;
+  justify-items: center;
 }
 
 .hero__stat {
+  position: relative;
+  /* Keeps both negative-z layers inside this box. Without it they would
+     search for a stacking context up the tree and could land behind an
+     ancestor's background, which is how a burst silently disappears. */
+  isolation: isolate;
+  /* The number and label are sized in cqw so they scale with the burst
+     itself rather than with the viewport. Sized against vw instead, a phone
+     put 42px digits inside a 110px shape. */
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: 2px;
   align-items: center;
-  padding: var(--sp-4) var(--sp-2);
-  background: linear-gradient(180deg, var(--surface-raised), var(--surface));
-  border: 1px solid var(--line-color);
-  border-radius: var(--r-sm);
-  transition: border-color var(--dur-mid) var(--ease-out);
+  justify-content: center;
+  /* A grid item defaults to min-width: auto, so the label's intrinsic width
+     was setting a floor under each 1fr track and the three-up row grew wider
+     than the hero. At 320px that pushed the third burst 20px off the page. */
+  min-width: 0;
+  /* Square, so the burst behind it is radially even. */
+  width: 100%;
+  max-width: 178px;
+  aspect-ratio: 1;
+  padding: var(--sp-3);
+  text-align: center;
 }
 
-.hero__stat:hover {
-  border-color: var(--green);
+.hero__stat::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  clip-path: polygon(
+    50% 0%, 57.71% 11.26%, 69.13% 3.81%, 71.95% 17.16%, 85.36% 14.64%,
+    82.84% 28.05%, 96.19% 30.87%, 88.74% 42.29%, 100% 50%, 88.74% 57.71%,
+    96.19% 69.13%, 82.84% 71.95%, 85.36% 85.36%, 71.95% 82.84%, 69.13% 96.19%,
+    57.71% 88.74%, 50% 100%, 42.29% 88.74%, 30.87% 96.19%, 28.05% 82.84%,
+    14.64% 85.36%, 17.16% 71.95%, 3.81% 69.13%, 11.26% 57.71%, 0% 50%,
+    11.26% 42.29%, 3.81% 30.87%, 17.16% 28.05%, 14.64% 14.64%, 28.05% 17.16%,
+    30.87% 3.81%, 42.29% 11.26%
+  );
+  background: var(--burst-fill);
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+
+/* A second burst, a touch larger and dimmer, reads as the neon halo the
+   flyer's shapes throw onto the artwork. `filter: blur` on a clipped shape
+   is cheap here because it never animates. */
+.hero__stat::after {
+  content: '';
+  position: absolute;
+  inset: -12%;
+  z-index: -2;
+  background: var(--burst-glow);
+  filter: blur(22px);
+  pointer-events: none;
+}
+
+.hero__stat--green {
+  --burst-fill: linear-gradient(160deg, rgba(61, 240, 127, 0.28), rgba(61, 240, 127, 0.08));
+  --burst-glow: radial-gradient(circle, var(--green-glow), transparent 68%);
+  --burst-ink: var(--green);
+}
+
+.hero__stat--blue {
+  --burst-fill: linear-gradient(160deg, rgba(77, 124, 254, 0.3), rgba(77, 124, 254, 0.08));
+  --burst-glow: radial-gradient(circle, var(--blue-glow), transparent 68%);
+  --burst-ink: var(--blue-bright);
+}
+
+.hero__stat--purple {
+  --burst-fill: linear-gradient(160deg, rgba(169, 112, 255, 0.3), rgba(169, 112, 255, 0.08));
+  --burst-glow: radial-gradient(circle, var(--purple-glow), transparent 68%);
+  --burst-ink: var(--purple-bright);
+}
+
+/* The burst turns slightly under the cursor. Only the shape moves, so the
+   number stays fixed and legible. */
+.hero__stat:hover::before {
+  transform: rotate(11.25deg) scale(1.04);
 }
 
 /* The flyer's burst numbers: oversized, neon, tabular so the row does not
    reflow as digits change. */
 .hero__stat-value {
   font-family: var(--font-display);
-  font-size: 2.6rem;
+  font-size: min(31cqw, 3.1rem);
   font-weight: 700;
   line-height: 1;
-  color: var(--green);
+  color: var(--burst-ink);
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 24px var(--green-glow);
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.6);
 }
 
 .hero__stat-label {
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  /* Floored at 0.7rem, which is 11.2px. The old 0.66rem floor rendered at
+     9.92px, below the point where letterspaced uppercase stays readable. */
+  font-size: clamp(0.7rem, 8cqw, 0.78rem);
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-subtle);
+  color: var(--text);
   margin: 0;
+  /* Wide enough that "Points on the board" breaks over two lines rather than
+     three, which is what kept the burst from looking evenly filled. A ch is
+     much wider in the expanded face than it was in the condensed one, so a
+     bare 14ch overran the burst at every width, by 21px at 178px. Capping at
+     the content box keeps the two-line break where the burst is wide enough
+     and simply wraps further where it is not. */
+  max-width: min(14ch, 100%);
   text-align: center;
-  line-height: 1.3;
+  line-height: 1.25;
 }
 
-@media (min-width: 700px) {
+@media (min-width: 640px) {
   .hero__stats {
-    grid-template-columns: repeat(4, 1fr);
+    gap: var(--sp-4);
+  }
+}
+
+/* The rotation is decoration, and a burst spinning under the pointer is
+   exactly what vestibular sensitivity flags. */
+@media (prefers-reduced-motion: reduce) {
+  .hero__stat:hover::before {
+    transform: none;
   }
 }
 
@@ -537,6 +638,167 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------- desktop: the pinned challenge deck ----------
+
+   The section holds still while this track scrolls past behind it, and scroll
+   position walks the deck one card at a time.
+
+   The track height sets how much scrolling one card costs. 360vh leaves about
+   260vh of travel once the sticky pane has taken its own screen out, and after
+   the lead-in and lead-out padding that is roughly 55vh of scroll per card
+   change: half a screen, so a card has time to land and be read but the page
+   never feels stuck. Shorter than about 260vh and the whole sequence is over
+   inside one flick of the wheel; much longer and four dead screens of scroll
+   read as the page having frozen.
+
+   Only the component's own elements are styled here. ChallengeDeck is not
+   rendered at all under prefers-reduced-motion or below 768px, so there is no
+   pinning to undo in a media query: the plain grid above is simply what
+   renders instead. */
+.challenge-deck__track {
+  min-height: 360vh;
+}
+
+.challenge-deck__pin {
+  position: sticky;
+  top: var(--nav-h);
+  height: calc(100vh - var(--nav-h));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: var(--sp-6);
+  /* The cards above and below the active one are a full card height clear of
+     it, which puts them outside this pane. Clipping keeps them from riding up
+     under the nav or down over the timeline. They are only clipped, never
+     hidden, so they stay in the accessibility tree. */
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .challenge-deck__pin {
+    grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--sp-8);
+  }
+}
+
+/* The progress rail. Its job is to say "five of these, you are on the second",
+   so the visitor knows the pin is a sequence with an end rather than a stall. */
+.challenge-deck__rail {
+  /* Below 1024px the rail shares a column with the reel, and the ghost card
+     above the active one reaches up into it. The rail has to win that overlap
+     or the step you are on is read through a card. */
+  position: relative;
+  z-index: var(--z-raised);
+  display: flex;
+  flex-direction: row;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 1024px) {
+  .challenge-deck__rail {
+    flex-direction: column;
+    gap: var(--sp-1);
+  }
+}
+
+.challenge-deck__step {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-left: 2px solid var(--line-color);
+  color: var(--text-subtle);
+  transition:
+    color var(--dur-mid) var(--ease-out),
+    border-color var(--dur-mid) var(--ease-out),
+    opacity var(--dur-mid) var(--ease-out);
+  opacity: 0.55;
+}
+
+.challenge-deck__step.is-done {
+  border-left-color: var(--green-deep);
+  opacity: 0.75;
+}
+
+.challenge-deck__step.is-active {
+  border-left-color: var(--green);
+  color: var(--text);
+  opacity: 1;
+}
+
+.challenge-deck__step-num {
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--green);
+}
+
+.challenge-deck__step-label {
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Below 1024px the rail sits above the cards and there is not room for five
+   names across, so it shrinks to numbered ticks. */
+@media (max-width: 1023px) {
+  .challenge-deck__rail {
+    justify-content: center;
+  }
+
+  .challenge-deck__step {
+    border-left: none;
+    border-bottom: 2px solid var(--line-color);
+  }
+
+  .challenge-deck__step.is-done {
+    border-bottom-color: var(--green-deep);
+  }
+
+  .challenge-deck__step.is-active {
+    border-bottom-color: var(--green);
+  }
+
+  .challenge-deck__step-label {
+    display: none;
+  }
+
+  .challenge-deck__step.is-active .challenge-deck__step-label {
+    display: inline;
+  }
+}
+
+/* Every card occupies the same grid cell, so the stage is as tall as the
+   tallest card, every card is the same height, and the reel stays in normal
+   flow. Absolute positioning would collapse the stage to nothing and leave the
+   cards floating over the rail. */
+.challenge-deck__stage {
+  display: grid;
+  width: 100%;
+  max-width: 660px;
+  margin-inline: auto;
+}
+
+.challenge-deck__card {
+  grid-area: 1 / 1;
+  will-change: transform, opacity;
+  /* Cards behind the front one must not catch the mouse: without this the
+     hover lift of a card stacked underneath fires through the one on top.
+     Pointer events only. The cards stay in the accessibility tree. */
+  pointer-events: none;
+}
+
+.challenge-deck__card.is-active {
+  pointer-events: auto;
+}
+
 /* ============================================================
    Timeline
    ============================================================ */
@@ -767,6 +1029,10 @@
   justify-content: center;
   gap: var(--sp-3);
   margin-top: var(--sp-2);
+  /* This row shrink-wraps its buttons, and .btn's max-width: 100% resolves
+     against it, so without a cap of its own the row grew to fit a nowrap
+     label and took the buttons past the panel edge with it. */
+  max-width: 100%;
 }
 
 /* ============================================================

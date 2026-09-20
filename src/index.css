@@ -1,8 +1,9 @@
-/* Barlow is requested with its true italic (`ital,wght@1,700`) as well as the
-   upright weights. The progsu wordmark on the landing hero is set in bold
-   italic; without the real face the browser would synthesise a slanted
-   upright, which looks visibly wrong on a piece of branding. */
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,700&display=swap');
+/* The Google Fonts request lives in index.html rather than here: an @import
+   cannot start until this stylesheet has been fetched and parsed, which puts
+   the fonts one avoidable round trip behind the page. Barlow is requested
+   with its true italic (`ital,wght@1,700`) as well as the upright weights,
+   because several call sites set it in bold italic and the browser would
+   otherwise synthesise a slanted upright. */
 
 /* ============================================================
    ColorStack Tech League @ GSU, Stadium Design Tokens
@@ -116,12 +117,24 @@
   --line-dash: 1px dashed var(--line-bright);
 
   /* --- Type ---
-     Barlow Condensed for display: the heavy condensed athletic
-     face the flyer is set in. Barlow for body, same skeleton so
-     the two never look like separate systems. */
-  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+     Archivo for display, set expanded. The flyer's wordmark is
+     wide and squarish; a condensed face was wrong on the width
+     axis, which is what made the type feel off against the
+     printed piece. See --display-width below.
+
+     Barlow for body. Both are grotesques, so the two never look
+     like separate systems. */
+  --font-display: 'Archivo', 'Arial', sans-serif;
   --font-body: 'Barlow', system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace;
+
+  /* progsu sets its wordmark in Helvetica Neue, so it gets its own token
+     rather than borrowing the body face. Helvetica Neue only ships on Apple
+     platforms; Helvetica then Arial are the closest metric matches
+     elsewhere, and both carry a real bold italic, which is the cut the
+     wordmark uses. No web font is loaded for it: one partner's wordmark is
+     not worth a blocking font request. */
+  --font-progsu: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 
   /* --font-hand was the sketch build's heading font, used in 47
      places. Repointing it at the display face converts them all. */
@@ -135,14 +148,17 @@
   --fs-2xl: 1.5rem;
   --fs-3xl: 1.9rem;
 
-  /* Display sizes. Condensed type sets narrow, so these run
-     larger than a normal scale would. Named --fs-hand-* to match
-     the call sites already in the stylesheets. */
-  --fs-hand-sm: 1.35rem;
-  --fs-hand-md: 1.85rem;
-  --fs-hand-lg: clamp(2rem, 3.6vw, 2.9rem);
-  --fs-hand-xl: clamp(2.4rem, 6vw, 4rem);
-  --fs-hand-hero: clamp(3.25rem, 13vw, 10rem);
+  /* Display sizes. These were tuned for a condensed face and had to come down
+     by about a third when the display font became expanded: at the old values
+     the hero wordmark wrapped onto two lines and the nav overflowed its bar.
+     Expanded type buys emphasis from width, so it needs less height to carry
+     the same weight. Named --fs-hand-* to match the call sites already in the
+     stylesheets. */
+  --fs-hand-sm: 1.15rem;
+  --fs-hand-md: 1.5rem;
+  --fs-hand-lg: clamp(1.7rem, 2.8vw, 2.3rem);
+  --fs-hand-xl: clamp(2rem, 4.4vw, 3rem);
+  --fs-hand-hero: clamp(2.3rem, 8.4vw, 6.4rem);
 
   /* --- Spacing (8pt rhythm) --- */
   --sp-1: 4px;
@@ -205,6 +221,17 @@
   --z-toast: 300;
 
   color-scheme: dark;
+
+  /* The display face's width, applied once here rather than at each of the 65
+     places that ask for --font-display. `font-stretch` inherits, so setting it
+     on the root reaches all of them.
+
+     This is safe for body copy because it selects a face, it never synthesises
+     one: Barlow ships a single width, so there is nothing else for the browser
+     to pick and body text is unaffected. If the body face is ever swapped for
+     something with its own width axis, that stops being true and this needs to
+     move onto the display elements instead. */
+  font-stretch: 125%;
 }
 
 /* ============================================================
@@ -326,6 +353,16 @@ h4 {
 
 p {
   text-wrap: pretty;
+}
+
+/* The nav is sticky and 76px tall, so anything jumped to by id — an anchor
+   link, a focused control, an error summary — otherwise lands underneath it.
+   Reserving the header's height on every targetable element is what keeps a
+   keyboard user's focus visible, which WCAG 2.2 asks for under 2.4.11
+   (Focus Not Obscured). */
+:target,
+[id] {
+  scroll-margin-top: calc(var(--nav-h) + var(--sp-4));
 }
 
 .wrap-anywhere {

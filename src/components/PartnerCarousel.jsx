@@ -1,4 +1,5 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
+import { Pause, Play } from '@phosphor-icons/react';
 import './PartnerCarousel.css';
 
 /**
@@ -18,7 +19,13 @@ import './PartnerCarousel.css';
  *
  * Either way the whole logo is always visible, nothing is ever cropped.
  *
- * The marquee scrolls continuously and never pauses.
+ * The marquee scrolls continuously, and carries a pause button.
+ *
+ * The button is not decoration: WCAG 2.2.2 asks for a way to stop anything
+ * that moves on its own for more than five seconds. Hovering already pauses
+ * it, but hover is not available on a touch screen and nothing inside the
+ * strip is focusable, so `:focus-within` never fires either. The button is
+ * the only mechanism that works for every visitor.
  */
 const PARTNERS = [
   // `bleed` = the logo file has its own solid background baked in, so it
@@ -30,6 +37,7 @@ const PARTNERS = [
 
 export default function PartnerCarousel({ partners = PARTNERS }) {
   const trackRef = useRef(null);
+  const [paused, setPaused] = useState(false);
 
   // The list is repeated COPIES times and the track slides left by exactly one
   // copy's width, so copy N lands where copy N-1 started and the restart is
@@ -55,7 +63,7 @@ export default function PartnerCarousel({ partners = PARTNERS }) {
   }, [partners.length]);
 
   return (
-    <div className="partners">
+    <div className={`partners ${paused ? 'is-paused' : ''}`}>
       <div className="partners__viewport">
         <ul className="partners__track" ref={trackRef}>
           {loop.map((partner, i) => {
@@ -94,6 +102,20 @@ export default function PartnerCarousel({ partners = PARTNERS }) {
         </ul>
       </div>
 
+      <button
+        type="button"
+        className="partners__toggle"
+        onClick={() => setPaused((p) => !p)}
+        aria-pressed={paused}
+      >
+        {paused ? (
+          <Play size={14} weight="fill" aria-hidden="true" />
+        ) : (
+          <Pause size={14} weight="fill" aria-hidden="true" />
+        )}
+        <span>{paused ? 'Play' : 'Pause'}</span>
+        <span className="sr-only"> partner logos</span>
+      </button>
     </div>
   );
 }

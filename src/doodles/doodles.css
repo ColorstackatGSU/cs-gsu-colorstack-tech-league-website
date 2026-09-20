@@ -16,12 +16,43 @@
   opacity: 0.55;
 }
 
+/* --e is an offset from the page's centre line, but what a gutter piece
+   actually has to clear is the *container's* edge, which sits at
+   --container/2 from that same centre. Several pieces carry an --e smaller
+   than that, so they were landing on top of the cards rather than beside
+   them. Taking the larger of the two keeps each piece where it was authored
+   when that is already outside the column, and pushes the rest just clear of
+   it, with --sp-4 of air so nothing touches a card edge. */
+/* The offset above fixes the piece's inner edge. What was missing is a limit
+   on how far it may then run outward: a gutter piece is only as wide as the
+   gap between that inner edge and the screen, which is about 124px at 1440.
+   The expanded face took the longest chip to 136px, so it hung off the left
+   edge of the screen. Capping each piece at the gutter it actually sits in
+   lets the chip wrap instead. */
 .tl-d.l {
-  right: calc(50% + var(--e));
+  right: max(
+    calc(50% + var(--e)),
+    calc(50% + var(--container) / 2 + var(--sp-4))
+  );
+  max-width: calc(
+    100% - max(
+        calc(50% + var(--e)),
+        calc(50% + var(--container) / 2 + var(--sp-4))
+      ) - var(--sp-2)
+  );
 }
 
 .tl-d.r {
-  left: calc(50% + var(--e));
+  left: max(
+    calc(50% + var(--e)),
+    calc(50% + var(--container) / 2 + var(--sp-4))
+  );
+  max-width: calc(
+    100% - max(
+        calc(50% + var(--e)),
+        calc(50% + var(--container) / 2 + var(--sp-4))
+      ) - var(--sp-2)
+  );
 }
 
 /* Gutter furniture only appears once there is real margin to put it in,
@@ -46,18 +77,25 @@
   overflow: visible;
 }
 
-/* A bracketed scoreboard chip. */
+/* A bracketed scoreboard chip.
+
+   Sized down when the display face became expanded. The gutter these sit in is
+   only about 120px at 1440, and at the old size the wider face pushed the
+   longest chip ("[ Fall season ]") off the left edge of the screen. */
 .tl-chip {
   font-family: var(--font-display);
-  font-size: 0.82rem;
+  font-size: 0.66rem;
   font-weight: 600;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  white-space: nowrap;
   color: var(--c);
   display: flex;
   align-items: center;
   gap: 5px;
+  /* Was nowrap, which is what turned a chip too wide for its gutter into a
+     chip half off the screen. With the gutter cap on .tl-d it can give way
+     onto a second line instead. */
+  flex-wrap: wrap;
 }
 
 .tl-chip-b {

@@ -98,7 +98,8 @@
   align-items: center;
   gap: var(--sp-2);
   align-self: flex-start;
-  min-height: 42px;
+  /* 42px missed the 44px touch target the README commits to. */
+  min-height: 44px;
   padding: var(--sp-2) var(--sp-4);
   font-family: var(--font-body);
   font-size: var(--fs-sm);
@@ -331,6 +332,11 @@
   text-decoration: underline;
   text-decoration-style: wavy;
   text-underline-offset: 4px;
+  /* On /verify, /reset-password and /confirm-email this link is the only
+     thing in its paragraph and the only way forward, and its line box is
+     17px tall. Vertical padding grows the hit area to 45px without moving
+     the surrounding text, which inline-flex would do. */
+  padding-block: 14px;
 }
 
 .auth__switch a:hover {
@@ -400,12 +406,18 @@
   text-decoration: underline;
   text-decoration-style: wavy;
   text-underline-offset: 4px;
+  /* Same 17px line box as .auth__switch a, and "Forgot your password?" sits
+     alone on its row, so it is a standalone target rather than a link inside
+     a sentence. Padding grows the hit area without shifting the form. */
+  padding-block: 14px;
 }
 
 .auth__link-button {
   background: none;
   border: 0;
-  padding: 0;
+  /* Only the inline padding is reset. A blanket `padding: 0` here would
+     undo the padding-block above that carries this control to 44px. */
+  padding-inline: 0;
   font: inherit;
   cursor: pointer;
 }
@@ -449,9 +461,27 @@
   border-top: 1px solid var(--paper-deep);
 }
 
+/* "Continue with ColorStack at GSU" is the longest label on the site, 31
+   characters of uppercase display type next to a logo, inside a card whose
+   width the viewport decides. `.btn` sets `nowrap`, so on a phone it did not
+   wrap, it clipped.
+
+   Shrinking the type was not enough on its own: at 390px the card is narrow
+   enough that no size that still reads as a primary control fits the label on
+   one line. So this one button is allowed to wrap, with its height released
+   and vertical padding restored to keep the tap target. */
 .auth__colorstack {
   width: 100%;
   justify-content: center;
+  font-size: var(--fs-base);
+  letter-spacing: 0.02em;
+  white-space: normal;
+  text-wrap: balance;
+  line-height: 1.25;
+  height: auto;
+  min-height: 56px;
+  padding-block: var(--sp-3);
+  padding-inline: var(--sp-4);
 }
 
 .auth__colorstack img {
