@@ -4,14 +4,14 @@
   align-items: center;
 }
 
-/* A strip of paper the logos ride along */
+/* The strip the logos ride along */
 .partners__viewport {
   position: relative;
   width: 100%;
   overflow: hidden;
   padding: var(--sp-5) 0;
-  background: var(--paper-warm);
-  border: 2px dashed var(--ink-light);
+  background: var(--surface-sunken);
+  border: 1px solid var(--line-bright);
   border-radius: var(--r-lg);
 }
 
@@ -28,12 +28,12 @@
 
 .partners__viewport::before {
   left: 0;
-  background: linear-gradient(to right, var(--paper-warm), transparent);
+  background: linear-gradient(to right, var(--surface-sunken), transparent);
 }
 
 .partners__viewport::after {
   right: 0;
-  background: linear-gradient(to left, var(--paper-warm), transparent);
+  background: linear-gradient(to left, var(--surface-sunken), transparent);
 }
 
 /* The track holds two identical copies of the partner list and slides left by
@@ -56,12 +56,63 @@
   animation: marquee var(--marquee-duration, 36s) linear infinite;
 }
 
-/* The global reduced-motion reset collapses every animation to one iteration,
-   which would leave the track parked mid-loop. This marquee is meant to run
-   continuously, so it opts back out. */
+/* Reduced motion stops the marquee rather than forcing it to keep running.
+   The global reset alone would collapse the animation to a single iteration
+   and park the track mid-loop, cutting the first logo in half — which is why
+   this used to opt back out. Removing the animation entirely instead returns
+   the track to translateX(0), where the first copy is already correctly
+   positioned, so every logo stays whole and nothing moves. */
 @media (prefers-reduced-motion: reduce) {
   .partners__track {
-    animation: marquee var(--marquee-duration, 36s) linear infinite !important;
+    animation: none !important;
+    transform: none;
+  }
+}
+
+/* Pausing on hover and on keyboard focus gives a pointer or keyboard user a
+   way to stop the motion and read a logo, without adding chrome. */
+.partners__viewport:hover .partners__track,
+.partners__viewport:focus-within .partners__track,
+.partners.is-paused .partners__track {
+  animation-play-state: paused;
+}
+
+/* The pause control. Sits centred under the strip (`.partners` is already a
+   centred column), quiet until it is wanted — but always present and always
+   reachable, since it is the only mechanism a touch user has to stop the
+   motion. */
+.partners__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+  /* 44px of tap target, of which only the text and icon are painted. */
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--line-color);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.partners__toggle:hover {
+  color: var(--text);
+  border-color: var(--line-bright);
+}
+
+/* Nothing is moving under reduced motion, so a control that stops the motion
+   has nothing to stop. */
+@media (prefers-reduced-motion: reduce) {
+  .partners__toggle {
+    display: none;
   }
 }
 
@@ -102,22 +153,21 @@
   width: 150px;
   height: 150px;
   padding: var(--sp-4);
-  background: var(--card);
-  border: var(--line);
-  border-radius: var(--r-wobble);
-  box-shadow: var(--shadow-pencil-sm);
+  /* Partner logos are drawn for light backgrounds and mostly ship as dark
+     marks on transparency, so the tile stays light even on the dark page.
+     Recolouring someone else's logo is not ours to do. */
+  background: #f4f6fb;
+  border: 1px solid var(--line-bright);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
   transition:
     transform var(--dur-fast) var(--ease-out),
     box-shadow var(--dur-fast) var(--ease-out);
 }
 
-.partner:nth-child(even) .partner__tile {
-  border-radius: var(--r-wobble-alt);
-}
-
 .partner__tile:hover {
-  transform: translate(-2px, -2px) rotate(-1.5deg);
-  box-shadow: var(--shadow-pencil);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg), var(--glow-green);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -152,10 +202,11 @@
 
 /* Text tile, used until a logo file exists */
 .partner__name {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--teal-deep);
+  text-transform: uppercase;
+  color: #14b45c;
   text-align: center;
   line-height: 1.15;
   text-wrap: balance;

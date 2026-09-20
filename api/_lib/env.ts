@@ -29,6 +29,12 @@ const schema = z.object({
   COLORSTACK_CLIENT_SECRET: z.string().optional(),
   COLORSTACK_REDIRECT_URI: z.url().optional(),
 
+  // Shared secret the chapter's admin portal presents to call /api/service/*. Optional:
+  // unset switches those routes off entirely rather than leaving them reachable with a
+  // guessable or empty credential. Nothing in the browser ever sends this, which is why
+  // it is not VITE_-prefixed and why the service routes sit outside the member session.
+  ADMIN_PORTAL_TOKEN: z.string().min(32, 'ADMIN_PORTAL_TOKEN must be at least 32 characters.').optional(),
+
   // Both set turns on the Gmail API transport. Neither set logs mail instead, which is
   // the local default and is refused in production (see mailer.ts).
   GMAIL_SEND_AS: z.string().optional(),

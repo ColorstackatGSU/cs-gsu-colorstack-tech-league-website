@@ -1,10 +1,14 @@
 /**
  * Fall 2026 season definition + scoring math.
  *
- * This is the single source of truth for the scoring system: the five graded
- * events, their rubrics, and their weights. Event names match the
- * milestones on the landing page exactly, so the site uses one vocabulary. The Scoring page renders it and
- * the Leaderboard computes against it, so a rule change happens here once.
+ * The five graded events, their rubrics, and their weights. The Scoring page
+ * renders this and the Leaderboard computes against it.
+ *
+ * It is not the only copy. The landing page hardcodes the same five events
+ * again in its own CHALLENGES and PHASES arrays, with the same names, dates,
+ * weights, blurbs and rubrics, and `supabase/migrations` seeds the `events`
+ * table with the same ids and weights a third time. A rule change has to be
+ * made in all three, and the event ids here must keep matching the table's.
  *
  * Scoring model
  * -------------

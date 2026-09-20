@@ -12,15 +12,14 @@ export default function AuthCard({ children }) {
     <div className="auth on-dark">
       <div className="auth__orb auth__orb--a" aria-hidden="true" />
       <div className="auth__orb auth__orb--b" aria-hidden="true" />
-      <motion.main
+      <motion.div
         className="auth__single"
-        id="main"
         initial={{ opacity: 0, y: 22 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       >
         <GlassCard className="auth__card">{children}</GlassCard>
-      </motion.main>
+      </motion.div>
     </div>
   );
 }

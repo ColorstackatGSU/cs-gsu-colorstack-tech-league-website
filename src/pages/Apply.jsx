@@ -278,7 +278,7 @@ function Submitted({ profile, schoolEmail }) {
   const j = journey(profile);
 
   return (
-    <div className="apply on-dark" id="main">
+    <div className="apply on-dark">
       <div className="container apply__narrow">
         <div className="apply__header">
           <Link to="/dashboard" className="apply__back">
@@ -480,7 +480,7 @@ function ApplicationForm({ profile, schoolEmail, submitApplication, saveDraft })
   const progress = (step / REVIEW) * 100;
 
   return (
-    <div className="apply on-dark" id="main">
+    <div className="apply on-dark">
       <div className="container apply__narrow" ref={topRef}>
         <div className="apply__header">
           <Link to="/dashboard" className="apply__back">

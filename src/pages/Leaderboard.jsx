@@ -290,7 +290,7 @@ export default function Leaderboard() {
   const anyScores = scoredEvents.length > 0;
 
   return (
-    <main className="leaderboard">
+    <div className="leaderboard">
       <section className="section leaderboard__hero on-dark">
         <div className="container">
           <Reveal>
@@ -428,6 +428,6 @@ export default function Leaderboard() {
           </Reveal>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

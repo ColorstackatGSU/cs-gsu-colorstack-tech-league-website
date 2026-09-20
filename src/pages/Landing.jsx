@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
 import {
   ArrowRight,
-  Code,
-  Rocket,
-  FileText,
+  SoccerBall,
+  PaintBrush,
+  UsersThree,
+  LockKey,
   Trophy,
 } from '@phosphor-icons/react';
 import { GlassCard, Button, Badge, SectionHeading } from '../components/ui';
@@ -17,6 +18,7 @@ import {
   useIsSmallScreen,
 } from '../components/Motion';
 import PartnerCarousel from '../components/PartnerCarousel';
+import ChallengeDeck from '../components/ChallengeDeck';
 import { mountDoodles } from '../doodles/doodles.js';
 import './Landing.css';
 import '../doodles/doodles.css';
@@ -25,7 +27,7 @@ import '../doodles/doodles.css';
 
 const CHALLENGES = [
   {
-    icon: Code,
+    icon: SoccerBall,
     name: 'Kickoff Cup',
     weight: '15%',
     points: '100 pts',
@@ -40,7 +42,7 @@ const CHALLENGES = [
     ],
   },
   {
-    icon: Rocket,
+    icon: PaintBrush,
     name: 'Design Derby',
     weight: '15%',
     points: '100 pts',
@@ -55,7 +57,7 @@ const CHALLENGES = [
     ],
   },
   {
-    icon: FileText,
+    icon: UsersThree,
     name: 'Crew Clash',
     weight: '15%',
     points: '100 pts',
@@ -70,7 +72,7 @@ const CHALLENGES = [
     ],
   },
   {
-    icon: Trophy,
+    icon: LockKey,
     name: 'Hack in the Box',
     weight: '15%',
     points: '100 pts',
@@ -128,6 +130,51 @@ const PHASES = [
   },
 ];
 
+/**
+ * One challenge card. Pulled out of the section so the plain grid and the
+ * pinned deck render exactly the same card, rather than two copies of this
+ * markup drifting apart the first time the rubric wording changes.
+ */
+function ChallengeCard({ challenge }) {
+  return (
+    <GlassCard
+      interactive
+      className={`challenge ${challenge.featured ? 'challenge--featured' : ''}`}
+    >
+      <div className="challenge__head">
+        <span className="challenge__icon" aria-hidden="true">
+          <challenge.icon size={24} weight="duotone" />
+        </span>
+        <Badge tone={challenge.featured ? 'accent' : 'neutral'}>
+          {challenge.weight} of final
+        </Badge>
+      </div>
+
+      <h3 className="challenge__name">{challenge.name}</h3>
+      <p className="challenge__blurb">{challenge.blurb}</p>
+
+      <div className="challenge__scoring">
+        {challenge.scoring.length > 0 ? (
+          <>
+            <p className="challenge__scoring-label">
+              Scored on <span>{challenge.points}</span>
+            </p>
+            <ul className="challenge__list">
+              {challenge.scoring.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p className="challenge__scoring-label">
+            Scoring breakdown still being finalized.
+          </p>
+        )}
+      </div>
+    </GlassCard>
+  );
+}
+
 export default function Landing() {
   const heroRef = useRef(null);
   const reduce = useReducedMotion();
@@ -181,16 +228,40 @@ export default function Landing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <p className="hero__status">
-              Fall semester &middot; Applications open
-            </p>
+            <p className="hero__status">ColorStack @ GSU presents</p>
           </motion.div>
 
-          <RevealText
-            className="hero__title"
-            text="ColorStack Tech League"
-            delay={0.16}
-          />
+          <RevealText className="hero__title" text="Tech League" delay={0.16} />
+
+          {/* The flyer's credit line: CS Club as its mark, progsu as its
+              wordmark, matching how each brand appears on the flyer itself. */}
+          <motion.p
+            className="hero__partners"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.44 }}
+          >
+            <span className="hero__partners-lead">In partnership with</span>
+            <span className="hero__partner">
+              <img
+                src="/partners/csclub.png"
+                alt=""
+                width="34"
+                height="34"
+                loading="lazy"
+                decoding="async"
+              />
+              <strong>CS Club</strong>
+            </span>
+            <span className="hero__partners-amp" aria-hidden="true">
+              &amp;
+            </span>
+            {/* progsu is set as its own wordmark on the flyer — lowercase bold
+                italic — rather than shown as a logo, so it is type here too. */}
+            <span className="hero__partner">
+              <strong className="hero__wordmark-progsu">progsu</strong>
+            </span>
+          </motion.p>
 
           <motion.p
             className="hero__subtitle"
@@ -198,10 +269,10 @@ export default function Landing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.5 }}
           >
-            The Tech League is a semester-long competition at Georgia State
-            where you earn points through five types of challenges. Track your rank
-            on a live leaderboard and wrap up with a mini hackathon.
-            It's built to help you gain job-ready skills naturally, no last-minute cramming needed.
+            A semester-long, team-based competition at Georgia State. Teams of
+            3-4 tackle five milestones, rack up points on a live leaderboard,
+            and finish with a Capstone Hackathon. Built so you gain job-ready
+            skills as you go, with no last-minute cramming.
           </motion.p>
 
           <motion.div
@@ -228,13 +299,15 @@ export default function Landing() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.8 }}
           >
+            {/* The flyer's three starbursts, in its order and its colours.
+                The burst itself is a decorative layer behind the text rather
+                than a clip on it, so nothing can crop a digit. */}
             {[
-              { value: '5', label: 'Challenge types' },
-              { value: '550', label: 'Points on the board' },
-              { value: '3-4', label: 'Members per team' },
-              { value: '1', label: 'Capstone hackathon' },
+              { value: '550', label: 'Points on the board', tone: 'green' },
+              { value: '5', label: 'Challenge types', tone: 'blue' },
+              { value: '3-4', label: 'Members per team', tone: 'purple' },
             ].map((stat) => (
-              <div className="hero__stat" key={stat.label}>
+              <div className={`hero__stat hero__stat--${stat.tone}`} key={stat.label}>
                 <dt className="hero__stat-value">{stat.value}</dt>
                 <dd className="hero__stat-label">{stat.label}</dd>
               </div>
@@ -257,52 +330,35 @@ export default function Landing() {
             subtitle="Each one has its own rubric and point value. Your raw points convert to a percentage of that category's max, then get weighted into a composite score out of 100, so one rough round never tanks your standing."
           />
 
-          <Stagger className="challenges__grid" gap={0.06}>
-            {CHALLENGES.map((challenge) => (
-              <StaggerItem key={challenge.name}>
-                <GlassCard
-                  interactive
-                                    className={`challenge ${challenge.featured ? 'challenge--featured' : ''}`}
-                >
-                  <div className="challenge__head">
-                    <span className="challenge__icon" aria-hidden="true">
-                      <challenge.icon size={24} weight="duotone" />
-                    </span>
-                    <Badge tone={challenge.featured ? 'accent' : 'neutral'}>
-                      {challenge.weight} of final
-                    </Badge>
-                  </div>
-
-                  <h3 className="challenge__name">{challenge.name}</h3>
-                  <p className="challenge__blurb">{challenge.blurb}</p>
-
-                  <div className="challenge__scoring">
-                    {challenge.scoring.length > 0 ? (
-                      <>
-                        <p className="challenge__scoring-label">
-                          Scored on <span>{challenge.points}</span>
-                        </p>
-                        <ul className="challenge__list">
-                          {challenge.scoring.map((line) => (
-                            <li key={line}>{line}</li>
-                          ))}
-                        </ul>
-                      </>
-                    ) : (
-                      <p className="challenge__scoring-label">
-                        Scoring breakdown still being finalized.
-                      </p>
-                    )}
-                  </div>
-                </GlassCard>
-              </StaggerItem>
-            ))}
-          </Stagger>
+          {/* The pinned deck is desktop-only and off under reduced motion, the
+              same `still` rule the hero and the orbs use. On a phone it would
+              also be actively worse: a pinned sequence fights the browser's
+              own scroll, and the swipe rail the grid already becomes below
+              640px is the better gesture there. */}
+          {still ? (
+            <Stagger className="challenges__grid" gap={0.06}>
+              {CHALLENGES.map((challenge) => (
+                <StaggerItem key={challenge.name}>
+                  <ChallengeCard challenge={challenge} />
+                </StaggerItem>
+              ))}
+            </Stagger>
+          ) : (
+            <ChallengeDeck
+              items={CHALLENGES}
+              getKey={(challenge) => challenge.name}
+              getLabel={(challenge) => challenge.name}
+            >
+              {(challenge) => <ChallengeCard challenge={challenge} />}
+            </ChallengeDeck>
+          )}
         </div>
       </section>
 
       {/* ---------------- Timeline ---------------- */}
-      <section className="section on-dark" id="timeline">
+      {/* Tinted band. The page is five dark sections in a row otherwise, and
+          the timeline is the natural midpoint to break it on. */}
+      <section className="section section--tint on-dark" id="timeline">
         <div className="container">
           <SectionHeading
             eyebrow="How it runs"

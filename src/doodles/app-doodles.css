@@ -1,59 +1,147 @@
-/* Tech League app doodles (log in, sign up, dashboard, application). Decoration only. */
-.tla-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
-.tla-layer { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+/* Tech League app ambient layer (log in, sign up, dashboard, application).
+   Decoration only — never moves existing content. */
+
+.tla-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
 
 .tla-d {
   position: absolute;
   display: none;
   top: var(--t);
   width: var(--w, auto);
-  transform: rotate(var(--r));
+  opacity: 0.55;
 }
-.tla-d.l { right: calc(50% + var(--e)); }
-.tla-d.r { left: calc(50% + var(--e)); }
-@media (min-width: 1200px) { .tla-d.mid { display: block; } }
-@media (min-width: 1360px) { .tla-d.near { display: block; } }
-@media (min-width: 1700px) { .tla-d.far { display: block; } }
 
-.tla-in { pointer-events: auto; will-change: transform; }
-.tla-in:hover { animation: tla-wiggle .6s ease-in-out; }
-.tla-d svg { display: block; width: 100%; height: auto; overflow: visible; filter: url(#tla-wobble); }
+/* Same correction as the landing layer: --e is measured from the centre
+   line, but a gutter piece has to clear the container's edge. Pieces
+   authored with an --e below --container/2 were sitting on the cards.
 
-.tla-label {
-  font-family: "Caveat", "Comic Sans MS", cursive;
+   The max-width is the other half of that, also mirrored from the landing
+   layer. The offset fixes a piece's inner edge, but nothing stopped it
+   running outward past the screen, which is how "[ Welcome back ]" ended up
+   147px off the right edge at 1280. */
+.tla-d.l {
+  right: max(
+    calc(50% + var(--e)),
+    calc(50% + var(--container) / 2 + var(--sp-4))
+  );
+  max-width: calc(
+    100% - max(
+        calc(50% + var(--e)),
+        calc(50% + var(--container) / 2 + var(--sp-4))
+      ) - var(--sp-2)
+  );
+}
+
+.tla-d.r {
+  left: max(
+    calc(50% + var(--e)),
+    calc(50% + var(--container) / 2 + var(--sp-4))
+  );
+  max-width: calc(
+    100% - max(
+        calc(50% + var(--e)),
+        calc(50% + var(--container) / 2 + var(--sp-4))
+      ) - var(--sp-2)
+  );
+}
+
+/* Each tier waits for enough gutter to sit in. */
+@media (min-width: 1200px) {
+  .tla-d.mid {
+    display: block;
+  }
+}
+
+@media (min-width: 1360px) {
+  .tla-d.near {
+    display: block;
+  }
+}
+
+@media (min-width: 1700px) {
+  .tla-d.far {
+    display: block;
+  }
+}
+
+.tla-d svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* Sized down to match .tl-chip on the landing layer, which got this
+   treatment when the display face became expanded. This one was missed: at
+   0.82rem with 0.18em tracking "[ Welcome back ]" measured 191px against a
+   gutter that is only 124px at 1440, so the chip ran off the right edge of
+   the screen. */
+.tla-chip {
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--c);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  /* Was nowrap. With the gutter cap above, a chip too wide for its gutter
+     wraps onto a second line rather than running off the screen. */
+  flex-wrap: wrap;
+}
+
+.tla-chip-b {
+  opacity: 0.55;
+}
+
+/* The step counter down the application flow. */
+.tla-step {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  color: var(--c);
+}
+
+.tla-step-n {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
   font-weight: 700;
-  font-size: 1.35rem;
   line-height: 1;
-  color: #5c574f;
-  text-align: center;
-  white-space: nowrap;
-  margin-block: 4px;
+  font-variant-numeric: tabular-nums;
 }
 
-.tla-scribble {
-  font-family: "Caveat", "Comic Sans MS", cursive;
-  font-weight: 700;
-  font-size: 1.55rem;
-  color: #8a8378;
-  white-space: nowrap;
+.tla-step-r {
+  display: block;
+  width: 46px;
+  height: 2px;
+  background: currentColor;
+  opacity: 0.5;
 }
 
-.tla-a-bob { animation: tla-bob 6s ease-in-out infinite; }
-.tla-a-drift { animation: tla-drift 5s ease-in-out infinite; }
-.tla-a-twinkle { animation: tla-twinkle 2.8s ease-in-out infinite; }
-.tla-steam path { animation: tla-steam 3s ease-in-out infinite; }
-.tla-steam path + path { animation-delay: .8s; }
-.tla-sand { animation: tla-sand 1s linear infinite; }
-.tla-burst { animation: tla-pop 2.4s ease-in-out infinite; transform-origin: 60px 90px; transform-box: view-box; }
+/* ---------- motion ---------- */
 
-@keyframes tla-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-@keyframes tla-drift { 0%, 100% { transform: translate(0, 0) rotate(0); } 50% { transform: translate(6px, -10px) rotate(-3deg); } }
-@keyframes tla-twinkle { 0%, 100% { transform: scale(1) rotate(0); opacity: 1; } 50% { transform: scale(.7) rotate(20deg); opacity: .7; } }
-@keyframes tla-steam { 0% { opacity: 0; transform: translateY(6px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); } }
-@keyframes tla-sand { to { stroke-dashoffset: -12; } }
-@keyframes tla-pop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08) rotate(3deg); } }
-@keyframes tla-wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-6deg); } 75% { transform: rotate(5deg); } }
+.tla-a-pulse {
+  animation: tla-pulse 3.4s var(--ease-in-out) infinite;
+}
+
+@keyframes tla-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .tla-layer * { animation: none !important; }
+  .tla-layer * {
+    animation: none !important;
+  }
 }

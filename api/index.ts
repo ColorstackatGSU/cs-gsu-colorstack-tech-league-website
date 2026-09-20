@@ -5,6 +5,7 @@ import { requireMember, requireSameOrigin, type AuthedEnv } from './_lib/session
 import account from './_routes/account.js';
 import admin from './_routes/admin.js';
 import auth from './_routes/auth.js';
+import serviceRoutes from './_routes/service.js';
 import teams from './_routes/teams.js';
 
 /**
@@ -30,6 +31,12 @@ import teams from './_routes/teams.js';
  * endpoint of its own.
  */
 const app = new Hono<AuthedEnv>().basePath('/api');
+
+// Called by the chapter's admin portal, not by a browser, so it authenticates with a
+// shared secret rather than a session or an origin check. It sits above requireSameOrigin
+// because the caller is another of our servers; there is no Origin header, but exempting
+// the path entirely is clearer than relying on that. See _routes/service.ts.
+app.route('/service', serviceRoutes);
 
 app.use('*', requireSameOrigin);
 

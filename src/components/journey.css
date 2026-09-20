@@ -5,33 +5,35 @@
    ============================================================ */
 
 .tone--brand {
-  --tone: var(--teal);
-  --tone-soft: var(--teal-soft);
-  --tone-ink: var(--teal-deep);
+  --tone: var(--green);
+  --tone-soft: var(--green-soft);
+  /* The deep green is a fill colour; as text on the dark surface it sits
+     under 4.5:1, so the bright neon carries the label instead. */
+  --tone-ink: var(--green);
 }
 
 .tone--review {
   --tone: var(--mustard);
   --tone-soft: var(--mustard-soft);
-  --tone-ink: #7A5C0E;
+  --tone-ink: var(--mustard);
 }
 
 .tone--success {
   --tone: var(--success);
   --tone-soft: var(--success-soft);
-  --tone-ink: #2C7050;
+  --tone-ink: var(--success);
 }
 
 .tone--waitlist {
   --tone: var(--clay);
   --tone-soft: var(--clay-soft);
-  --tone-ink: #9A4A24;
+  --tone-ink: var(--clay);
 }
 
 .tone--neutral {
-  --tone: var(--ink-light);
-  --tone-soft: var(--paper-warm);
-  --tone-ink: var(--ink-soft);
+  --tone: var(--line-bright);
+  --tone-soft: rgba(255, 255, 255, 0.05);
+  --tone-ink: var(--text-muted);
 }
 
 /* ---------- pill ---------- */
@@ -46,7 +48,7 @@
   white-space: nowrap;
   color: var(--tone-ink);
   background: var(--tone-soft);
-  border: 2px solid var(--tone);
+  border: 1px solid var(--tone);
   border-radius: var(--r-full);
 }
 
@@ -94,7 +96,7 @@
   left: 16px;
   top: 36px;
   bottom: 2px;
-  border-left: 2px dashed var(--ink-light);
+  border-left: 1px solid var(--ink-light);
 }
 
 .journey__stage.is-done:not(:last-child)::after {
@@ -109,19 +111,19 @@
   width: 34px;
   height: 34px;
   flex-shrink: 0;
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: 1.15rem;
   font-weight: 700;
   color: var(--text-subtle);
-  background: var(--card);
-  border: 2px dashed var(--ink-light);
+  background: var(--surface);
+  border: 1px solid var(--line-bright);
   border-radius: 50%;
 }
 
 .journey__stage.is-done .journey__marker {
   color: #fff;
   background: var(--success);
-  border: 2px solid var(--success);
+  border: 1px solid var(--success);
 }
 
 .journey__stage.is-current .journey__marker {
@@ -133,7 +135,7 @@
 
 .journey__stage.is-locked .journey__marker {
   color: var(--ink-light);
-  background: var(--paper-deep);
+  background: var(--surface-raised);
   border-style: solid;
   border-color: var(--paper-deep);
 }
@@ -186,7 +188,7 @@
     top: 16px;
     bottom: auto;
     border-left: 0;
-    border-top: 2px dashed var(--ink-light);
+    border-top: 1px solid var(--ink-light);
   }
 
   .journey__stage.is-done:not(:last-child)::after {
@@ -215,13 +217,13 @@
 .email-confirm.is-pending {
   background: var(--clay-soft);
   border-color: var(--clay);
-  color: #7F3E1E;
+  color: var(--clay);
 }
 
 .email-confirm.is-waiting {
   background: var(--mustard-soft);
   border-color: var(--mustard);
-  color: #6B500C;
+  color: var(--mustard);
 }
 
 .email-confirm.is-confirmed {
@@ -229,7 +231,7 @@
   align-items: flex-start;
   background: var(--success-soft);
   border-color: var(--success);
-  color: #2C7050;
+  color: var(--success);
 }
 
 .email-confirm.is-confirmed svg {
@@ -282,7 +284,7 @@
 .email-confirm__error {
   margin: 0;
   font-weight: 700;
-  color: #A8442F;
+  color: var(--danger);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,71 +1,164 @@
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap');
+/* The Google Fonts request lives in index.html rather than here: an @import
+   cannot start until this stylesheet has been fetched and parsed, which puts
+   the fonts one avoidable round trip behind the page. Barlow is requested
+   with its true italic (`ital,wght@1,700`) as well as the upright weights,
+   because several call sites set it in bold italic and the browser would
+   otherwise synthesise a slanted upright. */
 
 /* ============================================================
-   ColorStack Tech League @ GSU, Sketch Design Tokens
+   ColorStack Tech League @ GSU, Stadium Design Tokens
 
-   A friendly hand-drawn style: warm cream paper, soft teal
-   accents, handwritten headings, rounded pill controls,
-   dashed outlines, pencil-like offset shadows.
+   Broadcast sports graphics after dark: near-black pitch, a
+   neon green that carries the brand, condensed athletic
+   display type, hard-edged panels with a lit top rule.
+
+   Every foreground/background pair here was checked against
+   WCAG and clears AA for normal text. On --surface: body text
+   16.5:1, muted 8.6:1, subtle 5.1:1, green 11.9:1, mustard
+   11.1:1, clay 7.7:1, danger 6.4:1, purple 5.5:1.
+
+   Two colours are deliberately split between a text role and a
+   fill role, because the bright version fails under white type:
+   --blue is used for rules, borders and glows, never as a filled
+   button; --purple has a separate --purple-fill for controls.
    ============================================================ */
 
 :root {
-  /* --- Paper --- */
-  --paper: #FBF7EF;
-  --paper-warm: #F5EFE2;
-  --paper-deep: #EDE4D3;
-  --card: #FFFDF8;
+  /* --- Pitch: the dark base, cool rather than neutral --- */
+  --bg: #080b12;
+  --bg-deep: #05070c;
+  --surface: #111726;
+  --surface-raised: #18202f;
+  --surface-sunken: #0b1019;
 
-  /* --- Ink: soft graphite, never pure black --- */
-  --ink: #33302B;
-  --ink-soft: #5C574F;
-  --ink-light: #8A8378;
+  /* Legacy paper aliases. The sketch build named surfaces
+     --paper/--card; both still resolve so no stylesheet has to
+     be rewritten just to change the word. */
+  --paper: var(--bg);
+  --paper-warm: var(--surface);
+  --paper-deep: var(--surface-raised);
+  --card: var(--surface);
 
-  /* --- Teal accent --- */
-  --teal: #4FB3A5;
-  --teal-deep: #2F8478;
-  --teal-soft: #DCF0EC;
-  --teal-line: #A8D9D1;
+  /* --- Floodlight: text on the dark --- */
+  --text: #f2f6ff;
+  --text-muted: #a8b4cc;
+  --text-subtle: #7d8aa3;
 
-  /* --- Warm secondary accents --- */
-  --clay: #E08A5F;
-  --clay-soft: #FBE7DC;
-  --mustard: #E3B23C;
-  --mustard-soft: #FAF0D7;
+  /* Legacy ink aliases, same story as the paper ones. On dark
+     these have to invert or every old rule goes black-on-black. */
+  --ink: #f2f6ff;
+  --ink-soft: #a8b4cc;
+  --ink-light: #7d8aa3;
+
+  /* --- Neon green, the brand carrier --- */
+  --green: #3df07f;
+  --green-bright: #6bff9f;
+  --green-deep: #14b45c;
+  --green-glow: rgba(61, 240, 127, 0.22);
+  --green-soft: rgba(61, 240, 127, 0.11);
+  --on-green: #06210f;
+
+  /* --- Electric blue and court purple, the flyer's supports --- */
+  --blue: #4d7cfe;
+  --blue-bright: #6e96ff;
+  --blue-glow: rgba(77, 124, 254, 0.2);
+  --blue-soft: rgba(77, 124, 254, 0.1);
+
+  --purple: #a970ff;
+  --purple-bright: #b98cff;
+  /* A deeper purple for filled controls. The bright --purple above is a text
+     and accent colour; under white type it only reaches 3.3:1, which fails
+     for the small buttons, so filled surfaces use this instead (5.7:1). */
+  --purple-fill: #7c3aed;
+  --purple-fill-hover: #8b4ef5;
+  --purple-glow: rgba(169, 112, 255, 0.2);
+  --purple-soft: rgba(169, 112, 255, 0.1);
+
+  /* Teal aliases: the sketch build keyed its accent off --teal
+     across every page. Pointing them at the green moves the
+     whole app onto the new brand in one line. */
+  --teal: var(--green);
+  --teal-deep: var(--green-deep);
+  --teal-soft: var(--green-soft);
+  --teal-line: var(--line-color);
+  --on-teal: var(--on-green);
+
+  /* Warm accents, retuned for the dark */
+  --clay: #ff8a5f;
+  --clay-soft: rgba(255, 138, 95, 0.12);
+  --mustard: #ffc24d;
+  --mustard-soft: rgba(255, 194, 77, 0.12);
 
   /* --- Semantic --- */
-  --success: #3F9E6E;
-  --success-soft: #DFF2E8;
-  --danger: #D2604F;
-  --danger-soft: #FBE3DF;
+  --success: #3df07f;
+  --success-soft: rgba(61, 240, 127, 0.12);
+  --danger: #ff6b5e;
+  --danger-soft: rgba(255, 107, 94, 0.13);
+  --warning: #ffc24d;
+  --warning-soft: rgba(255, 194, 77, 0.12);
 
-  /* --- Text --- */
-  --text: #33302B;
-  --text-muted: #5C574F;
-  --text-subtle: #8A8378;
-  --on-teal: #FFFFFF;
+  /* --- Rules and edges ---
+     Two roles, because WCAG's 3:1 non-text rule applies to the
+     boundary of a control, not to decorative separators:
+
+     --line-color is for dividers and panel edges that carry no
+     meaning on their own. It stays quiet (1.4:1) on purpose;
+     the panel is already legible without it.
+
+     --line-bright is for anything that defines an interactive
+     control — an input's edge, a button's outline. It clears
+     3:1 against every surface (3.3:1 on --surface, 3.5:1 on
+     --surface-sunken, 3.6:1 on --bg), so the field's boundary
+     is perceivable rather than implied. */
+  --line-color: #263149;
+  --line-bright: #556a94;
+  --line: 1px solid var(--line-color);
+  --line-soft: 1px solid var(--line-color);
+  --line-dash: 1px dashed var(--line-bright);
 
   /* --- Type ---
-     Caveat for headings (handwritten), Quicksand for everything
-     else. Quicksand stays legible at form-label sizes where a
-     true handwriting face would not. */
-  --font-hand: 'Caveat', 'Comic Sans MS', cursive;
-  --font-body: 'Quicksand', ui-rounded, system-ui, sans-serif;
+     Archivo for display, set expanded. The flyer's wordmark is
+     wide and squarish; a condensed face was wrong on the width
+     axis, which is what made the type feel off against the
+     printed piece. See --display-width below.
 
-  --fs-xs: 0.8rem;
-  --fs-sm: 0.9rem;
+     Barlow for body. Both are grotesques, so the two never look
+     like separate systems. */
+  --font-display: 'Archivo', 'Arial', sans-serif;
+  --font-body: 'Barlow', system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace;
+
+  /* progsu sets its wordmark in Helvetica Neue, so it gets its own token
+     rather than borrowing the body face. Helvetica Neue only ships on Apple
+     platforms; Helvetica then Arial are the closest metric matches
+     elsewhere, and both carry a real bold italic, which is the cut the
+     wordmark uses. No web font is loaded for it: one partner's wordmark is
+     not worth a blocking font request. */
+  --font-progsu: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  /* --font-hand was the sketch build's heading font, used in 47
+     places. Repointing it at the display face converts them all. */
+  --font-hand: var(--font-display);
+
+  --fs-xs: 0.78rem;
+  --fs-sm: 0.875rem;
   --fs-base: 1rem;
-  --fs-lg: 1.12rem;
-  --fs-xl: 1.3rem;
-  --fs-2xl: 1.6rem;
-  --fs-3xl: 2rem;
+  --fs-lg: 1.075rem;
+  --fs-xl: 1.25rem;
+  --fs-2xl: 1.5rem;
+  --fs-3xl: 1.9rem;
 
-  /* Handwritten headings run small for their point size, so they
-     are set noticeably larger than the body scale. */
-  --fs-hand-sm: 1.6rem;
-  --fs-hand-md: 2.1rem;
-  --fs-hand-lg: clamp(2.2rem, 4vw, 3rem);
-  --fs-hand-xl: clamp(2.1rem, 6.5vw, 4rem);
-  --fs-hand-hero: clamp(2.4rem, 8.5vw, 5.2rem);
+  /* Display sizes. These were tuned for a condensed face and had to come down
+     by about a third when the display font became expanded: at the old values
+     the hero wordmark wrapped onto two lines and the nav overflowed its bar.
+     Expanded type buys emphasis from width, so it needs less height to carry
+     the same weight. Named --fs-hand-* to match the call sites already in the
+     stylesheets. */
+  --fs-hand-sm: 1.15rem;
+  --fs-hand-md: 1.5rem;
+  --fs-hand-lg: clamp(1.7rem, 2.8vw, 2.3rem);
+  --fs-hand-xl: clamp(2rem, 4.4vw, 3rem);
+  --fs-hand-hero: clamp(2.3rem, 8.4vw, 6.4rem);
 
   /* --- Spacing (8pt rhythm) --- */
   --sp-1: 4px;
@@ -79,25 +172,35 @@
   --sp-9: 96px;
   --sp-10: 128px;
 
-  /* --- Radius: soft and rounded. Pills for controls. --- */
-  --r-sm: 10px;
-  --r-md: 16px;
-  --r-lg: 22px;
-  --r-xl: 30px;
+  /* --- Radius: softened. Broadcast graphics are cut rather than
+     drawn, but fully square corners read as harsh on screen, so
+     everything carries a small consistent round. --- */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
   --r-full: 999px;
 
-  /* Slightly irregular radii so shapes look drawn, not generated */
-  --r-wobble: 22px 26px 20px 28px;
-  --r-wobble-alt: 26px 20px 28px 22px;
+  /* The sketch build's irregular "drawn" radii. Evened out so
+     nothing keeps its wobble after the restyle. */
+  --r-wobble: var(--r-md);
+  --r-wobble-alt: var(--r-md);
 
-  /* --- Borders + pencil shadows --- */
-  --line: 2px solid var(--ink);
-  --line-soft: 2px solid var(--teal-line);
-  --line-dash: 2px dashed var(--ink-light);
-  --shadow-pencil: 3px 3px 0 var(--ink);
-  --shadow-pencil-sm: 2px 2px 0 var(--ink);
-  --shadow-pencil-lg: 5px 5px 0 var(--ink);
-  --shadow-soft: 0 4px 14px rgba(51, 48, 43, 0.09);
+  /* --- Depth: glow and lift, no pencil offsets --- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.55);
+  --shadow-soft: var(--shadow-md);
+  --glow-green: 0 0 24px var(--green-glow);
+  --glow-blue: 0 0 24px var(--blue-glow);
+  --glow-purple: 0 0 24px var(--purple-glow);
+
+  /* --shadow-pencil was the sketch build's hard offset shadow,
+     used in 32 places. Repointed to depth so none of them
+     re-draw a pencil edge on the dark. */
+  --shadow-pencil: var(--shadow-sm);
+  --shadow-pencil-sm: var(--shadow-sm);
+  --shadow-pencil-lg: var(--shadow-md);
 
   /* --- Motion --- */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -117,7 +220,18 @@
   --z-modal: 200;
   --z-toast: 300;
 
-  color-scheme: light;
+  color-scheme: dark;
+
+  /* The display face's width, applied once here rather than at each of the 65
+     places that ask for --font-display. `font-stretch` inherits, so setting it
+     on the root reaches all of them.
+
+     This is safe for body copy because it selects a face, it never synthesises
+     one: Barlow ships a single width, so there is nothing else for the browser
+     to pick and body text is unaffected. If the body face is ever swapped for
+     something with its own width axis, that stops being true and this needs to
+     move onto the display elements instead. */
+  font-stretch: 125%;
 }
 
 /* ============================================================
@@ -159,30 +273,42 @@ html.lenis body {
 
 body {
   min-height: 100dvh;
-  background: var(--paper);
+  background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
   font-size: var(--fs-base);
-  font-weight: 500;
-  line-height: 1.7;
+  font-weight: 400;
+  line-height: 1.65;
   overflow-x: hidden;
 }
 
-/* Faint paper grain so the cream never looks like flat #fff */
+/* Stadium air: floodlight bloom in the corners plus a faint pitch grid.
+   Fixed and behind everything, so it reads as depth rather than content. */
 body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(77, 124, 254, 0.16), transparent 70%),
+    radial-gradient(ellipse 60% 45% at 8% 20%, rgba(61, 240, 127, 0.08), transparent 70%),
+    radial-gradient(ellipse 55% 45% at 95% 72%, rgba(169, 112, 255, 0.1), transparent 70%);
+}
+
+body::after {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
   opacity: 0.5;
-  background-image: radial-gradient(
-      circle at 20% 30%,
-      rgba(224, 138, 95, 0.05),
-      transparent 45%
-    ),
-    radial-gradient(circle at 82% 18%, rgba(79, 179, 165, 0.06), transparent 45%),
-    radial-gradient(circle at 60% 88%, rgba(227, 178, 60, 0.05), transparent 45%);
+  background-image: linear-gradient(rgba(38, 49, 73, 0.32) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(38, 49, 73, 0.32) 1px, transparent 1px);
+  background-size: 64px 64px;
+  /* Fades the grid out toward the bottom so it never competes with copy. */
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 65%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 65%);
 }
 
 img,
@@ -212,14 +338,16 @@ a {
   text-decoration: none;
 }
 
+/* Condensed, uppercase, tight. The flyer's voice. */
 h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: 0.01em;
+  line-height: 0.98;
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
   text-wrap: balance;
 }
 
@@ -227,9 +355,26 @@ p {
   text-wrap: pretty;
 }
 
+/* The nav is sticky and 76px tall, so anything jumped to by id — an anchor
+   link, a focused control, an error summary — otherwise lands underneath it.
+   Reserving the header's height on every targetable element is what keeps a
+   keyboard user's focus visible, which WCAG 2.2 asks for under 2.4.11
+   (Focus Not Obscured). */
+:target,
+[id] {
+  scroll-margin-top: calc(var(--nav-h) + var(--sp-4));
+}
+
 .wrap-anywhere {
   overflow-wrap: anywhere;
   min-width: 0;
+}
+
+/* Tabular figures wherever numbers are compared down a column:
+   scores, ranks, point totals. Stops digits from shifting width. */
+.tabular,
+.hero__stat-value {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Holds a protected page's place while the session check is in flight. */
@@ -245,18 +390,49 @@ p {
 }
 
 /* ============================================================
-   Focus, a drawn teal ring
+   Display treatment
+
+   The flyer sets TECH LEAGUE in white with a hard green shadow
+   offset down-right. `text-shadow` keeps the text selectable
+   and screen-reader-visible, which a duplicated span would not.
+   ============================================================ */
+
+.display-shadow {
+  color: var(--text);
+  text-shadow:
+    0.055em 0.055em 0 var(--green-deep),
+    0.09em 0.09em 0 rgba(0, 0, 0, 0.5);
+}
+
+.display-green {
+  color: var(--green);
+  text-shadow: 0 0 30px var(--green-glow);
+}
+
+/* A short neon rule, used above section headings and eyebrows. */
+.accent-rule::before {
+  content: '';
+  display: block;
+  width: 44px;
+  height: 3px;
+  margin-bottom: var(--sp-3);
+  background: var(--green);
+  box-shadow: var(--glow-green);
+}
+
+/* ============================================================
+   Focus, a neon ring
    ============================================================ */
 
 :focus-visible {
-  outline: 3px dashed var(--teal-deep);
-  outline-offset: 3px;
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
   border-radius: var(--r-sm);
 }
 
 ::selection {
-  background: var(--teal-soft);
-  color: var(--ink);
+  background: var(--green);
+  color: var(--on-green);
 }
 
 /* ============================================================
@@ -268,17 +444,17 @@ p {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--paper-warm);
+  background: var(--bg-deep);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--teal-line);
+  background: var(--line-bright);
   border-radius: var(--r-full);
-  border: 3px solid var(--paper-warm);
+  border: 3px solid var(--bg-deep);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--teal);
+  background: var(--green-deep);
 }
 
 /* ============================================================

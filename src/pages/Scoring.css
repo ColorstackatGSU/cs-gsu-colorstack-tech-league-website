@@ -6,7 +6,7 @@
 
 .scoring {
   position: relative;
-  background: var(--paper);
+  background: var(--bg);
   min-height: 100vh;
 }
 
@@ -30,7 +30,7 @@
 }
 
 .scoring__title {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-xl);
   line-height: 1.06;
   color: var(--ink);
@@ -90,7 +90,7 @@
   background: var(--mustard-soft);
   border: var(--line);
   box-shadow: var(--shadow-pencil-sm);
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-xl);
   font-weight: 700;
   color: var(--ink);
@@ -98,7 +98,7 @@
 }
 
 .scoring__steps h3 {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-sm);
   line-height: 1.15;
   margin-bottom: var(--sp-1);
@@ -115,7 +115,7 @@
   margin-top: var(--sp-5);
   padding: var(--sp-4);
   text-align: center;
-  background: var(--paper-warm);
+  background: var(--surface-sunken);
   border: var(--line-dash);
   border-radius: var(--r-md);
 }
@@ -170,10 +170,10 @@
   width: 34px;
   height: 34px;
   border-radius: var(--r-full);
-  background: var(--card);
+  background: var(--surface);
   border: var(--line);
   box-shadow: var(--shadow-pencil-sm);
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-xl);
   font-weight: 700;
   line-height: 1;
@@ -192,7 +192,7 @@
 }
 
 .score-event__weight {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-md);
   font-weight: 700;
   line-height: 1;
@@ -208,7 +208,7 @@
 }
 
 .score-event__name {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-sm);
   line-height: 1.15;
   color: var(--ink);
@@ -281,8 +281,8 @@
 .score-criterion__bar {
   height: 9px;
   border-radius: var(--r-full);
-  background: var(--paper-deep);
-  border: 1.5px solid var(--ink);
+  background: var(--surface-raised);
+  border: 1px solid var(--line-color);
   overflow: hidden;
 }
 
@@ -306,7 +306,7 @@
   align-items: flex-start;
   gap: var(--sp-2);
   padding: var(--sp-3) var(--sp-4);
-  background: var(--card);
+  background: var(--surface);
   border: var(--line-dash);
   border-radius: var(--r-md);
   font-size: var(--fs-sm);
@@ -328,8 +328,14 @@
   margin-top: var(--sp-6);
 }
 
+/* The table below carries a 460px min-width so its columns stay readable, and
+   this wrapper is what lets it scroll instead of stretching the page. That only
+   works with min-width: 0. As a flex/grid child its default min-width is auto,
+   which refuses to shrink below the table, so on a narrow phone the wrapper
+   grew to 460px and took the whole document sideways with it. */
 .weights__scroll {
   overflow-x: auto;
+  min-width: 0;
 }
 
 .weights__table {
@@ -355,7 +361,7 @@
 }
 
 .weights__table tbody th {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-xl);
   font-weight: 700;
   color: var(--ink);
@@ -391,7 +397,7 @@
 }
 
 .weights__table tfoot th {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-xl);
   color: var(--ink);
 }
@@ -421,7 +427,7 @@
 
 .scoring__cta-title {
   position: relative;
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-lg);
   line-height: 1.1;
   color: var(--ink);
@@ -441,4 +447,8 @@
   gap: var(--sp-3);
   justify-content: center;
   flex-wrap: wrap;
+  /* Same reason as .cta__actions: the row shrink-wraps, so .btn's
+     max-width: 100% had nothing finite to resolve against and
+     "Apply to the League" pushed it 25px past the panel at 320px. */
+  max-width: 100%;
 }

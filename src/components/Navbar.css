@@ -1,4 +1,5 @@
-/* A floating paper bar with a drawn dashed rule underneath */
+/* A broadcast header bar: translucent over the pitch, with a
+   hairline rule that lights up once you leave the hero. */
 .nav {
   position: fixed;
   top: 0;
@@ -8,13 +9,20 @@
   min-height: var(--nav-h);
   display: flex;
   align-items: center;
-  background: var(--paper);
-  border-bottom: 2px dashed var(--ink-light);
-  transition: box-shadow var(--dur-mid) var(--ease-out);
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-bottom: 1px solid transparent;
+  transition:
+    box-shadow var(--dur-mid) var(--ease-out),
+    border-color var(--dur-mid) var(--ease-out),
+    background var(--dur-mid) var(--ease-out);
 }
 
 .nav--scrolled {
-  box-shadow: var(--shadow-soft);
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+  border-bottom-color: var(--line-color);
+  box-shadow: var(--shadow-md);
 }
 
 .nav__inner {
@@ -35,19 +43,24 @@
 .nav__logo {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
+  /* The logo sets the height of the whole brand link, and at 42px that link
+     was the one tap target on every page that missed 44px. */
+  width: 44px;
+  height: 44px;
   padding: 3px;
-  background: var(--card);
-  border: var(--line);
-  border-radius: 50%;
+  background: var(--surface-raised);
+  border: 1px solid var(--line-bright);
+  border-radius: var(--r-sm);
   overflow: hidden;
   flex-shrink: 0;
-  transition: transform var(--dur-mid) var(--ease-out);
+  transition:
+    border-color var(--dur-mid) var(--ease-out),
+    box-shadow var(--dur-mid) var(--ease-out);
 }
 
 .nav__brand:hover .nav__logo {
-  transform: rotate(-8deg);
+  border-color: var(--green);
+  box-shadow: var(--glow-green);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -60,7 +73,7 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: 50%;
+  border-radius: 6px;
 }
 
 .nav__brand-text {
@@ -70,19 +83,28 @@
 }
 
 .nav__brand-text strong {
-  font-family: var(--font-hand);
-  font-size: 1.5rem;
+  font-family: var(--font-display);
+  /* Trimmed when the display face went from condensed to expanded: at 1.45rem
+     the brand lockup pushed the nav links into the actions and "Log in" broke
+     onto two lines. */
+  font-size: 1.15rem;
   font-weight: 700;
-  color: var(--ink);
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--text);
 }
 
 .nav__brand-text span {
-  font-family: var(--font-body);
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
+  font-family: var(--font-display);
+  /* Was 0.62rem, which renders at 9.92px. That is below the point where
+     letterspaced uppercase stays readable, and it was only that small to fit
+     under the old condensed lockup. The wider "COLORSTACK" line above still
+     sets the brand's width, so this costs nothing. */
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--teal-deep);
+  color: var(--green);
 }
 
 .nav__links {
@@ -96,19 +118,25 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  min-height: 40px;
-  font-family: var(--font-body);
+  /* 40px was under the 44px touch target the README commits to. This only
+     changes height, so it does not affect whether the row fits. */
+  min-height: 44px;
+  font-family: var(--font-display);
+  /* Expanded type sets wide, so the link row needs a smaller size, tighter
+     tracking and less padding to fit the same seven links on one line. */
   font-size: var(--fs-sm);
   font-weight: 600;
-  color: var(--ink-soft);
-  padding: 0 var(--sp-4);
-  border-radius: var(--r-full);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-sm);
   transition:
     color var(--dur-fast) var(--ease-out),
     background var(--dur-fast) var(--ease-out);
 }
 
-/* A hand-drawn underline that sweeps in on hover */
+/* A neon underline that sweeps in on hover */
 .nav__link::after {
   content: '';
   position: absolute;
@@ -116,15 +144,16 @@
   right: var(--sp-4);
   bottom: 7px;
   height: 2px;
-  background: var(--teal);
-  border-radius: var(--r-full);
+  background: var(--green);
+  box-shadow: var(--glow-green);
+  border-radius: 1px;
   transform: scaleX(0);
   transform-origin: left;
   transition: transform var(--dur-mid) var(--ease-out);
 }
 
 .nav__link:hover {
-  color: var(--ink);
+  color: var(--text);
 }
 
 .nav__link:hover::after,
@@ -133,7 +162,7 @@
 }
 
 .nav__link--active {
-  color: var(--ink);
+  color: var(--green);
   font-weight: 700;
 }
 
@@ -143,30 +172,35 @@
   gap: var(--sp-3);
 }
 
-/* The signed-in chip. Same 40px height and pill shape as the buttons next to
-   it, but dashed and untinted so it reads as an identity label rather than a
-   third call to action competing with Sign out. */
+/* The signed-in chip. Same 40px height as the buttons next to it, but
+   untinted so it reads as an identity label rather than a third call to
+   action competing with Sign out. */
 .nav__user {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-2);
-  min-height: 40px;
+  /* Matches the 44px the buttons beside it now use, and the comment above
+     about sharing their height. */
+  min-height: 44px;
   font-family: var(--font-body);
   font-size: var(--fs-sm);
-  font-weight: 700;
-  color: var(--ink);
+  font-weight: 600;
+  color: var(--text);
   padding: 0 var(--sp-4);
+  /* The signed-in row carries five links plus this chip plus Sign out. The
+     chip is the one piece with slack in it, so it gives ground first rather
+     than pushing the row past the container. */
   max-width: 190px;
-  background: transparent;
-  border: 2px dashed var(--ink-light);
-  border-radius: var(--r-full);
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line-bright);
+  border-radius: var(--r-sm);
   transition: border-color var(--dur-fast), background var(--dur-fast);
 }
 
 .nav__user:hover {
-  background: var(--teal-soft);
-  border-color: var(--teal);
-  border-style: solid;
+  background: var(--green-soft);
+  border-color: var(--green);
 }
 
 .nav__user span {
@@ -176,7 +210,7 @@
 }
 
 .nav__user svg {
-  color: var(--teal-deep);
+  color: var(--green);
   flex-shrink: 0;
 }
 
@@ -186,17 +220,16 @@
   width: 46px;
   height: 46px;
   margin-left: auto;
-  color: var(--ink);
-  background: var(--card);
-  border: var(--line);
-  border-radius: var(--r-full);
-  box-shadow: var(--shadow-pencil-sm);
-  transition: transform var(--dur-fast), box-shadow var(--dur-fast);
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--line-bright);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--dur-fast), border-color var(--dur-fast);
 }
 
 .nav__burger:active {
-  transform: translate(2px, 2px);
-  box-shadow: none;
+  transform: scale(0.94);
 }
 
 /* While the menu is open the button becomes the close control, so it gets the
@@ -204,11 +237,18 @@
 .nav__burger--open {
   position: relative;
   z-index: 1;
-  background: var(--teal-soft);
-  border-color: var(--teal);
+  background: var(--green-soft);
+  border-color: var(--green);
+  color: var(--green);
 }
 
-@media (min-width: 940px) {
+/* The desktop row used to open at 940px. Under the expanded display face the
+   public set (brand 217px, four links 505px, actions 234px, plus gaps) needs
+   about 990px of container, so between 940px and 1052px the actions ran past
+   the container: at 1024px "Apply now" sat 8px off the right edge of the
+   page. Opening the row at 1080px means it only appears once it genuinely
+   fits, and the burger covers everything below that. */
+@media (min-width: 1080px) {
   .nav__links,
   .nav__actions {
     display: flex;
@@ -228,10 +268,10 @@
   position: fixed;
   inset: 0;
   z-index: calc(var(--z-sticky) - 1);
-  /* A warm paper wash rather than a grey scrim, so the page behind reads as
-     the same sheet of paper the rest of the site is drawn on. */
-  background: rgba(94, 84, 66, 0.28);
-  backdrop-filter: blur(3px);
+  /* A deep scrim so the lit menu panel reads as the only active surface. */
+  background: rgba(3, 5, 9, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   padding-top: var(--nav-h);
 }
 
@@ -239,9 +279,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-1);
-  background: var(--paper);
-  border-bottom: 2px dashed var(--ink-light);
-  box-shadow: var(--shadow-soft);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line-color);
+  box-shadow: var(--shadow-lg);
   padding: var(--sp-4) var(--sp-4) var(--sp-5);
   max-height: calc(100dvh - var(--nav-h));
   overflow-y: auto;
@@ -253,14 +293,16 @@
   align-items: center;
   min-height: 52px;
   padding: 0 var(--sp-4);
-  font-family: var(--font-body);
-  font-size: var(--fs-base);
-  font-weight: 700;
-  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
   text-align: left;
   width: 100%;
-  border: 2px solid transparent;
-  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
   transition:
     background var(--dur-fast) var(--ease-out),
     border-color var(--dur-fast) var(--ease-out);
@@ -270,30 +312,33 @@
    instead of relying on :hover that only fires after the tap. */
 .mobile-menu__link:hover,
 .mobile-menu__link:active {
-  background: var(--teal-soft);
-  border-color: var(--teal-line);
+  background: var(--green-soft);
+  border-color: var(--green);
+  color: var(--green);
 }
 
 .mobile-menu__link--cta {
   justify-content: center;
-  background: var(--teal);
-  color: var(--on-teal);
-  border: var(--line);
-  border-radius: var(--r-full);
-  box-shadow: var(--shadow-pencil-sm);
+  background: var(--green);
+  color: var(--on-green);
+  border: 1px solid var(--green);
+  border-radius: var(--r-sm);
+  box-shadow: var(--glow-green);
   margin-top: var(--sp-3);
 }
 
 .mobile-menu__link--cta:hover,
 .mobile-menu__link--cta:active {
-  background: var(--teal-deep);
-  border-color: var(--ink);
+  background: var(--green-bright);
+  border-color: var(--green-bright);
+  /* Re-stated because the generic link hover above turns text green,
+     which would leave green on green here. */
+  color: var(--on-green);
 }
 
-/* A dashed rule above the account block, matching the drawn dividers used
-   elsewhere on the site. */
+/* A hairline rule above the account block. */
 .mobile-menu__divider {
   height: 0;
   margin: var(--sp-2) var(--sp-2);
-  border-top: 2px dashed var(--ink-light);
+  border-top: 1px solid var(--line-color);
 }

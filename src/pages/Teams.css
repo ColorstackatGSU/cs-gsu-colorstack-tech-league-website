@@ -5,7 +5,7 @@
   gap: var(--sp-2);
   padding-bottom: var(--sp-4);
   margin-bottom: var(--sp-4);
-  border-bottom: 2px dashed var(--paper-deep);
+  border-bottom: 1px solid var(--paper-deep);
 }
 
 .teams-tab {
@@ -14,9 +14,9 @@
   font-size: var(--fs-sm);
   padding: var(--sp-2) var(--sp-4);
   min-height: 44px;
-  border: 2px dashed var(--ink-light);
+  border: 1px solid var(--line-bright);
   border-radius: var(--r-full);
-  background: var(--card);
+  background: var(--surface);
   color: var(--text-muted);
   cursor: pointer;
 }
@@ -55,7 +55,7 @@
 }
 
 .team-card--yours {
-  outline: 3px dashed var(--teal);
+  outline: 1px solid var(--teal);
   outline-offset: 3px;
 }
 
@@ -67,7 +67,7 @@
 }
 
 .team-card__name {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-sm);
   line-height: 1.1;
   margin: 0;

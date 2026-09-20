@@ -3,7 +3,7 @@
   overflow-x: clip;
 }
 
-/* Decorative doodle shapes drifting behind the content */
+/* Floodlight pools drifting behind the content */
 .landing__orb {
   position: absolute;
   pointer-events: none;
@@ -12,43 +12,43 @@
 }
 
 .landing__orb--one {
-  top: 10%;
-  left: -3%;
-  width: 220px;
-  height: 220px;
-  border: 3px dashed var(--teal-line);
-  border-radius: 60% 40% 55% 45%;
-  opacity: 0.55;
+  top: 6%;
+  left: -8%;
+  width: 460px;
+  height: 460px;
+  background: radial-gradient(circle, var(--green-glow), transparent 68%);
+  filter: blur(30px);
+  opacity: 0.8;
 }
 
 .landing__orb--two {
-  top: 55%;
-  right: -4%;
-  width: 260px;
-  height: 260px;
-  border: 3px dashed var(--clay);
-  border-radius: 45% 55% 40% 60%;
-  opacity: 0.32;
+  top: 52%;
+  right: -10%;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, var(--purple-glow), transparent 68%);
+  filter: blur(34px);
+  opacity: 0.75;
 }
 
-/* On a phone the doodles are wider than the margins, so they end up sitting
-   behind the copy instead of beside it. Shrink them and tuck them further
-   off-canvas; they read as texture at the edge rather than clutter. */
+/* On a phone the pools are wider than the margins. Shrink them and tuck
+   them further off-canvas so they read as light at the edge, not haze
+   sitting behind the copy. */
 @media (max-width: 767px) {
   .landing__orb--one {
-    top: 6%;
-    left: -22%;
-    width: 150px;
-    height: 150px;
-    opacity: 0.35;
+    top: 4%;
+    left: -40%;
+    width: 300px;
+    height: 300px;
+    opacity: 0.5;
   }
 
   .landing__orb--two {
     top: 58%;
-    right: -24%;
-    width: 170px;
-    height: 170px;
-    opacity: 0.22;
+    right: -44%;
+    width: 320px;
+    height: 320px;
+    opacity: 0.45;
   }
 }
 
@@ -89,10 +89,21 @@
   gap: var(--sp-4);
 }
 
+/* The flyer runs its type straight onto the artwork, so the hero drops the
+   panel chrome entirely and sits on the pitch. The GlassCard wrapper stays
+   in the markup; these rules strip its surface. */
 .hero__window {
   width: 100%;
-  max-width: 900px;
+  max-width: 940px;
   margin-inline: auto;
+  background: none;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.hero__window::before {
+  display: none;
 }
 
 .hero__window .window__body {
@@ -101,59 +112,140 @@
   align-items: center;
   text-align: center;
   gap: var(--sp-4);
-  padding-block: var(--sp-7);
+  padding-block: var(--sp-6);
 }
 
-/* Plain status line above the headline. Deliberately unboxed — it reads as a
-   note in the margin rather than a badge competing with the hero title. */
+/* The flyer's "COLORSTACK @ GSU PRESENTS" line: small, wide-tracked, and
+   flanked by rules so it reads as a broadcast slug. */
 .hero__status {
-  font-family: var(--font-body);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: #8A6A12;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--green);
 }
 
+.hero__status::before,
+.hero__status::after {
+  content: '';
+  width: 32px;
+  height: 1px;
+  background: var(--green);
+  box-shadow: var(--glow-green);
+}
+
+/* The hero lockup. Condensed, uppercase, set as tight as the flyer's, with
+   the hard green offset shadow. `text-shadow` keeps the words selectable and
+   readable to a screen reader, which a duplicated layer would not. */
 .hero__title {
   position: relative;
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-hero);
-  line-height: 1.06;
-  color: var(--ink);
-  max-width: 18ch;
+  font-weight: 700;
+  line-height: 0.88;
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
+  color: var(--text);
+  /* "Tech League" is 11 characters, so the cap only has to stop a longer
+     headline from running edge to edge. At 14ch it was also squeezing this
+     one onto a narrower column than the hero allows. */
+  max-width: 100%;
   margin-inline: auto;
-  padding-bottom: var(--sp-4);
   text-wrap: balance;
+  text-shadow:
+    0.05em 0.05em 0 var(--green-deep),
+    0.085em 0.085em 0 rgba(0, 0, 0, 0.55);
 }
 
 @media (max-width: 767px) {
-  /* 18ch of a 2.4rem hand face is wider than a phone, so the cap only forced
-     ragged breaks. Let the line box use the full column instead. */
+  /* The cap is measured in ch of a condensed face, so it stays narrow on a
+     phone and forces ragged breaks. Let the line box use the full column. */
   .hero__title {
     max-width: 100%;
-    line-height: 1.12;
   }
 }
 
-/* Hand-drawn underline swoosh beneath the headline */
-.hero__title::after {
-  content: '';
-  position: absolute;
-  left: 10%;
-  right: 10%;
-  bottom: 0;
-  height: 12px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 12' fill='none'%3E%3Cpath d='M2 8c40-6 82 2 124-2s90-4 172 3' stroke='%23E3B23C' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
+/* The flyer's "in partnership with" credit, sitting under the lockup, with
+   each club's mark inline beside its name. Wraps as a row of flex items so a
+   narrow phone breaks it between the clubs rather than mid-pair. */
+.hero__partners {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2) var(--sp-3);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.hero__partners-lead {
+  white-space: nowrap;
+}
+
+.hero__partners-amp {
+  color: var(--text-subtle);
+}
+
+/* A logo and its name travel together and never split across a line. */
+.hero__partner {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  white-space: nowrap;
+}
+
+/* The CS Club mark sits bare on the pitch — no backing plate, just the
+   logo's own transparency.
+
+   About half its artwork is near-black, which has almost no contrast with
+   the background on its own. A soft dark-blue halo sits under it instead of
+   a plate: it lifts those areas just enough to read as a shape without
+   putting a light box on the page or recolouring the logo itself. */
+.hero__partner img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 1px rgba(168, 196, 255, 0.9))
+    drop-shadow(0 0 3px rgba(120, 165, 255, 0.55));
+}
+
+/* progsu's own wordmark: lowercase, bold, italic, set in Helvetica Neue,
+   which is the face the org uses for it. `text-transform: none` overrides
+   the uppercase the surrounding credit line applies.
+
+   Helvetica sets on a smaller x-height than the condensed display face
+   around it, so 1.15em holds the two at the same optical size. */
+.hero__wordmark-progsu {
+  font-family: var(--font-progsu);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 1.15em;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  color: var(--text);
+}
+
+.hero__partners strong {
+  font-weight: 700;
+  color: var(--text);
 }
 
 .hero__subtitle {
   font-size: var(--fs-lg);
   color: var(--text-muted);
   max-width: 58ch;
-  line-height: 1.75;
+  line-height: 1.7;
   margin-inline: auto;
+  margin-top: var(--sp-2);
 }
 
 .hero__actions {
@@ -164,48 +256,156 @@
   margin-top: var(--sp-3);
 }
 
+/* ---------- the flyer's starbursts ----------
+
+   Three bursts, in the flyer's order and colours. On the flyer these are
+   filled shapes with dark type on them; here they sit on the pitch, so the
+   burst is a tinted plate with a lit edge and the type stays light.
+
+   The star is a clip-path on a decorative layer *behind* the text, never on
+   the text's own box: clipping the content box would crop a descender or a
+   digit at some viewport width, and the numbers are the whole point.
+
+   Both layers are pseudo-elements rather than a spare span, because a <dl>
+   group may only contain <dt> and <dd> — a decorative span inside one is
+   invalid markup that some screen readers do report. */
+/* Three across at every width, as on the flyer. Stacking them on a phone
+   made the hero three viewports tall before the first section. */
 .hero__stats {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--sp-3);
-  margin-top: var(--sp-6);
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
+  margin-top: var(--sp-5);
   width: 100%;
+  justify-items: center;
 }
 
 .hero__stat {
+  position: relative;
+  /* Keeps both negative-z layers inside this box. Without it they would
+     search for a stacking context up the tree and could land behind an
+     ancestor's background, which is how a burst silently disappears. */
+  isolation: isolate;
+  /* The number and label are sized in cqw so they scale with the burst
+     itself rather than with the viewport. Sized against vw instead, a phone
+     put 42px digits inside a 110px shape. */
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: 2px;
   align-items: center;
-  padding: var(--sp-4) var(--sp-2);
-  background: var(--paper-warm);
-  border: 2px dashed var(--teal-line);
-  border-radius: var(--r-md);
-}
-
-.hero__stat-value {
-  font-family: var(--font-hand);
-  font-size: 2.4rem;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--teal-deep);
-  font-variant-numeric: tabular-nums;
-}
-
-.hero__stat-label {
-  font-family: var(--font-body);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--text-subtle);
-  margin: 0;
+  justify-content: center;
+  /* A grid item defaults to min-width: auto, so the label's intrinsic width
+     was setting a floor under each 1fr track and the three-up row grew wider
+     than the hero. At 320px that pushed the third burst 20px off the page. */
+  min-width: 0;
+  /* Square, so the burst behind it is radially even. */
+  width: 100%;
+  max-width: 178px;
+  aspect-ratio: 1;
+  padding: var(--sp-3);
   text-align: center;
 }
 
-@media (min-width: 700px) {
+.hero__stat::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  clip-path: polygon(
+    50% 0%, 57.71% 11.26%, 69.13% 3.81%, 71.95% 17.16%, 85.36% 14.64%,
+    82.84% 28.05%, 96.19% 30.87%, 88.74% 42.29%, 100% 50%, 88.74% 57.71%,
+    96.19% 69.13%, 82.84% 71.95%, 85.36% 85.36%, 71.95% 82.84%, 69.13% 96.19%,
+    57.71% 88.74%, 50% 100%, 42.29% 88.74%, 30.87% 96.19%, 28.05% 82.84%,
+    14.64% 85.36%, 17.16% 71.95%, 3.81% 69.13%, 11.26% 57.71%, 0% 50%,
+    11.26% 42.29%, 3.81% 30.87%, 17.16% 28.05%, 14.64% 14.64%, 28.05% 17.16%,
+    30.87% 3.81%, 42.29% 11.26%
+  );
+  background: var(--burst-fill);
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+
+/* A second burst, a touch larger and dimmer, reads as the neon halo the
+   flyer's shapes throw onto the artwork. `filter: blur` on a clipped shape
+   is cheap here because it never animates. */
+.hero__stat::after {
+  content: '';
+  position: absolute;
+  inset: -12%;
+  z-index: -2;
+  background: var(--burst-glow);
+  filter: blur(22px);
+  pointer-events: none;
+}
+
+.hero__stat--green {
+  --burst-fill: linear-gradient(160deg, rgba(61, 240, 127, 0.28), rgba(61, 240, 127, 0.08));
+  --burst-glow: radial-gradient(circle, var(--green-glow), transparent 68%);
+  --burst-ink: var(--green);
+}
+
+.hero__stat--blue {
+  --burst-fill: linear-gradient(160deg, rgba(77, 124, 254, 0.3), rgba(77, 124, 254, 0.08));
+  --burst-glow: radial-gradient(circle, var(--blue-glow), transparent 68%);
+  --burst-ink: var(--blue-bright);
+}
+
+.hero__stat--purple {
+  --burst-fill: linear-gradient(160deg, rgba(169, 112, 255, 0.3), rgba(169, 112, 255, 0.08));
+  --burst-glow: radial-gradient(circle, var(--purple-glow), transparent 68%);
+  --burst-ink: var(--purple-bright);
+}
+
+/* The burst turns slightly under the cursor. Only the shape moves, so the
+   number stays fixed and legible. */
+.hero__stat:hover::before {
+  transform: rotate(11.25deg) scale(1.04);
+}
+
+/* The flyer's burst numbers: oversized, neon, tabular so the row does not
+   reflow as digits change. */
+.hero__stat-value {
+  font-family: var(--font-display);
+  font-size: min(31cqw, 3.1rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--burst-ink);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.6);
+}
+
+.hero__stat-label {
+  font-family: var(--font-display);
+  /* Floored at 0.7rem, which is 11.2px. The old 0.66rem floor rendered at
+     9.92px, below the point where letterspaced uppercase stays readable. */
+  font-size: clamp(0.7rem, 8cqw, 0.78rem);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin: 0;
+  /* Wide enough that "Points on the board" breaks over two lines rather than
+     three, which is what kept the burst from looking evenly filled. A ch is
+     much wider in the expanded face than it was in the condensed one, so a
+     bare 14ch overran the burst at every width, by 21px at 178px. Capping at
+     the content box keeps the two-line break where the burst is wide enough
+     and simply wraps further where it is not. */
+  max-width: min(14ch, 100%);
+  text-align: center;
+  line-height: 1.25;
+}
+
+@media (min-width: 640px) {
   .hero__stats {
-    grid-template-columns: repeat(4, 1fr);
+    gap: var(--sp-4);
+  }
+}
+
+/* The rotation is decoration, and a burst spinning under the pointer is
+   exactly what vestibular sensitivity flags. */
+@media (prefers-reduced-motion: reduce) {
+  .hero__stat:hover::before {
+    transform: none;
   }
 }
 
@@ -218,14 +418,15 @@
   height: 46px;
   overflow: hidden;
   border-radius: var(--r-full);
-  background: var(--paper-deep);
+  background: var(--line-color);
 }
 
 .hero__scroll-line {
   display: block;
   width: 100%;
   height: 40%;
-  background: var(--teal);
+  background: var(--green);
+  box-shadow: var(--glow-green);
   border-radius: var(--r-full);
   animation: scroll-hint 2s var(--ease-in-out) infinite;
 }
@@ -249,11 +450,11 @@
   z-index: 1;
 }
 
-/* A warmer band of paper to separate sections */
+/* A slightly lifted band to separate sections */
 .section--tint {
-  background: var(--paper-warm);
-  border-top: 2px dashed var(--paper-deep);
-  border-bottom: 2px dashed var(--paper-deep);
+  background: var(--surface-sunken);
+  border-top: 1px solid var(--line-color);
+  border-bottom: 1px solid var(--line-color);
 }
 
 @media (min-width: 768px) {
@@ -288,7 +489,7 @@
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
-    /* Room for the cards' pencil shadow, which sits bottom-right */
+    /* Room for the cards' hover lift */
     padding: var(--sp-1) var(--sp-4) var(--sp-4);
     margin-inline: calc(var(--sp-4) * -1);
     scrollbar-width: none;
@@ -334,15 +535,32 @@
   height: 100%;
 }
 
-/* The capstone is the centerpiece, so it gets a warm tint */
+/* The capstone is the centerpiece: a gold-lit plate that stands out from
+   the four regular challenge cards around it. */
 .challenge--featured {
-  background: var(--mustard-soft);
-  border-color: var(--mustard);
-  box-shadow: 3px 3px 0 var(--mustard);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 194, 77, 0.12),
+    var(--surface) 65%
+  );
+  border-color: rgba(255, 194, 77, 0.45);
+  box-shadow: var(--shadow-md), 0 0 30px rgba(255, 194, 77, 0.12);
 }
 
 .challenge--featured.panel--interactive:hover {
-  box-shadow: 5px 5px 0 var(--mustard);
+  border-color: var(--mustard);
+  box-shadow: var(--shadow-lg), 0 0 40px rgba(255, 194, 77, 0.22);
+}
+
+/* The lit top rule goes gold to match. */
+.challenge--featured::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--mustard) 45%,
+    transparent
+  );
+  opacity: 0.85;
 }
 
 .challenge__head {
@@ -358,20 +576,20 @@
   place-items: center;
   width: 48px;
   height: 48px;
-  background: var(--teal-soft);
-  color: var(--teal-deep);
-  border: 2px solid var(--teal-line);
-  border-radius: 50% 45% 55% 50%;
+  background: var(--green-soft);
+  color: var(--green);
+  border: 1px solid rgba(61, 240, 127, 0.35);
+  border-radius: var(--r-md);
 }
 
 .challenge--featured .challenge__icon {
-  background: #fff;
-  border-color: var(--mustard);
-  color: #A97F16;
+  background: var(--mustard-soft);
+  border-color: rgba(255, 194, 77, 0.45);
+  color: var(--mustard);
 }
 
 .challenge__name {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-sm);
   line-height: 1.15;
   color: var(--ink);
@@ -386,7 +604,7 @@
 
 .challenge__scoring {
   padding-top: var(--sp-3);
-  border-top: 2px dashed var(--paper-deep);
+  border-top: 1px solid var(--line-color);
 }
 
 .challenge__scoring-label {
@@ -420,6 +638,167 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------- desktop: the pinned challenge deck ----------
+
+   The section holds still while this track scrolls past behind it, and scroll
+   position walks the deck one card at a time.
+
+   The track height sets how much scrolling one card costs. 360vh leaves about
+   260vh of travel once the sticky pane has taken its own screen out, and after
+   the lead-in and lead-out padding that is roughly 55vh of scroll per card
+   change: half a screen, so a card has time to land and be read but the page
+   never feels stuck. Shorter than about 260vh and the whole sequence is over
+   inside one flick of the wheel; much longer and four dead screens of scroll
+   read as the page having frozen.
+
+   Only the component's own elements are styled here. ChallengeDeck is not
+   rendered at all under prefers-reduced-motion or below 768px, so there is no
+   pinning to undo in a media query: the plain grid above is simply what
+   renders instead. */
+.challenge-deck__track {
+  min-height: 360vh;
+}
+
+.challenge-deck__pin {
+  position: sticky;
+  top: var(--nav-h);
+  height: calc(100vh - var(--nav-h));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: var(--sp-6);
+  /* The cards above and below the active one are a full card height clear of
+     it, which puts them outside this pane. Clipping keeps them from riding up
+     under the nav or down over the timeline. They are only clipped, never
+     hidden, so they stay in the accessibility tree. */
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .challenge-deck__pin {
+    grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--sp-8);
+  }
+}
+
+/* The progress rail. Its job is to say "five of these, you are on the second",
+   so the visitor knows the pin is a sequence with an end rather than a stall. */
+.challenge-deck__rail {
+  /* Below 1024px the rail shares a column with the reel, and the ghost card
+     above the active one reaches up into it. The rail has to win that overlap
+     or the step you are on is read through a card. */
+  position: relative;
+  z-index: var(--z-raised);
+  display: flex;
+  flex-direction: row;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 1024px) {
+  .challenge-deck__rail {
+    flex-direction: column;
+    gap: var(--sp-1);
+  }
+}
+
+.challenge-deck__step {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-left: 2px solid var(--line-color);
+  color: var(--text-subtle);
+  transition:
+    color var(--dur-mid) var(--ease-out),
+    border-color var(--dur-mid) var(--ease-out),
+    opacity var(--dur-mid) var(--ease-out);
+  opacity: 0.55;
+}
+
+.challenge-deck__step.is-done {
+  border-left-color: var(--green-deep);
+  opacity: 0.75;
+}
+
+.challenge-deck__step.is-active {
+  border-left-color: var(--green);
+  color: var(--text);
+  opacity: 1;
+}
+
+.challenge-deck__step-num {
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--green);
+}
+
+.challenge-deck__step-label {
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Below 1024px the rail sits above the cards and there is not room for five
+   names across, so it shrinks to numbered ticks. */
+@media (max-width: 1023px) {
+  .challenge-deck__rail {
+    justify-content: center;
+  }
+
+  .challenge-deck__step {
+    border-left: none;
+    border-bottom: 2px solid var(--line-color);
+  }
+
+  .challenge-deck__step.is-done {
+    border-bottom-color: var(--green-deep);
+  }
+
+  .challenge-deck__step.is-active {
+    border-bottom-color: var(--green);
+  }
+
+  .challenge-deck__step-label {
+    display: none;
+  }
+
+  .challenge-deck__step.is-active .challenge-deck__step-label {
+    display: inline;
+  }
+}
+
+/* Every card occupies the same grid cell, so the stage is as tall as the
+   tallest card, every card is the same height, and the reel stays in normal
+   flow. Absolute positioning would collapse the stage to nothing and leave the
+   cards floating over the rail. */
+.challenge-deck__stage {
+  display: grid;
+  width: 100%;
+  max-width: 660px;
+  margin-inline: auto;
+}
+
+.challenge-deck__card {
+  grid-area: 1 / 1;
+  will-change: transform, opacity;
+  /* Cards behind the front one must not catch the mouse: without this the
+     hover lift of a card stacked underneath fires through the one on top.
+     Pointer events only. The cards stay in the accessibility tree. */
+  pointer-events: none;
+}
+
+.challenge-deck__card.is-active {
+  pointer-events: auto;
+}
+
 /* ============================================================
    Timeline
    ============================================================ */
@@ -447,18 +826,19 @@
 }
 
 .timeline__dot {
-  width: 16px;
-  height: 16px;
-  background: var(--teal);
-  border: 2px solid var(--ink);
+  width: 14px;
+  height: 14px;
+  background: var(--green);
+  border: 2px solid var(--bg);
   border-radius: 50%;
   flex-shrink: 0;
+  box-shadow: var(--glow-green);
 }
 
 .timeline__line {
   width: 0;
   flex-grow: 1;
-  border-left: 2px dashed var(--teal-line);
+  border-left: 1px solid var(--line-color);
   margin-top: var(--sp-2);
 }
 
@@ -485,13 +865,13 @@
   font-family: var(--font-body);
   font-size: var(--fs-xs);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--clay);
+  color: var(--green);
 }
 
 .timeline__title {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-sm);
   line-height: 1.15;
   margin-bottom: var(--sp-2);
@@ -563,7 +943,7 @@
     height: 0;
     flex: 1 1 auto;
     border-left: 0;
-    border-top: 2px dashed var(--teal-line);
+    border-top: 1px solid var(--line-color);
     margin-top: 0;
     margin-left: var(--sp-2);
   }
@@ -581,15 +961,40 @@
    ============================================================ */
 
 .cta {
+  position: relative;
   max-width: 760px;
   margin-inline: auto;
-  background: var(--teal-soft);
-  border-color: var(--teal);
-  box-shadow: 4px 4px 0 var(--teal-deep);
+  background: linear-gradient(
+    180deg,
+    rgba(61, 240, 127, 0.1),
+    var(--surface) 70%
+  );
+  border-color: rgba(61, 240, 127, 0.35);
+  box-shadow: var(--shadow-lg), 0 0 40px var(--green-glow);
+  overflow: hidden;
 }
 
 .cta.panel--interactive:hover {
-  box-shadow: 6px 6px 0 var(--teal-deep);
+  border-color: var(--green);
+  box-shadow: var(--shadow-lg), 0 0 56px var(--green-glow);
+}
+
+.cta::before {
+  opacity: 1;
+}
+
+/* A floodlight wash behind the final call. */
+.cta__glow {
+  display: block;
+  position: absolute;
+  top: -40%;
+  left: 50%;
+  width: 420px;
+  height: 420px;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, var(--green-glow), transparent 68%);
+  filter: blur(40px);
+  pointer-events: none;
 }
 
 .cta .window__body {
@@ -601,15 +1006,14 @@
   padding-block: var(--sp-7);
 }
 
-.cta__glow {
-  display: none;
-}
-
 .cta__title {
-  font-family: var(--font-hand);
+  font-family: var(--font-display);
   font-size: var(--fs-hand-xl);
-  line-height: 1.1;
-  color: var(--ink);
+  line-height: 0.98;
+  color: var(--text);
+  text-shadow:
+    0.05em 0.05em 0 var(--green-deep),
+    0.085em 0.085em 0 rgba(0, 0, 0, 0.5);
 }
 
 .cta__body {
@@ -625,6 +1029,10 @@
   justify-content: center;
   gap: var(--sp-3);
   margin-top: var(--sp-2);
+  /* This row shrink-wraps its buttons, and .btn's max-width: 100% resolves
+     against it, so without a cap of its own the row grew to fit a nowrap
+     label and took the buttons past the panel edge with it. */
+  max-width: 100%;
 }
 
 /* ============================================================
@@ -635,7 +1043,7 @@
   position: relative;
   z-index: 1;
   padding-block: var(--sp-7);
-  border-top: 2px dashed var(--ink-light);
+  border-top: 1px solid var(--line-color);
 }
 
 .footer__inner {

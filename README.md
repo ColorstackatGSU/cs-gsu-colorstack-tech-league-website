@@ -48,21 +48,28 @@ docker exec -i supabase_db_tech-league psql -U postgres -v ON_ERROR_STOP=1 < sup
 
 ## Design
 
-A friendly hand-drawn sketch style: warm cream paper, soft teal accents,
-handwritten headings (Caveat) over a rounded readable body face (Quicksand),
-rounded pill controls, dashed outlines, and pencil-like hard offset shadows.
+Broadcast sports graphics after dark: a near-black pitch (`#080b12`), a neon
+green (`#3df07f`) carrying the brand, electric blue and court purple as
+supports, condensed athletic display type (Barlow Condensed, set uppercase)
+over Barlow for body copy, hard-edged panels, and glow rather than offset
+shadow for depth.
 
 All design decisions live as CSS custom properties in
 [src/index.css](src/index.css) - color, type scale, spacing, motion.
 Components never hardcode a hex value, so retheming happens in one file.
 
-Two details carry most of the character: cards use slightly uneven corner
-radii (`--r-wobble`) so shapes read as drawn rather than generated, and
-buttons sit on a hard offset shadow that they sink onto when pressed.
+That is not theoretical, it is how this theme arrived. The site was a
+hand-drawn sketch style before, and the restyle was a rewrite of index.css
+alone. The sketch build's token names survive as aliases pointing at the new
+values, so `--paper`, `--ink`, `--teal`, `--font-hand`, `--shadow-pencil`, and
+`--r-wobble` all still resolve and no other stylesheet had to be rewritten to
+change a word. The wobble radii are evened out and the pencil shadows now
+point at depth, so nothing keeps its old look under the old name.
 
-Body copy uses Quicksand rather than a true handwriting face because
-handwriting becomes unreadable at form-label sizes. Caveat is reserved for
-headings, numbers, and short labels.
+Barlow Condensed is reserved for headings, numbers, and short labels. Body
+copy uses Barlow instead, because condensed type gets hard to read at
+form-label sizes, and the two share a skeleton so they never look like
+separate systems.
 
 ## Routes
 
@@ -72,7 +79,8 @@ headings, numbers, and short labels.
 | `/scoring` | public | The scoring system, from `src/lib/season.js` |
 | `/login` | public | Student email + password, or Sign in with ColorStack at GSU |
 | `/signup` | public | Account creation; sends a confirmation link |
-| `/verify` | public | Where the confirmation link lands |
+| `/verify` | public | Where the signup confirmation link lands |
+| `/confirm-email` | public | Where the personal-email confirmation link lands |
 | `/forgot-password`, `/reset-password` | public | Password reset by email |
 | `/dashboard` | auth | Progress, resume, application status, team |
 | `/apply` | auth | Four-step League application; final once submitted |
@@ -102,7 +110,12 @@ to Supabase directly and holds no keys.
   [supabase/migrations](supabase/migrations). The API validates shapes and passes
   the database's refusals through as sentences.
 - **Scores are server-authoritative.** Only admins write them;
-  `src/lib/season.js` ranks for display over numbers the server returned.
+  `src/lib/season.js` ranks for display over numbers the server returned. It
+  holds the five events, their rubrics, and their weights for the Scoring page
+  and the Leaderboard, but it is not the only copy: the landing page repeats
+  the same five in its own `CHALLENGES` and `PHASES` arrays, so an event, a
+  date, a weight, or a rubric line has to be changed in both files or the two
+  pages disagree.
 - **Applications are final once submitted.** Only an admin can reopen one.
 - **Resumes** are private files in Supabase Storage, shared with League partners
   (deleting one is the opt-out). They are kept for about a month after the
@@ -131,7 +144,8 @@ Every one of them collapses to the final state when the visitor has
 Built in rather than bolted on: visible focus on every interactive element,
 44px minimum tap targets, labelled fields with errors tied via
 `aria-describedby`, a focusable error summary on failed submits, `.edu` email
-validation with a specific recovery message, and a skip link. Password fields
+validation with a specific recovery message, and a skip link that targets the
+app's single `<main>` landmark in [src/App.jsx](src/App.jsx). Password fields
 allow paste and password managers.
 
 ## Assets
@@ -150,15 +164,19 @@ array at the top of
 { name: 'Org Name', logo: '/partners/org.png' }
 ```
 
-Tiles are white, so a transparent PNG or SVG drops straight in. If the logo
+The array is what renders, not the folder: a file sitting in `public/partners/`
+with no row pointing at it never appears.
+
+Tiles stay light even on the dark page, because partner logos are drawn for
+light backgrounds, so a transparent PNG or SVG drops straight in. If the logo
 file has its own solid background baked in (a white mark on a brand color),
 add `bleed: true` so it fills the tile edge to edge instead of sitting as a
-colored square inside a white box. Either way the full logo always shows -
+colored square inside a light box. Either way the full logo always shows -
 nothing is cropped.
 
 Omit `logo` entirely and the tile renders the org's name as text, so the
-carousel still looks intentional while you wait on an asset. **CS Club is currently a text tile**, drop its logo in
-`public/partners/` and add a `logo:` key to that row to swap it in.
+carousel still looks intentional while you wait on an asset. Every partner in
+the array currently has a logo, so no tile is falling back to text.
 
 The marquee repeats short lists automatically to fill the strip, and it has a
 pause button (and stops for `prefers-reduced-motion`).

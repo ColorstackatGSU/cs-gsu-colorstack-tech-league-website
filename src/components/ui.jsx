@@ -192,10 +192,10 @@ export const Select = forwardRef(function Select(
       <span className="select-wrap__chevron" aria-hidden="true">
         <svg viewBox="0 0 16 10" width="16" height="10" fill="none">
           <path
-            d="M1.5 2C4 5.2 6 8 8 8.2c2 .2 4-3 6.5-6.4"
+            d="M2 2.5 L8 8 L14 2.5"
             stroke="currentColor"
             strokeWidth="2"
-            strokeLinecap="round"
+            strokeLinecap="square"
           />
         </svg>
       </span>

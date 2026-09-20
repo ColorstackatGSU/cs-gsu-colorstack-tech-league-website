@@ -89,7 +89,7 @@ export default function Scoring() {
   const { isAuthed } = useAuth();
 
   return (
-    <main className="scoring">
+    <div className="scoring">
       {/* ---------------- Header ---------------- */}
       <section className="section scoring__hero on-dark">
         <div className="container">
@@ -259,6 +259,6 @@ export default function Scoring() {
           </Reveal>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
