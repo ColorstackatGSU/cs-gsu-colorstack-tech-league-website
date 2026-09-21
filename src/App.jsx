@@ -21,7 +21,6 @@ import ConfirmEmail from './pages/ConfirmEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Teams from './pages/Teams';
-import Admin from './pages/Admin';
 import { startAppDoodles } from './doodles/app-doodles.js';
 import './doodles/app-doodles.css';
 
@@ -60,11 +59,6 @@ function RequireAuth({ children }) {
   return children;
 }
 
-/** /admin for admins. The API refuses everyone else regardless; this just says so first. */
-function RequireAdmin({ children }) {
-  const { isAdmin } = useAuth();
-  return <RequireAuth>{isAdmin ? children : <Navigate to="/dashboard" replace />}</RequireAuth>;
-}
 
 /** Signed-in users have no reason to see login/signup. */
 function RedirectIfAuthed({ children }) {
@@ -167,14 +161,6 @@ export default function App() {
                 <RequireAuth>
                   <Teams />
                 </RequireAuth>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <RequireAdmin>
-                  <Admin />
-                </RequireAdmin>
               }
             />
             {/* Reached from emailed links, so they work signed in or out. */}

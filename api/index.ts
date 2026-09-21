@@ -3,7 +3,6 @@ import { handle } from 'hono/vercel';
 import { HttpError } from './_lib/errors.js';
 import { requireMember, requireSameOrigin, type AuthedEnv } from './_lib/session.js';
 import account from './_routes/account.js';
-import admin from './_routes/admin.js';
 import auth from './_routes/auth.js';
 import serviceRoutes from './_routes/service.js';
 import teams from './_routes/teams.js';
@@ -56,7 +55,6 @@ app.use('*', requireMember);
 
 app.route('/', account);
 app.route('/', teams);
-app.route('/admin', admin);
 
 app.notFound((c) => c.json({ error: 'That page of the API does not exist.' }, 404));
 

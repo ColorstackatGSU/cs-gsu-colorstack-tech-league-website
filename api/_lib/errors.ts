@@ -29,6 +29,18 @@ export function fromDb(error: PostgrestError): HttpError | Error {
   switch (error.code) {
     case 'P0001':
       return new HttpError(409, error.message);
+    // P0002 is `raise ... using errcode = 'no_data_found'`, which the portal functions use
+    // for "that row is not there". It is a distinct code precisely so it does not come back
+    // as a 409 alongside the rule violations, which would tell an officer following a stale
+    // link that the applicant had not finished rather than that the application is gone.
+    case 'P0002':
+      return new HttpError(404, error.message);
+    // A foreign key violation reaching here means a row referred to something that is no
+    // longer there, which from the caller's side is a stale page rather than a fault. It
+    // was surfacing as a generic 500, so an officer scoring a team that had just been
+    // deleted read "something went wrong on our end".
+    case '23503':
+      return new HttpError(409, 'Something this refers to no longer exists. Reload the page and try again.');
     case '42501':
       return new HttpError(403, 'You do not have permission to do that.');
     case '23505':

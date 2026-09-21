@@ -1,46 +1,32 @@
-import { Hono, type Context, type MiddlewareHandler } from 'hono';
-import { z } from 'zod';
-import { decisionEmail } from '../_lib/emails.js';
-import { HttpError, parse, unwrap } from '../_lib/errors.js';
-import { sendMail } from '../_lib/mailer.js';
-import type { AuthedEnv } from '../_lib/session.js';
-import { RESUME_BUCKET, resumePath } from '../_lib/supabase.js';
-import { pdfResponse } from './account.js';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { decisionEmail } from './emails.js';
+import { HttpError, unwrap } from './errors.js';
+import { sendMail } from './mailer.js';
+import { RESUME_BUCKET, resumePath } from './supabase.js';
 
 /**
- * The /admin page's API: reviewing applications and entering scores.
+ * Application review and score entry, shared by the two ways into it.
  *
- * Everything runs as the signed-in admin, not the service role, so the same RLS policies
- * decide what they can do. The check below only turns a non-admin away early with a clear
- * message; it is not what protects the data.
+ * /api/admin runs as the signed-in admin, so RLS and is_admin() decide what they can do.
+ * /api/service runs as the service role on behalf of an officer in the chapter's admin
+ * portal, who may have no Tech League account at all. The reading is identical either
+ * way, so every function here takes the client to run as rather than building one: pass
+ * `c.get('db')` for a member, `service()` for the portal.
+ *
+ * The writes are not identical, because the database functions behind them check
+ * is_admin(), which is false for the service role. Hence `Reviewer`: it picks which of
+ * the two RPCs in supabase/migrations/20260920000001_portal_application_review.sql to
+ * call, and carries the officer's address when there is one.
+ *
+ * This file exists because /api/admin is being replaced by the portal and is deleted at
+ * the end of that move. Until then both paths have to behave the same, and two copies of
+ * this logic would not stay that way.
  */
-const admin = new Hono<AuthedEnv>();
 
-const requireAdmin: MiddlewareHandler<AuthedEnv> = async (c, next) => {
-  const profile = unwrap(
-    await c.get('db').from('profiles').select('is_admin').eq('id', c.get('member').id).single()
-  ) as { is_admin: boolean };
-  if (!profile.is_admin) {
-    throw new HttpError(403, 'This page is for League admins.');
-  }
-  await next();
-};
+/** Who is asking, and therefore which set of database functions the writes go through. */
+export type Reviewer = { kind: 'member' } | { kind: 'portal'; actor: string };
 
-admin.use('*', requireAdmin);
-
-async function body(c: Context) {
-  try {
-    return await c.req.json();
-  } catch {
-    return {};
-  }
-}
-
-const userIdParam = (c: Context) => parse(z.uuid('That application could not be found.'), c.req.param('id'));
-
-/* ---------- applications ---------- */
-
-type ReviewRow = {
+export type ReviewRow = {
   user_id: string;
   status: 'draft' | 'submitted';
   full_name: string | null;
@@ -74,7 +60,7 @@ const REVIEW_COLUMNS =
   'decided_at, decision_emailed_at, submitted_at, updated_at, ' +
   'profile:profiles!applications_user_id_fkey(email, resume_name, resume_size, resume_uploaded_at)';
 
-function toReview(row: ReviewRow) {
+export function toReview(row: ReviewRow) {
   return {
     userId: row.user_id,
     email: row.profile?.email ?? row.school_email,
@@ -104,23 +90,45 @@ function toReview(row: ReviewRow) {
   };
 }
 
-admin.get('/applications', async (c) => {
+export async function listReviews(db: SupabaseClient) {
   const rows = unwrap(
-    await c
-      .get('db')
-      .from('applications')
-      .select(REVIEW_COLUMNS)
-      .order('submitted_at', { ascending: true, nullsFirst: false })
+    await db.from('applications').select(REVIEW_COLUMNS).order('submitted_at', { ascending: true, nullsFirst: false })
   ) as unknown as ReviewRow[];
-  return c.json({ applications: rows.map(toReview) });
-});
+  return rows;
+}
 
-async function loadReview(c: Context<AuthedEnv>, userId: string) {
+export async function loadReview(db: SupabaseClient, userId: string) {
   const row = unwrap(
-    await c.get('db').from('applications').select(REVIEW_COLUMNS).eq('user_id', userId).maybeSingle()
+    await db.from('applications').select(REVIEW_COLUMNS).eq('user_id', userId).maybeSingle()
   ) as unknown as ReviewRow | null;
   if (!row) throw new HttpError(404, 'That application could not be found.');
   return row;
+}
+
+export async function decideApplication(db: SupabaseClient, who: Reviewer, userId: string, decision: string) {
+  if (who.kind === 'portal') {
+    unwrap(
+      await db.rpc('portal_decide_application', { p_user_id: userId, p_decision: decision, p_actor: who.actor })
+    );
+    return;
+  }
+  unwrap(await db.rpc('decide_application', { p_user_id: userId, p_decision: decision }));
+}
+
+export async function reopenApplication(db: SupabaseClient, who: Reviewer, userId: string) {
+  if (who.kind === 'portal') {
+    unwrap(await db.rpc('portal_reopen_application', { p_user_id: userId, p_actor: who.actor }));
+    return;
+  }
+  unwrap(await db.rpc('reopen_application', { p_user_id: userId }));
+}
+
+async function markDecisionEmailed(db: SupabaseClient, who: Reviewer, userId: string) {
+  if (who.kind === 'portal') {
+    unwrap(await db.rpc('portal_mark_decision_emailed', { p_user_id: userId, p_actor: who.actor }));
+    return;
+  }
+  unwrap(await db.rpc('mark_decision_emailed', { p_user_id: userId }));
 }
 
 /**
@@ -130,7 +138,7 @@ async function loadReview(c: Context<AuthedEnv>, userId: string) {
  * saved and is not undone by an email that did not go. The admin page shows the
  * application as "not emailed" with a button to try again.
  */
-async function emailDecision(c: Context<AuthedEnv>, row: ReviewRow) {
+export async function emailDecision(db: SupabaseClient, who: Reviewer, row: ReviewRow) {
   if (!row.decision) return { emailed: false, emailError: 'There is no decision to email yet.' };
 
   // The personal address, as the application page promises: a student address can
@@ -150,48 +158,23 @@ async function emailDecision(c: Context<AuthedEnv>, row: ReviewRow) {
     return { emailed: false, emailError: 'The decision is saved, but the email did not send. Try sending it again.' };
   }
 
-  unwrap(await c.get('db').rpc('mark_decision_emailed', { p_user_id: row.user_id }));
+  await markDecisionEmailed(db, who, row.user_id);
   return { emailed: true };
 }
 
-admin.post('/applications/:id/decision', async (c) => {
-  const userId = userIdParam(c);
-  const { decision } = parse(
-    z.object({ decision: z.enum(['accepted', 'waitlisted', 'denied'], 'Choose accept, waitlist, or deny.') }),
-    await body(c)
-  );
-
-  unwrap(await c.get('db').rpc('decide_application', { p_user_id: userId, p_decision: decision }));
-  const result = await emailDecision(c, await loadReview(c, userId));
-  return c.json({ application: toReview(await loadReview(c, userId)), ...result });
-});
-
-admin.post('/applications/:id/email', async (c) => {
-  const userId = userIdParam(c);
-  const result = await emailDecision(c, await loadReview(c, userId));
-  return c.json({ application: toReview(await loadReview(c, userId)), ...result });
-});
-
-admin.post('/applications/:id/reopen', async (c) => {
-  const userId = userIdParam(c);
-  unwrap(await c.get('db').rpc('reopen_application', { p_user_id: userId }));
-  return c.json({ application: toReview(await loadReview(c, userId)) });
-});
-
-admin.get('/applications/:id/resume', async (c) => {
-  const row = await loadReview(c, userIdParam(c));
+/** The stored resume as a Blob, with the 404s the two resume routes both need. */
+export async function downloadResume(db: SupabaseClient, row: ReviewRow) {
   if (!row.profile?.resume_name) {
     throw new HttpError(404, 'This applicant has not uploaded a resume.');
   }
-  const { data, error } = await c.get('db').storage.from(RESUME_BUCKET).download(resumePath(row.user_id));
+  const { data, error } = await db.storage.from(RESUME_BUCKET).download(resumePath(row.user_id));
   if (error || !data) throw new HttpError(404, 'That resume file could not be found.');
-  return pdfResponse(data, row.profile.resume_name, c.req.query('download') === '1');
-});
+  return { file: data, name: row.profile.resume_name };
+}
 
 /* ---------- scores ---------- */
 
-admin.get('/scores', async (c) => {
-  const db = c.get('db');
+export async function readScores(db: SupabaseClient) {
   const [events, teams] = await Promise.all([
     db.from('events').select('id, name, weight, max_points, position').order('position'),
     db.from('teams').select('id, name, capacity, team_members(count), scores(event_id, points)').order('name'),
@@ -205,7 +188,7 @@ admin.get('/scores', async (c) => {
     scores: Array<{ event_id: string; points: number }>;
   }>;
 
-  return c.json({
+  return {
     events: (unwrap(events) as Array<{ id: string; name: string; weight: number; max_points: number }>).map((e) => ({
       id: e.id,
       name: e.name,
@@ -219,34 +202,48 @@ admin.get('/scores', async (c) => {
       members: t.team_members[0]?.count ?? 0,
       scores: Object.fromEntries(t.scores.map((s) => [s.event_id, Number(s.points)])),
     })),
-  });
-});
+  };
+}
 
-admin.put('/scores', async (c) => {
-  const input = parse(
-    z.object({
-      teamId: z.uuid('That team could not be found.'),
-      eventId: z.string().min(1, 'That event could not be found.'),
-      // null clears a score, for an event entered against the wrong team.
-      points: z.number('Scores are numbers.').min(0, 'Scores cannot be negative.').nullable(),
-    }),
-    await body(c)
-  );
-  const db = c.get('db');
+/**
+ * Writes or clears one team's score for one event.
+ *
+ * The two paths differ because of who is writing. A member's write goes straight at the
+ * table, where RLS decides whether they may and the scores_guard trigger stamps
+ * entered_by from their own session. The portal has no session, so it goes through
+ * portal_save_score, which carries the officer's address and records them as the author.
+ *
+ * Without that split every score entered from the portal had no author at all, since the
+ * guard assigned auth.uid() unconditionally and that is NULL for the service role. That
+ * did not matter while /admin was the only way in. It does now.
+ */
+export async function saveScore(
+  db: SupabaseClient,
+  who: Reviewer,
+  input: { teamId: string; eventId: string; points: number | null }
+) {
+  if (who.kind === 'portal') {
+    unwrap(
+      await db.rpc('portal_save_score', {
+        p_team: input.teamId,
+        p_event: input.eventId,
+        p_points: input.points,
+        p_actor: who.actor,
+      })
+    );
+    return;
+  }
 
   if (input.points === null) {
     unwrap(await db.from('scores').delete().eq('team_id', input.teamId).eq('event_id', input.eventId));
-  } else {
-    const written = unwrap(
-      await db
-        .from('scores')
-        .upsert({ team_id: input.teamId, event_id: input.eventId, points: input.points })
-        .select('team_id')
-    ) as unknown[];
-    if (written.length === 0) throw new HttpError(403, 'That score was not saved.');
+    return;
   }
 
-  return c.json({ ok: true });
-});
-
-export default admin;
+  const written = unwrap(
+    await db
+      .from('scores')
+      .upsert({ team_id: input.teamId, event_id: input.eventId, points: input.points })
+      .select('team_id')
+  ) as unknown[];
+  if (written.length === 0) throw new HttpError(403, 'That score was not saved.');
+}

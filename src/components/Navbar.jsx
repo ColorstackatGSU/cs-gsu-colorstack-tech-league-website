@@ -22,13 +22,11 @@ const MEMBER_LINKS = [
   { to: '/dashboard', label: 'Dashboard' },
 ];
 
-const ADMIN_LINK = { to: '/admin', label: 'Admin' };
-
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const { isAuthed, isAdmin, session, signOut } = useAuth();
-  const memberLinks = isAdmin ? [...MEMBER_LINKS, ADMIN_LINK] : MEMBER_LINKS;
+  const { isAuthed, session, signOut } = useAuth();
+  const memberLinks = MEMBER_LINKS;
   const navigate = useNavigate();
   const location = useLocation();
 
