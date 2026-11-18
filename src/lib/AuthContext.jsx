@@ -154,6 +154,7 @@ export function AuthProvider({ children }) {
       loadError,
       session,
       profile,
+      signOutReason,
       isAuthed: Boolean(session),
       refresh,
       signIn,
