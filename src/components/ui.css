@@ -614,11 +614,6 @@
   gap: var(--sp-3);
 }
 
-.section-heading--left {
-  align-items: flex-start;
-  text-align: left;
-}
-
 /* The eyebrow carries the neon rule that sits above every
    section title, the flyer's recurring divider. */
 .section-heading__eyebrow {

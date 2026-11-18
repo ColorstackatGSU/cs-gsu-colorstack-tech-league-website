@@ -125,11 +125,6 @@ export const EVENTS = [
 
 export const TOTAL_WEIGHT = EVENTS.reduce((sum, e) => sum + e.weight, 0);
 
-/** Events that can currently contribute points, in season order. */
-export const GRADED_EVENT_IDS = EVENTS.filter((e) => e.status === 'complete').map(
-  (e) => e.id
-);
-
 export function getEvent(id) {
   return EVENTS.find((e) => e.id === id) ?? null;
 }

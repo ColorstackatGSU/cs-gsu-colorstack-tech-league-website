@@ -21,7 +21,7 @@ import { RACE_ETHNICITY } from './profile.js';
  * picked up the next time the member signs in with ColorStack.
  */
 
-export const SCOPES = ['openid', 'profile', 'email', 'socials', 'discord', 'demographics', 'resume'];
+const SCOPES = ['openid', 'profile', 'email', 'socials', 'discord', 'demographics', 'resume'];
 
 function colorstackConfig() {
   const { COLORSTACK_ISSUER, COLORSTACK_CLIENT_ID, COLORSTACK_CLIENT_SECRET, COLORSTACK_REDIRECT_URI } = env();

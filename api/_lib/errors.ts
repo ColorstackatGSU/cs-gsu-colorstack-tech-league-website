@@ -25,7 +25,7 @@ export class HttpError extends Error {
  * sentence written for a member, so those pass straight through. That is the whole
  * contract between the SQL and this file: the rules and their wording live together.
  */
-export function fromDb(error: PostgrestError): HttpError | Error {
+function fromDb(error: PostgrestError): HttpError | Error {
   switch (error.code) {
     case 'P0001':
       return new HttpError(409, error.message);

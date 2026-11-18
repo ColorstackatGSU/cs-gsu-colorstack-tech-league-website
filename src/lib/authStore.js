@@ -107,7 +107,7 @@ export function passwordStrength(password) {
  *
  * The "me" shape every sign-in function resolves with, and what fetchMe returns:
  *   {
- *     session: { userId, email, name, isAdmin },
+ *     session: { userId, email, name },
  *     profile: { fullName, resume, application, applicationStatus, decision,
  *                teamEligible, team, teamInbox, ... },
  *   }
@@ -198,10 +198,6 @@ export async function fetchMe() {
 }
 
 /* ---------- profile: resume + application ---------- */
-
-export function saveProfile(patch) {
-  return request('PATCH', '/me', patch);
-}
 
 /** Uploads a PDF. The server checks the bytes are a PDF, not just the extension. */
 export function saveResume(file) {
@@ -306,20 +302,12 @@ export async function fetchTeams() {
   return data.teams;
 }
 
-export function getTeam() {
-  return request('GET', '/team');
-}
-
 export function createTeam({ name, capacity }) {
   return request('POST', '/teams', { name: name.trim(), capacity: Number(capacity) });
 }
 
 export function updateTeam(patch) {
   return request('PATCH', '/team', patch);
-}
-
-export function renameTeam(name) {
-  return updateTeam({ name: name.trim() });
 }
 
 export function leaveTeam() {

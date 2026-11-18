@@ -5,28 +5,17 @@ import { sendMail } from './mailer.js';
 import { RESUME_BUCKET, resumePath } from './supabase.js';
 
 /**
- * Application review and score entry, shared by the two ways into it.
+ * Application review and score entry for /api/service, which runs as the service role on
+ * behalf of an officer in the chapter's admin portal, who may have no Tech League account
+ * at all. Every function here takes the client to run as rather than building one.
  *
- * /api/admin runs as the signed-in admin, so RLS and is_admin() decide what they can do.
- * /api/service runs as the service role on behalf of an officer in the chapter's admin
- * portal, who may have no Tech League account at all. The reading is identical either
- * way, so every function here takes the client to run as rather than building one: pass
- * `c.get('db')` for a member, `service()` for the portal.
- *
- * The writes are not identical, because the database functions behind them check
- * is_admin(), which is false for the service role. Hence `Reviewer`: it picks which of
- * the two RPCs in supabase/migrations/20260920000001_portal_application_review.sql to
- * call, and carries the officer's address when there is one.
- *
- * This file exists because /api/admin is being replaced by the portal and is deleted at
- * the end of that move. Until then both paths have to behave the same, and two copies of
- * this logic would not stay that way.
+ * The database functions behind the writes check is_admin(), which is false for the
+ * service role, so the portal goes through the portal_* functions in
+ * supabase/migrations/20260920000001_portal_application_review.sql. Each carries the
+ * officer's address as `actor` so the write is attributed to them.
  */
 
-/** Who is asking, and therefore which set of database functions the writes go through. */
-export type Reviewer = { kind: 'member' } | { kind: 'portal'; actor: string };
-
-export type ReviewRow = {
+type ReviewRow = {
   user_id: string;
   status: 'draft' | 'submitted';
   full_name: string | null;
@@ -105,40 +94,26 @@ export async function loadReview(db: SupabaseClient, userId: string) {
   return row;
 }
 
-export async function decideApplication(db: SupabaseClient, who: Reviewer, userId: string, decision: string) {
-  if (who.kind === 'portal') {
-    unwrap(
-      await db.rpc('portal_decide_application', { p_user_id: userId, p_decision: decision, p_actor: who.actor })
-    );
-    return;
-  }
-  unwrap(await db.rpc('decide_application', { p_user_id: userId, p_decision: decision }));
+export async function decideApplication(db: SupabaseClient, actor: string, userId: string, decision: string) {
+  unwrap(await db.rpc('portal_decide_application', { p_user_id: userId, p_decision: decision, p_actor: actor }));
 }
 
-export async function reopenApplication(db: SupabaseClient, who: Reviewer, userId: string) {
-  if (who.kind === 'portal') {
-    unwrap(await db.rpc('portal_reopen_application', { p_user_id: userId, p_actor: who.actor }));
-    return;
-  }
-  unwrap(await db.rpc('reopen_application', { p_user_id: userId }));
+export async function reopenApplication(db: SupabaseClient, actor: string, userId: string) {
+  unwrap(await db.rpc('portal_reopen_application', { p_user_id: userId, p_actor: actor }));
 }
 
-async function markDecisionEmailed(db: SupabaseClient, who: Reviewer, userId: string) {
-  if (who.kind === 'portal') {
-    unwrap(await db.rpc('portal_mark_decision_emailed', { p_user_id: userId, p_actor: who.actor }));
-    return;
-  }
-  unwrap(await db.rpc('mark_decision_emailed', { p_user_id: userId }));
+async function markDecisionEmailed(db: SupabaseClient, actor: string, userId: string) {
+  unwrap(await db.rpc('portal_mark_decision_emailed', { p_user_id: userId, p_actor: actor }));
 }
 
 /**
  * Emails the member their decision and stamps it as sent.
  *
  * Returns rather than throws on a failed send, because the decision itself is already
- * saved and is not undone by an email that did not go. The admin page shows the
+ * saved and is not undone by an email that did not go. The portal shows the
  * application as "not emailed" with a button to try again.
  */
-export async function emailDecision(db: SupabaseClient, who: Reviewer, row: ReviewRow) {
+export async function emailDecision(db: SupabaseClient, actor: string, row: ReviewRow) {
   if (!row.decision) return { emailed: false, emailError: 'There is no decision to email yet.' };
 
   // The personal address, as the application page promises: a student address can
@@ -158,7 +133,7 @@ export async function emailDecision(db: SupabaseClient, who: Reviewer, row: Revi
     return { emailed: false, emailError: 'The decision is saved, but the email did not send. Try sending it again.' };
   }
 
-  await markDecisionEmailed(db, who, row.user_id);
+  await markDecisionEmailed(db, actor, row.user_id);
   return { emailed: true };
 }
 
@@ -206,44 +181,21 @@ export async function readScores(db: SupabaseClient) {
 }
 
 /**
- * Writes or clears one team's score for one event.
- *
- * The two paths differ because of who is writing. A member's write goes straight at the
- * table, where RLS decides whether they may and the scores_guard trigger stamps
- * entered_by from their own session. The portal has no session, so it goes through
- * portal_save_score, which carries the officer's address and records them as the author.
- *
- * Without that split every score entered from the portal had no author at all, since the
- * guard assigned auth.uid() unconditionally and that is NULL for the service role. That
- * did not matter while /admin was the only way in. It does now.
+ * Writes or clears one team's score for one event, through portal_save_score, which
+ * records the officer's address as the author. The portal has no session, so the
+ * scores_guard trigger has no auth.uid() to stamp.
  */
 export async function saveScore(
   db: SupabaseClient,
-  who: Reviewer,
+  actor: string,
   input: { teamId: string; eventId: string; points: number | null }
 ) {
-  if (who.kind === 'portal') {
-    unwrap(
-      await db.rpc('portal_save_score', {
-        p_team: input.teamId,
-        p_event: input.eventId,
-        p_points: input.points,
-        p_actor: who.actor,
-      })
-    );
-    return;
-  }
-
-  if (input.points === null) {
-    unwrap(await db.from('scores').delete().eq('team_id', input.teamId).eq('event_id', input.eventId));
-    return;
-  }
-
-  const written = unwrap(
-    await db
-      .from('scores')
-      .upsert({ team_id: input.teamId, event_id: input.eventId, points: input.points })
-      .select('team_id')
-  ) as unknown[];
-  if (written.length === 0) throw new HttpError(403, 'That score was not saved.');
+  unwrap(
+    await db.rpc('portal_save_score', {
+      p_team: input.teamId,
+      p_event: input.eventId,
+      p_points: input.points,
+      p_actor: actor,
+    })
+  );
 }

@@ -81,8 +81,8 @@ export const submissionSchema = z.object({
   commitment: z.enum(['1-2', '3-5', '6-8', '9+'], 'Select your expected time commitment.'),
 });
 
-export type Draft = z.infer<typeof draftSchema>;
-export type Submission = z.infer<typeof submissionSchema>;
+type Draft = z.infer<typeof draftSchema>;
+type Submission = z.infer<typeof submissionSchema>;
 
 type ApplicationRow = {
   status: 'draft' | 'submitted';
@@ -127,7 +127,7 @@ export function toRow(input: Draft | Submission) {
   };
 }
 
-export function fromRow(row: ApplicationRow) {
+function fromRow(row: ApplicationRow) {
   return {
     fullName: row.full_name ?? '',
     schoolEmail: row.school_email ?? '',
@@ -146,13 +146,13 @@ export function fromRow(row: ApplicationRow) {
   };
 }
 
-export const APPLICATION_COLUMNS =
+const APPLICATION_COLUMNS =
   'status, full_name, school_email, personal_email, race_ethnicity, year, major, second_major, grad_term, ' +
   'interest, team_pref, why_join, goals, experience, commitment, decision, decided_at, submitted_at, ' +
   'personal_email_verified_at';
 
 const PROFILE_COLUMNS =
-  'full_name, is_admin, linkedin_url, github_url, discord_username, ' +
+  'full_name, linkedin_url, github_url, discord_username, ' +
   'resume_name, resume_size, resume_uploaded_at, resume_source, colorstack_sub';
 
 /** Loads everything the dashboard shows, as the member, in parallel. */
@@ -165,7 +165,6 @@ export async function loadMe(db: SupabaseClient, member: Member) {
 
   const p = unwrap(profile) as unknown as {
     full_name: string | null;
-    is_admin: boolean;
     linkedin_url: string | null;
     github_url: string | null;
     discord_username: string | null;
@@ -187,7 +186,6 @@ export async function loadMe(db: SupabaseClient, member: Member) {
       userId: member.id,
       email: member.email,
       name: p.full_name,
-      isAdmin: p.is_admin,
     },
     profile: {
       fullName: p.full_name,

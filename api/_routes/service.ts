@@ -13,7 +13,6 @@ import {
   reopenApplication,
   saveScore,
   toReview,
-  type Reviewer,
 } from '../_lib/review.js';
 import { service } from '../_lib/supabase.js';
 import { pdfResponse } from './account.js';
@@ -160,9 +159,9 @@ const actorSchema = z.object({
   actor: z.email('The officer making the change needs an email address.'),
 });
 
-async function reviewer(c: Context): Promise<Reviewer> {
+async function reviewer(c: Context): Promise<string> {
   const { actor } = parse(actorSchema, await body(c));
-  return { kind: 'portal', actor };
+  return actor;
 }
 
 serviceRoutes.get('/applications', async (c) => {
@@ -179,18 +178,16 @@ serviceRoutes.post('/applications/:id/decision', async (c) => {
     }),
     await body(c)
   );
-  const who: Reviewer = { kind: 'portal', actor: input.actor };
-
-  await decideApplication(db, who, userId, input.decision);
-  const result = await emailDecision(db, who, await loadReview(db, userId));
+  await decideApplication(db, input.actor, userId, input.decision);
+  const result = await emailDecision(db, input.actor, await loadReview(db, userId));
   return c.json({ application: toReview(await loadReview(db, userId)), ...result });
 });
 
 serviceRoutes.post('/applications/:id/email', async (c) => {
   const db = service();
   const userId = userIdParam(c);
-  const who = await reviewer(c);
-  const result = await emailDecision(db, who, await loadReview(db, userId));
+  const actor = await reviewer(c);
+  const result = await emailDecision(db, actor, await loadReview(db, userId));
   return c.json({ application: toReview(await loadReview(db, userId)), ...result });
 });
 
@@ -224,7 +221,7 @@ serviceRoutes.put('/scores', async (c) => {
     await body(c)
   );
 
-  await saveScore(service(), { kind: 'portal', actor: input.actor }, input);
+  await saveScore(service(), input.actor, input);
   return c.json({ ok: true });
 });
 

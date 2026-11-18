@@ -28,8 +28,6 @@ has registered for Sign in with ColorStack, which is matched literally.
 
 With no Gmail credentials in `.env.local`, emails are printed to the terminal
 instead of sent, confirmation links included. That is how you sign up locally.
-To make yourself an admin, open Studio at http://127.0.0.1:54433 and set
-`is_admin` on your row in `profiles`.
 
 ```bash
 npm run build          # production build into dist/
@@ -86,7 +84,6 @@ separate systems.
 | `/apply` | auth | Four-step League application; final once submitted |
 | `/teams` | auth | Every team, and the member directory (accepted members only) |
 | `/leaderboard` | auth | Standings, ranked from server-held scores |
-| `/admin` | admin | Application review and decisions, score entry |
 
 Signed-out visitors hitting a protected route are sent to `/login` and returned
 to where they were headed after signing in.
@@ -116,7 +113,7 @@ to Supabase directly and holds no keys.
   the same five in its own `CHALLENGES` and `PHASES` arrays, so an event, a
   date, a weight, or a rubric line has to be changed in both files or the two
   pages disagree.
-- **Applications are final once submitted.** Only an admin can reopen one.
+- **Applications are final once submitted.** Only a chapter officer can reopen one, from the admin portal.
 - **Resumes** are private files in Supabase Storage, shared with League partners
   (deleting one is the opt-out). They are kept for about a month after the
   season, when the Supabase project is deleted.

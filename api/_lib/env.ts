@@ -42,7 +42,7 @@ const schema = z.object({
   MAIL_FROM: z.string().default('ColorStack at GSU <official@colorstackatgsu.com>'),
 });
 
-export type Env = z.infer<typeof schema>;
+type Env = z.infer<typeof schema>;
 
 let cached: Env | null = null;
 

@@ -430,9 +430,8 @@ begin
   -- 16. Denying an accepted member takes them off their team.
   -- ---------------------------------------------------------------------------
   execute 'reset role';
-  perform set_config('request.jwt.claims', jsonb_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
-  execute 'set local role authenticated';
-  perform public.decide_application(v_d, 'denied');
+  execute 'set local role service_role';
+  perform public.portal_decide_application(v_d, 'denied', 'officer@colorstackatgsu.com');
 
   execute 'reset role';
   if public.team_of(v_d) is not null then
@@ -443,9 +442,8 @@ begin
   -- 16b. Waitlisting is not accepting: it closes teams, and a later accept reopens them.
   -- ---------------------------------------------------------------------------
   execute 'reset role';
-  perform set_config('request.jwt.claims', jsonb_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
-  execute 'set local role authenticated';
-  perform public.decide_application(v_e, 'waitlisted');
+  execute 'set local role service_role';
+  perform public.portal_decide_application(v_e, 'waitlisted', 'officer@colorstackatgsu.com');
 
   execute 'reset role';
   if public.team_of(v_e) is not null then
@@ -461,9 +459,8 @@ begin
   end;
 
   execute 'reset role';
-  perform set_config('request.jwt.claims', jsonb_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
-  execute 'set local role authenticated';
-  perform public.decide_application(v_e, 'accepted');
+  execute 'set local role service_role';
+  perform public.portal_decide_application(v_e, 'accepted', 'officer@colorstackatgsu.com');
   execute 'reset role';
   if not public.is_accepted(v_e) then
     raise exception 'check 16b FAILED: accepting a waitlisted member did not take';

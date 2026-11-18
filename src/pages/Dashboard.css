@@ -597,15 +597,6 @@
   padding-left: calc(var(--sp-3) + 24px);
 }
 
-.finder__results {
-  margin-top: var(--sp-4);
-  display: grid;
-  gap: var(--sp-2);
-  max-height: 340px;
-  overflow-y: auto;
-  padding-right: var(--sp-1);
-}
-
 .finder__row {
   display: flex;
   align-items: center;

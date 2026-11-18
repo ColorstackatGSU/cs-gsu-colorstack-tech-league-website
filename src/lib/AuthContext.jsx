@@ -100,7 +100,6 @@ export function AuthProvider({ children }) {
     }
   }, [apply]);
 
-  const updateProfile = useCallback(async (patch) => apply(await store.saveProfile(patch)), [apply]);
   const uploadResume = useCallback(async (file) => apply(await store.saveResume(file)), [apply]);
   const deleteResume = useCallback(async () => apply(await store.removeResume()), [apply]);
   const submitApplication = useCallback(
@@ -123,7 +122,6 @@ export function AuthProvider({ children }) {
 
   const createTeam = useCallback(async (input) => applyTeam(await store.createTeam(input)), [applyTeam]);
   const updateTeam = useCallback(async (patch) => applyTeam(await store.updateTeam(patch)), [applyTeam]);
-  const renameTeam = useCallback(async (name) => applyTeam(await store.renameTeam(name)), [applyTeam]);
   const leaveTeam = useCallback(async () => applyTeam(await store.leaveTeam()), [applyTeam]);
   const requestTeammate = useCallback(
     async (userId, message) => applyTeam(await store.requestTeammate(userId, message)),
@@ -157,14 +155,12 @@ export function AuthProvider({ children }) {
       session,
       profile,
       isAuthed: Boolean(session),
-      isAdmin: Boolean(session?.isAdmin),
       refresh,
       signIn,
       signUp,
       verifyEmail,
       resetPassword,
       signOut,
-      updateProfile,
       uploadResume,
       deleteResume,
       submitApplication,
@@ -172,7 +168,6 @@ export function AuthProvider({ children }) {
       sendPersonalEmailLink,
       createTeam,
       updateTeam,
-      renameTeam,
       leaveTeam,
       requestTeammate,
       requestToJoin,
@@ -193,7 +188,6 @@ export function AuthProvider({ children }) {
       verifyEmail,
       resetPassword,
       signOut,
-      updateProfile,
       uploadResume,
       deleteResume,
       submitApplication,
@@ -201,7 +195,6 @@ export function AuthProvider({ children }) {
       sendPersonalEmailLink,
       createTeam,
       updateTeam,
-      renameTeam,
       leaveTeam,
       requestTeammate,
       requestToJoin,

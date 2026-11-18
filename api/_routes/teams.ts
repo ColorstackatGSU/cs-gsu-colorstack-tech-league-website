@@ -62,8 +62,6 @@ teams.post('/teams/:id/requests', async (c) => {
 
 /* ---------- the member's own team ---------- */
 
-teams.get('/team', async (c) => c.json(unwrap(await c.get('db').rpc('my_team'))));
-
 teams.patch('/team', async (c) => {
   const input = parse(
     z

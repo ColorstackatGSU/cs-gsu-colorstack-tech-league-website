@@ -63,7 +63,7 @@ export function readAccessToken(c: Context) {
  * Returns null for a signed-out caller rather than throwing, so routes that behave
  * differently when signed out can use it too.
  */
-export async function resolveMember(c: Context): Promise<{ member: Member; accessToken: string } | null> {
+async function resolveMember(c: Context): Promise<{ member: Member; accessToken: string } | null> {
   const access = getCookie(c, ACCESS_COOKIE);
   const refresh = getCookie(c, REFRESH_COOKIE);
   if (!access && !refresh) return null;

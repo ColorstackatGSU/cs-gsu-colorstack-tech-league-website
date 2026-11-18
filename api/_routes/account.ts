@@ -5,9 +5,7 @@ import { personalEmailToken } from '../_lib/emailToken.js';
 import { HttpError, parse, unwrap } from '../_lib/errors.js';
 import { sendMail } from '../_lib/mailer.js';
 import {
-  APPLICATION_COLUMNS,
   draftSchema,
-  fromRow,
   loadMe,
   submissionSchema,
   toRow,
@@ -34,53 +32,7 @@ async function body(c: Context) {
 
 account.get('/me', async (c) => c.json(await loadMe(c.get('db'), c.get('member'))));
 
-const optionalUrl = z
-  .union([z.url('Enter a full link, starting with https://.').max(300), z.literal('')])
-  .optional()
-  .transform((value) => (value === '' ? null : value));
-
-account.patch('/me', async (c) => {
-  const patch = parse(
-    z.object({
-      linkedinUrl: optionalUrl,
-      githubUrl: optionalUrl,
-      discordUsername: z
-        .string()
-        .trim()
-        .max(40, 'Keep that under 40 characters.')
-        .optional()
-        .transform((value) => (value === '' ? null : value)),
-    }),
-    await body(c)
-  );
-
-  const db = c.get('db');
-  unwrap(
-    await db
-      .from('profiles')
-      .update({
-        linkedin_url: patch.linkedinUrl,
-        github_url: patch.githubUrl,
-        discord_username: patch.discordUsername,
-      })
-      .eq('id', c.get('member').id)
-  );
-  return c.json(await loadMe(db, c.get('member')));
-});
-
 /* ---------- application ---------- */
-
-account.get('/application', async (c) => {
-  const row = unwrap(
-    await c.get('db').from('applications').select(APPLICATION_COLUMNS).eq('user_id', c.get('member').id).maybeSingle()
-  ) as (Parameters<typeof fromRow>[0] & { status: string; decision: string | null }) | null;
-
-  return c.json({
-    application: row ? fromRow(row) : null,
-    status: row?.status ?? 'not-started',
-    decision: row?.decision ?? null,
-  });
-});
 
 const ALREADY_SUBMITTED =
   'You already submitted your application, so it can no longer be changed. If something needs fixing, email official@colorstackatgsu.com.';
